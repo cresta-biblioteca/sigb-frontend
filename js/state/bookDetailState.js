@@ -7,6 +7,8 @@ class BookDetailState {
 		this.libro = null;
 		this.loading = false;
 		this.error = null;
+		this.editMode = false;
+		this.currentId = null;
 	}
 
 	setLibro(libro) {
@@ -31,5 +33,21 @@ class BookDetailState {
 
 	getError() {
 		return this.error;
+	}
+
+	setEditMode(value) {
+		this.editMode = Boolean(value);
+	}
+
+	isEditMode() {
+		return this.editMode;
+	}
+
+	setCurrentId(id) {
+		this.currentId = id;
+	}
+
+	getCurrentId() {
+		return this.currentId;
 	}
 }

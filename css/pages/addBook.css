@@ -95,6 +95,17 @@
   gap: 24px;
 }
 
+.add-book-form__admin-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(15, 43, 91, 0.08);
+  border: 1px solid rgba(15, 43, 91, 0.2);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
 /* ========== FIELDSETS ========== */
 .form-fieldset {
   border: none;

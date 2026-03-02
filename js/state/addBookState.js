@@ -1,5 +1,5 @@
 /**
- * Estado de Agregar Libro - Gestión de datos del formulario
+ * Estado de Alta de Libro (Panel de Administracion) - Gestión de datos del formulario
  * Mantiene el estado del formulario y validación
  */
 

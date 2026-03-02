@@ -1,7 +1,7 @@
 /**
- * Controlador de Agregar Libro - Orquestación de lógica
+ * Controlador de Alta de Libro (Panel de Administracion) - Orquestación de lógica
  * Coordina entre AddBookState, LibroService y AddBookRenderer
- * Maneja la lógica de negocio para agregar nuevos libros
+ * Maneja la lógica de negocio para alta de nuevos libros desde administración
  */
 
 class AddBookController {
@@ -24,12 +24,12 @@ class AddBookController {
    */
   init() {
     try {
-      console.log('🚀 Inicializando controlador de agregar libro...');
+      console.log('🚀 Inicializando controlador de alta de libro (admin)...');
 
       // Configurar event listeners
       this.setupEventListeners();
 
-      console.log('✅ Controlador de agregar libro inicializado');
+      console.log('✅ Controlador de alta de libro (admin) inicializado');
     } catch (error) {
       console.error('❌ Error al inicializar el controlador:', error);
       this.renderer.showErrorMessage('Error al inicializar el formulario');
@@ -70,7 +70,7 @@ class AddBookController {
    * Maneja la apertura del modal
    */
   async handleOpenModal() {
-    console.log('📖 Abriendo modal de agregar libro');
+    console.log('📖 Abriendo modal de alta de libro (admin)');
     
     // Cargar CDU si aún no está cargada
     if (this.state.getCDUList().length === 0) {
@@ -85,7 +85,7 @@ class AddBookController {
    * Maneja el cierre del modal
    */
   handleCloseModal() {
-    console.log('❌ Cerrando modal de agregar libro');
+    console.log('❌ Cerrando modal de alta de libro (admin)');
     this.state.reset();
     this.renderer.clearErrors();
   }
@@ -152,7 +152,7 @@ class AddBookController {
    */
   async handleSubmit(formData) {
     try {
-      console.log('📝 Enviando formulario...');
+      console.log('📝 Enviando formulario de alta (admin)...');
 
       // Actualizar estado del formulario
       this.state.setFormData(formData);
@@ -176,15 +176,16 @@ class AddBookController {
       const marc21 = this.state.generateMARC21();
       const dataToSend = {
         ...this.state.getFormData(),
-        marc21: marc21
+        marc21: marc21,
+        origenPanel: 'administracion'
       };
 
       // Enviar datos al servidor
       const response = await this.service.createLibro(dataToSend);
 
       if (response) {
-        console.log('✅ Libro agregado exitosamente:', response);
-        this.renderer.showSuccessMessage('Libro agregado correctamente');
+        console.log('✅ Libro dado de alta exitosamente (admin):', response);
+        this.renderer.showSuccessMessage('Libro dado de alta correctamente desde administración');
         
         // Cerrar modal después de un pequeño delay
         setTimeout(() => {
@@ -197,8 +198,8 @@ class AddBookController {
       }
 
     } catch (error) {
-      console.error('❌ Error al agregar el libro:', error);
-      this.renderer.showErrorMessage(error.message || 'Error al agregar el libro. Intenta de nuevo.');
+      console.error('❌ Error al dar de alta el libro (admin):', error);
+      this.renderer.showErrorMessage(error.message || 'Error al dar de alta el libro desde administración. Intenta de nuevo.');
     } finally {
       // Habilitar botón de envío
       this.state.setIsSubmitting(false);

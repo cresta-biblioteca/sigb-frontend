@@ -160,4 +160,33 @@ class LibroService {
       throw error;
     }
   }
+
+  /**
+   * Actualiza un libro existente por ID
+   * @param {string|number} id - ID del libro
+   * @param {Object} libroData - Datos a actualizar
+   * @returns {Promise<Object>} Libro actualizado
+   */
+  async updateLibro(id, libroData) {
+    try {
+      const response = await fetch(`/api/libros/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(libroData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.libro || data;
+    } catch (error) {
+      console.error('❌ Error al actualizar libro:', error);
+      throw error;
+    }
+  }
 }

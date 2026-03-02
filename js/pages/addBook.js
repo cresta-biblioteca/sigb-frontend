@@ -1,6 +1,6 @@
 /**
- * Página de Agregar Libro - Punto de entrada
- * Inicializa el controlador, estado, servicio y renderizador
+ * Página de Alta de Libro (Panel de Administracion) - Punto de entrada
+ * Inicializa el controlador, estado, servicio y renderizador del panel admin
  */
 
 // Inicializar cuando el DOM esté listo
@@ -23,7 +23,7 @@ function initializeAddBook() {
 
   // Manejar evento de libro agregado para actualizar catálogo
   window.addEventListener('bookAdded', () => {
-    console.log('📚 Actualizando catálogo después de agregar libro...');
+    console.log('📚 [Admin] Actualizando catálogo después de alta de libro...');
     if (window.catalogController) {
       // Recargar el catálogo
       window.catalogController.applyFiltersAndRender();

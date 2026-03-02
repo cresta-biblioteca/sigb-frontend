@@ -154,8 +154,8 @@
         <div class="catalog-results-info">
           <h2 id="resultsCount" class="catalog-results-count">Mostrando 10 resultados</h2>
           <div class="catalog-view-controls">
-            <button id="addBookBtn" class="btn btn--primary" aria-label="Agregar nuevo libro">
-              + Agregar Libro
+            <button id="addBookBtn" class="btn btn--primary" aria-label="Abrir panel de administracion para agregar libro">
+              + Alta de Libro (Admin)
             </button>
             <button class="catalog-view-btn catalog-view-btn--active" data-view="grid" aria-label="Vista de cuadrícula" aria-pressed="true">
               <i class="lucide" data-lucide="grid"></i>
@@ -185,12 +185,12 @@
 
   </main>
 
-  <!-- ========== MODAL AGREGAR LIBRO ========== -->
+  <!-- ========== MODAL PANEL ADMINISTRACION: ALTA DE LIBRO ========== -->
   <div id="addBookModal" class="modal modal--book-add" style="display: none;">
     <div class="modal__overlay"></div>
     <div class="modal__content">
       <div class="modal__header">
-        <h2 class="modal__title">Agregar Nuevo Libro</h2>
+        <h2 class="modal__title">Panel de Administracion - Alta de Libro</h2>
         <button class="modal__close" aria-label="Cerrar modal" id="closeModalBtn">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6L6 18M6 6l12 12"></path>
@@ -199,6 +199,8 @@
       </div>
       
       <form id="addBookForm" class="add-book-form">
+        <p class="add-book-form__admin-note">Este formulario pertenece al panel de administracion del catalogo.</p>
+
         <!-- Información de Títulos -->
         <fieldset class="form-fieldset">
           <legend class="form-fieldset__legend">Títulos</legend>
@@ -277,7 +279,7 @@
         <!-- Botones de Acción -->
         <div class="form-actions">
           <button type="button" class="btn btn--outline" id="cancelAddBookBtn">Cancelar</button>
-          <button type="submit" class="btn btn--primary">Agregar Libro</button>
+          <button type="submit" class="btn btn--primary">Guardar Alta (Admin)</button>
         </div>
       </form>
     </div>

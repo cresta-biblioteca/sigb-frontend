@@ -1,6 +1,6 @@
 /**
- * Renderizador de Agregar Libro - Actualización del DOM
- * Maneja la actualización visual del modal y formulario de agregar libros
+ * Renderizador de Alta de Libro (Panel de Administracion) - Actualización del DOM
+ * Maneja la actualización visual del modal y formulario de alta de libros
  * Encapsula toda la interacción con el DOM
  */
 
@@ -413,7 +413,7 @@ class AddBookRenderer {
    * @param {string} message - Mensaje a mostrar
    */
   showSuccessMessage(message) {
-    console.log('✅', message);
+    console.log('✅ [Admin]', message);
     alert(message);
   }
 
@@ -422,7 +422,7 @@ class AddBookRenderer {
    * @param {string} message - Mensaje a mostrar
    */
   showErrorMessage(message) {
-    console.error('❌', message);
+    console.error('❌ [Admin]', message);
     alert('Error: ' + message);
   }
 
@@ -434,7 +434,7 @@ class AddBookRenderer {
     const submitBtn = this.form?.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = !enabled;
-      submitBtn.textContent = enabled ? 'Agregar Libro' : 'Agregando...';
+      submitBtn.textContent = enabled ? 'Guardar Alta (Admin)' : 'Guardando alta...';
     }
   }
 }

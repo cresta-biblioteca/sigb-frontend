@@ -14,6 +14,19 @@ class BookDetailRenderer {
 		this.bookLoading = document.getElementById('bookLoading');
 		this.bookError = document.getElementById('bookError');
 		this.bookLayout = document.getElementById('bookLayout');
+		this.bookEditToggle = document.getElementById('bookEditToggle');
+		this.bookEditForm = document.getElementById('bookEditForm');
+		this.bookEditCancel = document.getElementById('bookEditCancel');
+		this.bookEditSave = document.getElementById('bookEditSave');
+		this.bookEditMessage = document.getElementById('bookEditMessage');
+		this.editTitulo = document.getElementById('editTitulo');
+		this.editAutor = document.getElementById('editAutor');
+		this.editISBN = document.getElementById('editISBN');
+		this.editEditorial = document.getElementById('editEditorial');
+		this.editAnio = document.getElementById('editAnio');
+		this.editCDU = document.getElementById('editCDU');
+		this.editDescripcion = document.getElementById('editDescripcion');
+		this.editEjemplares = document.getElementById('editEjemplares');
 	}
 
 	showLoading() {
@@ -42,6 +55,86 @@ class BookDetailRenderer {
 		}
 	}
 
+	onToggleEdit(callback) {
+		if (!this.bookEditToggle) return;
+		this.bookEditToggle.addEventListener('click', callback);
+	}
+
+	onCancelEdit(callback) {
+		if (!this.bookEditCancel) return;
+		this.bookEditCancel.addEventListener('click', callback);
+	}
+
+	onSubmitEdit(callback) {
+		if (!this.bookEditForm) return;
+		this.bookEditForm.addEventListener('submit', event => {
+			event.preventDefault();
+			callback(this.getEditFormData());
+		});
+	}
+
+	showEditMode(libro) {
+		if (!this.bookEditForm) return;
+		this.bookEditForm.classList.remove('is-hidden');
+		if (this.bookEditToggle) this.bookEditToggle.textContent = 'Ocultar edicion';
+		this.fillEditForm(libro);
+		this.showFormMessage('', false);
+	}
+
+	hideEditMode() {
+		if (!this.bookEditForm) return;
+		this.bookEditForm.classList.add('is-hidden');
+		if (this.bookEditToggle) this.bookEditToggle.textContent = 'Editar (Administracion)';
+		this.showFormMessage('', false);
+	}
+
+	fillEditForm(libro) {
+		if (!libro) return;
+		if (this.editTitulo) this.editTitulo.value = libro.titulo || '';
+		if (this.editAutor) this.editAutor.value = libro.autor || (Array.isArray(libro.autores) ? libro.autores.join(', ') : '');
+		if (this.editISBN) this.editISBN.value = libro.isbn || '';
+		if (this.editEditorial) this.editEditorial.value = libro.editorial || '';
+		if (this.editAnio) this.editAnio.value = libro.anio || libro.año || '';
+		if (this.editCDU) this.editCDU.value = libro.cdu || '';
+		if (this.editDescripcion) this.editDescripcion.value = libro.descripcion || libro.description || libro.resumen || '';
+		if (this.editEjemplares) this.editEjemplares.value = this.getEjemplares(libro);
+	}
+
+	getEditFormData() {
+		return {
+			titulo: this.editTitulo ? this.editTitulo.value.trim() : '',
+			autor: this.editAutor ? this.editAutor.value.trim() : '',
+			isbn: this.editISBN ? this.editISBN.value.trim() : '',
+			editorial: this.editEditorial ? this.editEditorial.value.trim() : '',
+			anio: this.editAnio && this.editAnio.value !== '' ? Number(this.editAnio.value) : null,
+			cdu: this.editCDU ? this.editCDU.value.trim() : '',
+			descripcion: this.editDescripcion ? this.editDescripcion.value.trim() : '',
+			ejemplares: this.editEjemplares && this.editEjemplares.value !== '' ? Number(this.editEjemplares.value) : 0
+		};
+	}
+
+	setEditSubmitting(isSubmitting) {
+		if (this.bookEditSave) {
+			this.bookEditSave.disabled = isSubmitting;
+			this.bookEditSave.textContent = isSubmitting ? 'Guardando...' : 'Guardar cambios';
+		}
+	}
+
+	showFormMessage(message, isError = false) {
+		if (!this.bookEditMessage) return;
+		if (!message) {
+			this.bookEditMessage.classList.add('is-hidden');
+			this.bookEditMessage.textContent = '';
+			this.bookEditMessage.classList.remove('book-detail__form-message--error', 'book-detail__form-message--success');
+			return;
+		}
+
+		this.bookEditMessage.textContent = message;
+		this.bookEditMessage.classList.remove('is-hidden');
+		this.bookEditMessage.classList.toggle('book-detail__form-message--error', isError);
+		this.bookEditMessage.classList.toggle('book-detail__form-message--success', !isError);
+	}
+
 	renderLibro(libro) {
 		if (!libro) {
 			this.showError('No se encontro el libro solicitado.');
@@ -63,7 +156,7 @@ class BookDetailRenderer {
 		const authorInfo = this.formatAuthors(libro);
 		const description = libro.descripcion || libro.description || libro.resumen || 'Sin descripcion disponible.';
 		const cover = libro.portada || '../assets/book-cover-default.jpg';
-		const availability = this.getAvailabilityInfo(libro.disponibilidad);
+		const availability = this.getAvailabilityInfo(libro);
 
 		if (this.bookTitle) this.bookTitle.textContent = title;
 		if (this.bookAuthor) this.bookAuthor.textContent = authorInfo || 'Autor desconocido';
@@ -84,6 +177,18 @@ class BookDetailRenderer {
 		this.renderChips(libro);
 	}
 
+	getEjemplares(libro) {
+		const sources = [libro.ejemplares, libro.disponibles, libro.cantidad];
+		for (const value of sources) {
+			if (value === 0 || value) {
+				const numberValue = Number(value);
+				if (!Number.isNaN(numberValue) && numberValue >= 0) return numberValue;
+			}
+		}
+		if (String(libro.disponibilidad || '').toLowerCase() === 'disponible') return 1;
+		return 0;
+	}
+
 	renderMeta(libro) {
 		if (!this.bookMetaList) return;
 		this.bookMetaList.innerHTML = '';
@@ -93,6 +198,7 @@ class BookDetailRenderer {
 			{ label: 'ISBN', value: libro.isbn },
 			{ label: 'Editorial', value: libro.editorial },
 			{ label: 'Ano', value: libro.anio || libro.año },
+			{ label: 'Ejemplares', value: this.getEjemplares(libro) },
 			{ label: 'Paginas', value: libro.paginas },
 			{ label: 'Idioma', value: libro.idioma },
 			{ label: 'Categoria', value: this.getCategoriaText(libro) },
@@ -100,7 +206,7 @@ class BookDetailRenderer {
 		];
 
 		metaItems
-			.filter(item => item.value)
+			.filter(item => item.value !== undefined && item.value !== null && item.value !== '')
 			.forEach(item => {
 				const div = document.createElement('div');
 				div.className = 'book-detail__meta-item';
@@ -162,19 +268,12 @@ class BookDetailRenderer {
 		return parts.length > 0 ? parts.join(', ') : '';
 	}
 
-	getAvailabilityInfo(availability) {
-		if (!availability) {
-			return { class: 'book-detail__availability--unavailable', text: 'No disponible' };
+	getAvailabilityInfo(libro) {
+		const ejemplares = this.getEjemplares(libro);
+		if (ejemplares <= 0) {
+			return { class: 'book-detail__availability--unavailable', text: 'No disponible (0)' };
 		}
-
-		const normalized = String(availability).toLowerCase();
-		if (normalized === 'available' || normalized === 'disponible') {
-			return { class: 'book-detail__availability--available', text: 'Disponible' };
-		}
-		if (normalized === 'digital') {
-			return { class: 'book-detail__availability--digital', text: 'Digital' };
-		}
-		return { class: 'book-detail__availability--unavailable', text: 'No disponible' };
+		return { class: 'book-detail__availability--available', text: `${ejemplares} ejemplares` };
 	}
 
 	escapeHtml(value) {

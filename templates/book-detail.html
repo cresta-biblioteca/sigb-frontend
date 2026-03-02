@@ -92,10 +92,54 @@
 								<img id="bookCover" class="book-detail__cover" src="../assets/book-cover-default.jpg" alt="Portada del libro">
 								<span class="book-detail__availability" id="bookAvailability">Disponibilidad</span>
 							</div>
+							<button class="btn btn--primary book-detail__edit-toggle" id="bookEditToggle" type="button">Editar (Administracion)</button>
 							<a href="catalog.html" class="btn btn--outline book-detail__back">Volver al catalogo</a>
 						</aside>
 
 						<div class="book-detail__info">
+							<form class="book-detail__edit-form is-hidden" id="bookEditForm" novalidate>
+								<h2 class="book-detail__section-title">Edicion de libro</h2>
+								<div class="book-detail__edit-grid">
+									<div class="book-detail__field">
+										<label for="editTitulo" class="book-detail__label">Titulo</label>
+										<input id="editTitulo" name="titulo" class="book-detail__input" type="text" required>
+									</div>
+									<div class="book-detail__field">
+										<label for="editAutor" class="book-detail__label">Autor</label>
+										<input id="editAutor" name="autor" class="book-detail__input" type="text">
+									</div>
+									<div class="book-detail__field">
+										<label for="editISBN" class="book-detail__label">ISBN</label>
+										<input id="editISBN" name="isbn" class="book-detail__input" type="text">
+									</div>
+									<div class="book-detail__field">
+										<label for="editEditorial" class="book-detail__label">Editorial</label>
+										<input id="editEditorial" name="editorial" class="book-detail__input" type="text">
+									</div>
+									<div class="book-detail__field">
+										<label for="editAnio" class="book-detail__label">Ano</label>
+										<input id="editAnio" name="anio" class="book-detail__input" type="number" min="0" step="1">
+									</div>
+									<div class="book-detail__field">
+										<label for="editCDU" class="book-detail__label">CDU</label>
+										<input id="editCDU" name="cdu" class="book-detail__input" type="text">
+									</div>
+									<div class="book-detail__field book-detail__field--full">
+										<label for="editDescripcion" class="book-detail__label">Descripcion</label>
+										<textarea id="editDescripcion" name="descripcion" class="book-detail__textarea" rows="4"></textarea>
+									</div>
+									<div class="book-detail__field">
+										<label for="editEjemplares" class="book-detail__label">Ejemplares disponibles</label>
+										<input id="editEjemplares" name="ejemplares" class="book-detail__input" type="number" min="0" step="1" required>
+									</div>
+								</div>
+								<p class="book-detail__form-message is-hidden" id="bookEditMessage"></p>
+								<div class="book-detail__edit-actions">
+									<button type="button" class="btn btn--outline" id="bookEditCancel">Cancelar</button>
+									<button type="submit" class="btn btn--primary" id="bookEditSave">Guardar cambios</button>
+								</div>
+							</form>
+
 							<div class="book-detail__meta" id="bookMeta">
 								<h2 class="book-detail__section-title">Detalles</h2>
 								<div class="book-detail__meta-list" id="bookMetaList"></div>
