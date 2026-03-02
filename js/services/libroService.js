@@ -126,4 +126,38 @@ class LibroService {
       throw error;
     }
   }
+
+  /**
+   * Crea un nuevo libro
+   * @param {Object} libroData - Datos del libro a crear
+   * @returns {Promise<Object>} Libro creado con su ID
+   * @throws {Error} Si ocurre un error HTTP o validación
+   */
+  async createLibro(libroData) {
+    try {
+      const response = await fetch('/api/libros', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(libroData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Procesar respuesta - puede ser el libro directamente o {libro: ...}
+      const libro = data.libro || data;
+
+      console.log('✅ Libro creado exitosamente:', libro);
+      return libro;
+    } catch (error) {
+      console.error('❌ Error al crear libro:', error);
+      throw error;
+    }
+  }
 }

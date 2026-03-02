@@ -28,4 +28,5 @@ document.addEventListener('DOMContentLoaded', () => {
   // Exponer en window para debugging en consola
   window.catalogController = controller;
   window.catalogState = state;
+  window.libroService = service;
 });

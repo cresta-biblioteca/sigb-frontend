@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../css/layout.css">
   <link rel="stylesheet" href="../css/components.css">
   <link rel="stylesheet" href="../css/pages/catalog.css">
+  <link rel="stylesheet" href="../css/pages/addBook.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css">
 </head>
 <body>
@@ -153,6 +154,9 @@
         <div class="catalog-results-info">
           <h2 id="resultsCount" class="catalog-results-count">Mostrando 10 resultados</h2>
           <div class="catalog-view-controls">
+            <button id="addBookBtn" class="btn btn--primary" aria-label="Agregar nuevo libro">
+              + Agregar Libro
+            </button>
             <button class="catalog-view-btn catalog-view-btn--active" data-view="grid" aria-label="Vista de cuadrícula" aria-pressed="true">
               <i class="lucide" data-lucide="grid"></i>
             </button>
@@ -181,6 +185,104 @@
 
   </main>
 
+  <!-- ========== MODAL AGREGAR LIBRO ========== -->
+  <div id="addBookModal" class="modal modal--book-add" style="display: none;">
+    <div class="modal__overlay"></div>
+    <div class="modal__content">
+      <div class="modal__header">
+        <h2 class="modal__title">Agregar Nuevo Libro</h2>
+        <button class="modal__close" aria-label="Cerrar modal" id="closeModalBtn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <form id="addBookForm" class="add-book-form">
+        <!-- Información de Títulos -->
+        <fieldset class="form-fieldset">
+          <legend class="form-fieldset__legend">Títulos</legend>
+          
+          <div class="form-group">
+            <label for="bookTitle" class="form-label">Título Principal <span class="form-required">*</span></label>
+            <input type="text" id="bookTitle" name="title" class="form-input" required placeholder="Título del libro">
+          </div>
+
+          <div class="form-group">
+            <label for="bookInformativeTitle" class="form-label">Título Informativo</label>
+            <input type="text" id="bookInformativeTitle" name="informativeTitle" class="form-input" placeholder="Subtítulo o título adicional">
+          </div>
+
+          <div class="form-group">
+            <label for="bookOtherTitles" class="form-label">Otros Títulos</label>
+            <textarea id="bookOtherTitles" name="otherTitles" class="form-textarea" rows="2" placeholder="Títulos alternativos (uno por línea)"></textarea>
+          </div>
+        </fieldset>
+
+        <!-- Información de Autores -->
+        <fieldset class="form-fieldset">
+          <legend class="form-fieldset__legend">Autoría</legend>
+          
+          <div class="form-group">
+            <label for="bookAuthor" class="form-label">Autor Principal <span class="form-required">*</span></label>
+            <input type="text" id="bookAuthor" name="author" class="form-input" required placeholder="Nombre del autor principal">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Autores Opcionales</label>
+            <div id="optionalAuthorsContainer" class="authors-list">
+              <div class="author-item">
+                <input type="text" class="form-input optional-author-input" placeholder="Nombre del autor (opcional)">
+                <button type="button" class="btn btn--small btn--outline remove-author" aria-label="Eliminar autor">
+                  Eliminar
+                </button>
+              </div>
+            </div>
+            <button type="button" class="btn btn--small btn--outline" id="addAuthorBtn" style="margin-top: 8px;">
+              + Agregar Autor
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label for="bookCollaborators" class="form-label">Colaboradores</label>
+            <textarea id="bookCollaborators" name="collaborators" class="form-textarea" rows="2" placeholder="Colaboradores del libro (uno por línea)"></textarea>
+          </div>
+        </fieldset>
+
+        <!-- Clasificación -->
+        <fieldset class="form-fieldset">
+          <legend class="form-fieldset__legend">Clasificación</legend>
+          
+          <div class="form-group">
+            <label for="bookCDU" class="form-label">CDU (Clasificación Decimal Universal) <span class="form-required">*</span></label>
+            <select id="bookCDU" name="cdu" class="form-input" required>
+              <option value="">Selecciona una clasificación CDU</option>
+            </select>
+          </div>
+        </fieldset>
+
+        <!-- MARC21 Preview -->
+        <fieldset class="form-fieldset">
+          <legend class="form-fieldset__legend">Formato MARC21</legend>
+          
+          <div class="marc21-preview">
+            <p class="marc21-info">La traducción a MARC21 se actualizará automáticamente mientras completas el formulario:</p>
+            <pre id="marc21Output" class="marc21-output"><code>Completa el formulario para ver la traducción a MARC21</code></pre>
+            <button type="button" class="btn btn--small btn--outline" id="copyMarcBtn" title="Copiar MARC21">
+              Copiar MARC21
+            </button>
+          </div>
+        </fieldset>
+
+        <!-- Botones de Acción -->
+        <div class="form-actions">
+          <button type="button" class="btn btn--outline" id="cancelAddBookBtn">Cancelar</button>
+          <button type="submit" class="btn btn--primary">Agregar Libro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ========== FOOTER ========== -->
   <footer class="footer" id="footer"></footer>
 
@@ -194,15 +296,19 @@
 
   <!-- Capa de Estado (Model) -->
   <script src="../js/state/catalogState.js"></script>
+  <script src="../js/state/addBookState.js"></script>
 
   <!-- Capa de Presentación (View) -->
   <script src="../js/ui/catalogRenderer.js"></script>
+  <script src="../js/ui/addBookRenderer.js"></script>
 
   <!-- Capa de Control (Controller) -->
   <script src="../js/controllers/catalogController.js"></script>
+  <script src="../js/controllers/addBookController.js"></script>
 
   <!-- Punto de entrada (Inicialización) -->
   <script src="../js/pages/catalog.js"></script>
+  <script src="../js/pages/addBook.js"></script>
 
 </body>
 </html>
