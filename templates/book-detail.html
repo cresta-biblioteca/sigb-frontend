@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Detalle del Libro - Biblioteca CRESTA</title>
+	<meta name="description" content="Detalle del libro seleccionado en el catálogo de la Biblioteca CRESTA.">
+	<link rel="stylesheet" href="../css/reset.css">
+	<link rel="stylesheet" href="../css/variables.css">
+	<link rel="stylesheet" href="../css/layout.css">
+	<link rel="stylesheet" href="../css/components.css">
+	<link rel="stylesheet" href="../css/pages/bookDetail.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css">
+</head>
+<body>
+
+	<!-- ========== NAVBAR ========== -->
+	<header class="navbar" id="navbar">
+		<div class="navbar__container">
+			<a href="../index.html" class="navbar__brand">
+				<div class="navbar__logo">
+					<svg class="navbar__logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<rect width="40" height="40" rx="8" fill="white"/>
+						<path d="M10 30V12C10 10.9 10.9 10 12 10H28C29.1 10 30 10.9 30 12V30L20 25L10 30Z" fill="#0F2B5B"/>
+						<path d="M14 16H26M14 20H22" stroke="white" stroke-width="2" stroke-linecap="round"/>
+					</svg>
+				</div>
+				<div class="navbar__brand-text">
+					<span class="navbar__brand-name">BIBLIOTECA CRESTA</span>
+					<span class="navbar__brand-subtitle">CENTRO REGIONAL DE ESTUDIOS SUPERIORES</span>
+				</div>
+			</a>
+
+			<button class="navbar__toggle" id="navbarToggle" aria-label="Abrir menú de navegación" aria-expanded="false">
+				<span class="navbar__toggle-line"></span>
+				<span class="navbar__toggle-line"></span>
+				<span class="navbar__toggle-line"></span>
+			</button>
+
+			<nav class="navbar__nav" id="navbarMenu">
+				<ul class="navbar__list">
+					<li class="navbar__item">
+						<a href="../index.html" class="navbar__link">Inicio</a>
+					</li>
+					<li class="navbar__item navbar__item--dropdown">
+						<button class="navbar__link navbar__link--dropdown" aria-expanded="false" aria-haspopup="true">
+							Servicios
+							<svg class="navbar__dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+								<path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</button>
+						<ul class="navbar__dropdown">
+							<li><a href="catalog.html" class="navbar__link navbar__link--active">Catálogo</a></li>
+							<li><a href="dashboard.html" class="navbar__link">Mi Área</a></li>
+							<li><a href="loans.html" class="navbar__link">Mis Préstamos</a></li>
+						</ul>
+					</li>
+					<li class="navbar__item">
+						<a href="readers.html" class="navbar__link">Lectores</a>
+					</li>
+					<li class="navbar__item navbar__item--auth">
+						<a href="login.html" class="btn btn--outline">Iniciar Sesión</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</header>
+
+	<!-- ========== MAIN CONTENT ========== -->
+	<main class="book-detail-main">
+		<section class="book-detail-hero">
+			<div class="container">
+				<div class="book-detail-hero__breadcrumbs">
+					<a href="catalog.html" class="book-detail-hero__link">Catalogo</a>
+					<span class="book-detail-hero__separator">/</span>
+					<span class="book-detail-hero__current">Detalle del libro</span>
+				</div>
+				<h1 class="book-detail-hero__title" id="bookTitle">Detalle del libro</h1>
+				<p class="book-detail-hero__subtitle" id="bookAuthor">Cargando autor...</p>
+			</div>
+		</section>
+
+		<section class="book-detail-content">
+			<div class="container">
+				<div class="book-detail" id="bookDetail">
+					<div class="book-detail__loading" id="bookLoading" aria-live="polite">Cargando informacion del libro...</div>
+					<div class="book-detail__error is-hidden" id="bookError" role="alert"></div>
+
+					<div class="book-detail__layout" id="bookLayout">
+						<aside class="book-detail__aside">
+							<div class="book-detail__cover-wrapper">
+								<img id="bookCover" class="book-detail__cover" src="../assets/book-cover-default.jpg" alt="Portada del libro">
+								<span class="book-detail__availability" id="bookAvailability">Disponibilidad</span>
+							</div>
+							<a href="catalog.html" class="btn btn--outline book-detail__back">Volver al catalogo</a>
+						</aside>
+
+						<div class="book-detail__info">
+							<div class="book-detail__meta" id="bookMeta">
+								<h2 class="book-detail__section-title">Detalles</h2>
+								<div class="book-detail__meta-list" id="bookMetaList"></div>
+							</div>
+
+							<div class="book-detail__description">
+								<h2 class="book-detail__section-title">Descripcion</h2>
+								<p id="bookDescription">Sin descripcion disponible.</p>
+							</div>
+
+							<div class="book-detail__extras" id="bookExtras">
+								<h2 class="book-detail__section-title">Informacion adicional</h2>
+								<div class="book-detail__chips" id="bookChips"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<!-- ========== FOOTER ========== -->
+	<footer class="footer" id="footer"></footer>
+
+	<!-- ========== SCRIPTS ========== -->
+	<script src="../js/components/navbar.js"></script>
+	<script src="../js/components/footer.js"></script>
+
+	<script src="../js/services/libroService.js"></script>
+	<script src="../js/state/bookDetailState.js"></script>
+	<script src="../js/ui/bookDetailRenderer.js"></script>
+	<script src="../js/controllers/bookDetailController.js"></script>
+	<script src="../js/pages/bookDetail.js"></script>
+</body>
+</html>

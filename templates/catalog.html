@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo - Biblioteca CRESTA</title>
+  <meta name="description" content="Explora nuestro catálogo completo de libros, revistas y recursos digitales disponibles en la Biblioteca CRESTA.">
+  <link rel="stylesheet" href="../css/reset.css">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages/catalog.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css">
+</head>
+<body>
+
+  <!-- ========== NAVBAR ========== -->
+  <header class="navbar" id="navbar">
+    <div class="navbar__container">
+      <a href="../index.html" class="navbar__brand">
+        <div class="navbar__logo">
+          <svg class="navbar__logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="40" height="40" rx="8" fill="white"/>
+            <path d="M10 30V12C10 10.9 10.9 10 12 10H28C29.1 10 30 10.9 30 12V30L20 25L10 30Z" fill="#0F2B5B"/>
+            <path d="M14 16H26M14 20H22" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="navbar__brand-text">
+          <span class="navbar__brand-name">BIBLIOTECA CRESTA</span>
+          <span class="navbar__brand-subtitle">CENTRO REGIONAL DE ESTUDIOS SUPERIORES</span>
+        </div>
+      </a>
+
+      <button class="navbar__toggle" id="navbarToggle" aria-label="Abrir menú de navegación" aria-expanded="false">
+        <span class="navbar__toggle-line"></span>
+        <span class="navbar__toggle-line"></span>
+        <span class="navbar__toggle-line"></span>
+      </button>
+
+      <nav class="navbar__nav" id="navbarMenu">
+        <ul class="navbar__list">
+          <li class="navbar__item">
+            <a href="../index.html" class="navbar__link">Inicio</a>
+          </li>
+          <li class="navbar__item navbar__item--dropdown">
+            <button class="navbar__link navbar__link--dropdown" aria-expanded="false" aria-haspopup="true">
+              Servicios
+              <svg class="navbar__dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <ul class="navbar__dropdown">
+              <li><a href="catalog.html" class="navbar__link navbar__link--active">Catálogo</a></li>
+              <li><a href="dashboard.html" class="navbar__link">Mi Área</a></li>
+              <li><a href="loans.html" class="navbar__link">Mis Préstamos</a></li>
+            </ul>
+          </li>
+          <li class="navbar__item">
+            <a href="readers.html" class="navbar__link">Lectores</a>
+          </li>
+          <li class="navbar__item navbar__item--auth">
+            <a href="login.html" class="btn btn--outline">Iniciar Sesión</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <main class="catalog-main">
+    
+    <!-- ========== HERO SECTION ========== -->
+    <section class="catalog-hero">
+      <div class="container">
+        <h1 class="catalog-hero__title">Catálogo de Recursos</h1>
+        <p class="catalog-hero__subtitle">Descubre miles de libros, revistas y recursos digitales disponibles para ti</p>
+      </div>
+    </section>
+
+    <!-- ========== SEARCH & FILTERS ========== -->
+    <section class="catalog-filters-section">
+      <div class="container catalog-filters-container">
+        
+        <!-- Search Form -->
+        <div class="catalog-search-wrapper">
+          <form class="catalog-search-form" id="searchForm">
+            <label for="searchInput" class="search-form__label">Buscar libros</label>
+            <div class="search-form__group">
+              <input 
+                type="text" 
+                id="searchInput" 
+                class="search-form__input" 
+                placeholder="Título, autor, ISBN..."
+                aria-label="Buscar libros"
+              >
+              <button type="submit" class="search-form__submit" aria-label="Buscar">
+                Buscar
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Filters Panel -->
+        <div class="catalog-filters-panel">
+          
+          <!-- Categories Filter -->
+          <div class="catalog-filter-group">
+            <label class="catalog-filter-label">Categoría</label>
+            <select id="categoryFilter" class="catalog-filter-select" aria-label="Filtrar por categoría">
+              <option value="">Todas las categorías</option>
+            </select>
+          </div>
+
+          <!-- Availability Filter -->
+          <div class="catalog-filter-group">
+            <label class="catalog-filter-label">Disponibilidad</label>
+            <div class="catalog-filter-checkbox-group">
+              <label class="catalog-filter-checkbox">
+                <input type="checkbox" value="available" aria-label="Disponibles">
+                <span>Disponibles</span>
+              </label>
+              <label class="catalog-filter-checkbox">
+                <input type="checkbox" value="digital" aria-label="Digitales">
+                <span>Digitales</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Sort Options -->
+          <div class="catalog-filter-group">
+            <label class="catalog-filter-label">Ordenar por</label>
+            <select id="sortFilter" class="catalog-filter-select" aria-label="Ordenar resultados">
+              <option value="relevance">Relevancia</option>
+              <option value="newest">Más recientes</option>
+              <option value="rating">Mejor calificación</option>
+              <option value="title">Título A-Z</option>
+            </select>
+          </div>
+
+          <!-- Clear Filters Button -->
+          <button id="clearFilters" class="btn btn--outline catalog-clear-btn" aria-label="Limpiar filtros">
+            Limpiar filtros
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== CATALOG BOOKS GRID ========== -->
+    <section class="catalog-books-section">
+      <div class="container">
+        
+        <!-- Results Info -->
+        <div class="catalog-results-info">
+          <h2 id="resultsCount" class="catalog-results-count">Mostrando 10 resultados</h2>
+          <div class="catalog-view-controls">
+            <button class="catalog-view-btn catalog-view-btn--active" data-view="grid" aria-label="Vista de cuadrícula" aria-pressed="true">
+              <i class="lucide" data-lucide="grid"></i>
+            </button>
+            <button class="catalog-view-btn" data-view="list" aria-label="Vista de lista" aria-pressed="false">
+              <i class="lucide" data-lucide="list"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Books Grid - Será llenado dinámicamente por catalog.js -->
+        <div id="booksGrid" class="catalog-books-grid"></div>
+
+        <!-- Pagination - Será llenado dinámicamente por catalog.js -->
+        <nav aria-label="Paginación de resultados" class="catalog-pagination">
+          <button class="catalog-pagination__btn catalog-pagination__btn--prev" aria-label="Página anterior" disabled>
+            <i class="lucide" data-lucide="chevron-left"></i>
+          </button>
+          <ul class="catalog-pagination__list"></ul>
+          <button class="catalog-pagination__btn catalog-pagination__btn--next" aria-label="Página siguiente">
+            <i class="lucide" data-lucide="chevron-right"></i>
+          </button>
+        </nav>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer" id="footer"></footer>
+
+  <!-- ========== SCRIPTS ========== -->
+  <!-- Componentes base -->
+  <script src="../js/components/navbar.js"></script>
+  <script src="../js/components/footer.js"></script>
+
+  <!-- Capa de Servicios (Comunicación HTTP) -->
+  <script src="../js/services/libroService.js"></script>
+
+  <!-- Capa de Estado (Model) -->
+  <script src="../js/state/catalogState.js"></script>
+
+  <!-- Capa de Presentación (View) -->
+  <script src="../js/ui/catalogRenderer.js"></script>
+
+  <!-- Capa de Control (Controller) -->
+  <script src="../js/controllers/catalogController.js"></script>
+
+  <!-- Punto de entrada (Inicialización) -->
+  <script src="../js/pages/catalog.js"></script>
+
+</body>
+</html>
