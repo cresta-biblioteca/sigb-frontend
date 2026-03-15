@@ -1,0 +1,371 @@
+{
+  "openapi": "3.0.0",
+  "info":
+    {
+      "title": "SIGB API",
+      "description": "API REST del Sistema de Gestión Bibliotecaria (SIGB)",
+      "version": "1.0.0",
+    },
+  "servers": [{ "url": "/api/v1", "description": "Servidor de desarrollo" }],
+  "paths":
+    {
+      "/auth/register":
+        {
+          "post":
+            {
+              "tags": ["Auth"],
+              "summary": "Registrar usuario",
+              "description": "Crea un nuevo usuario y su perfil de lector en el sistema",
+              "operationId": "7223dba0012f6bca451ffcece59ee54f",
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "$ref": "#/components/schemas/UserRegisterRequest",
+                            },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "201":
+                    {
+                      "description": "Usuario creado exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/UserRegisterResponse",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada no válidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "409":
+                    {
+                      "description": "El usuario ya existe",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "422":
+                    {
+                      "description": "Error de validación de negocio",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "field": { "type": "string" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/auth/change-password":
+        {
+          "post":
+            {
+              "tags": ["Auth"],
+              "summary": "Cambiar contraseña",
+              "description": "Actualiza la contraseña del usuario autenticado. Requiere token JWT.",
+              "operationId": "98dd9478f733623fe954d7063f5ac859",
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "$ref": "#/components/schemas/ChangePasswordRequest",
+                            },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Contraseña actualizada correctamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada no válidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401":
+                    {
+                      "description": "No autenticado o contraseña actual incorrecta",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/auth/login":
+        {
+          "post":
+            {
+              "tags": ["Auth"],
+              "summary": "Iniciar sesión",
+              "description": "Autentica un usuario con DNI y contraseña, retorna un token JWT",
+              "operationId": "ce2d3e7f3368922a175515e491a113f0",
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            { "$ref": "#/components/schemas/UserLoginRequest" },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Login exitoso",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/UserLoginResponse",
+                                },
+                            },
+                        },
+                    },
+                  "401":
+                    {
+                      "description": "Credenciales inválidas",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+    },
+  "components":
+    {
+      "schemas":
+        {
+          "ChangePasswordRequest":
+            {
+              "required": ["current_password", "new_password"],
+              "properties":
+                {
+                  "current_password":
+                    { "type": "string", "format": "password" },
+                  "new_password":
+                    {
+                      "description": "Mínimo 8 caracteres, una mayúscula, una minúscula y un número",
+                      "type": "string",
+                      "format": "password",
+                    },
+                },
+              "type": "object",
+            },
+          "UserLoginRequest":
+            {
+              "required": ["dni", "password"],
+              "properties":
+                {
+                  "dni":
+                    {
+                      "description": "DNI del usuario (7-8 dígitos)",
+                      "type": "string",
+                      "example": "12345678",
+                    },
+                  "password":
+                    {
+                      "type": "string",
+                      "format": "password",
+                      "example": "Password123",
+                    },
+                },
+              "type": "object",
+            },
+          "UserRegisterRequest":
+            {
+              "required":
+                [
+                  "dni",
+                  "password",
+                  "nombre",
+                  "apellido",
+                  "fecha_nacimiento",
+                  "telefono",
+                  "email",
+                ],
+              "properties":
+                {
+                  "dni":
+                    {
+                      "description": "DNI del usuario (7-8 dígitos)",
+                      "type": "string",
+                      "example": "12345678",
+                    },
+                  "password":
+                    {
+                      "description": "Mínimo 8 caracteres, una mayúscula, una minúscula y un número",
+                      "type": "string",
+                      "format": "password",
+                    },
+                  "nombre": { "type": "string", "example": "Juan" },
+                  "apellido": { "type": "string", "example": "Pérez" },
+                  "legajo":
+                    { "type": "string", "example": "L12345", "nullable": true },
+                  "genero":
+                    { "type": "string", "example": "M", "nullable": true },
+                  "fecha_nacimiento":
+                    {
+                      "type": "string",
+                      "format": "date",
+                      "example": "2000-01-31",
+                    },
+                  "telefono": { "type": "string", "example": "2615001234" },
+                  "email":
+                    {
+                      "type": "string",
+                      "format": "email",
+                      "example": "juan.perez@example.com",
+                    },
+                  "cresta_id": { "type": "string", "nullable": true },
+                },
+              "type": "object",
+            },
+          "UserLoginResponse":
+            {
+              "required": ["token"],
+              "properties":
+                {
+                  "token":
+                    {
+                      "description": "Token JWT de autenticación",
+                      "type": "string",
+                    },
+                },
+              "type": "object",
+            },
+          "UserRegisterResponse":
+            {
+              "required": ["userId", "lectorId", "fullName"],
+              "properties":
+                {
+                  "userId": { "type": "integer", "example": 1 },
+                  "lectorId": { "type": "integer", "example": 1 },
+                  "fullName": { "type": "string", "example": "Juan Pérez" },
+                },
+              "type": "object",
+            },
+        },
+      "securitySchemes":
+        {
+          "bearerAuth":
+            {
+              "type": "http",
+              "description": "Token JWT obtenido en el endpoint de login",
+              "bearerFormat": "JWT",
+              "scheme": "bearer",
+            },
+        },
+    },
+  "tags": [{ "name": "Auth", "description": "Auth" }],
+}

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Panel — Biblioteca CRESTA</title>
+  <meta name="robots" content="noindex">
+  <!-- paths relativos a /templates/ → ../css/ -->
+  <link rel="stylesheet" href="../css/reset.css">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages/dashboard.css">
+</head>
+<body>
+
+  <!-- ========== NAVBAR ========== -->
+  <!--
+    Misma estructura que index.html, con dos diferencias:
+      1. Paths ajustados: href="../index.html", href="catalog.html" (sin templates/)
+      2. Se agrega el bloque de usuario + logout en la nav
+  -->
+  <header class="navbar" id="navbar">
+    <div class="navbar__container">
+      <a href="../index.html" class="navbar__brand">
+        <div class="navbar__logo">
+          <svg class="navbar__logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="40" height="40" rx="8" fill="white"/>
+            <path d="M10 30V12C10 10.9 10.9 10 12 10H28C29.1 10 30 10.9 30 12V30L20 25L10 30Z" fill="#0F2B5B"/>
+            <path d="M14 16H26M14 20H22" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="navbar__brand-text">
+          <span class="navbar__brand-name">BIBLIOTECA CRESTA</span>
+          <span class="navbar__brand-subtitle">CENTRO REGIONAL DE ESTUDIOS SUPERIORES</span>
+        </div>
+      </a>
+
+      <button class="navbar__toggle" id="navbarToggle" aria-label="Abrir menú de navegación" aria-expanded="false">
+        <span class="navbar__toggle-line"></span>
+        <span class="navbar__toggle-line"></span>
+        <span class="navbar__toggle-line"></span>
+      </button>
+
+      <nav class="navbar__nav" id="navbarMenu">
+        <ul class="navbar__list">
+          <li class="navbar__item">
+            <a href="../index.html" class="navbar__link">Inicio</a>
+          </li>
+          <li class="navbar__item navbar__item--dropdown">
+            <button class="navbar__link navbar__link--dropdown" aria-expanded="false" aria-haspopup="true">
+              Servicios
+              <svg class="navbar__dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <ul class="navbar__dropdown">
+              <li><a href="loans.html" class="navbar__dropdown-link">Préstamos</a></li>
+              <li><a href="readers.html" class="navbar__dropdown-link">Lectores</a></li>
+            </ul>
+          </li>
+          <li class="navbar__item">
+            <a href="catalog.html" class="navbar__link">Catálogo</a>
+          </li>
+        </ul>
+
+        <!--
+          Bloque de usuario autenticado.
+          #navUserName es llenado por dashboard.js con el nombre del JWT.
+        -->
+        <div class="navbar__user">
+          <span class="navbar__user-name" id="navUserName"></span>
+          <button class="btn btn--outline btn--sm" id="logoutBtn">Cerrar sesión</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ========== DASHBOARD CONTENT ========== -->
+  <main class="main dashboard">
+    <div class="container">
+
+      <!-- Encabezado del panel -->
+      <section class="dashboard__header">
+        <!--
+          JS llena #dashboardWelcome con el nombre del usuario desde el JWT.
+          Ej: "Bienvenido, Juan Pérez"
+        -->
+        <h1 class="dashboard__title" id="dashboardWelcome">Bienvenido</h1>
+        <p class="dashboard__subtitle">Este es tu panel de acceso a los servicios de la biblioteca.</p>
+      </section>
+
+      <!-- Accesos rápidos — HTML estático, no necesita datos de API -->
+      <section class="dashboard__section">
+        <h2 class="dashboard__section-title">Accesos rápidos</h2>
+        <div class="dashboard__cards">
+          <a href="catalog.html" class="card dashboard__card">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <h3>Buscar en el catálogo</h3>
+            <p>Explorá el fondo bibliográfico de la biblioteca.</p>
+          </a>
+          <a href="loans.html" class="card dashboard__card">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+            <h3>Mis préstamos</h3>
+            <p>Consultá los libros que tenés prestados y sus vencimientos.</p>
+          </a>
+        </div>
+      </section>
+
+      <!--
+        Préstamos activos — contenedor vacío que dashboard.js llenará.
+
+        Estado inicial: el spinner ya está en el HTML para que el usuario
+        vea "Cargando..." inmediatamente, antes de que JS termine de correr.
+        JS lo reemplaza con los datos reales (o error/vacío).
+      -->
+      <section class="dashboard__section">
+        <h2 class="dashboard__section-title">Préstamos activos</h2>
+        <div id="activeLoans">
+          <div class="ui-loading" role="status">
+            <span class="ui-loading__spinner" aria-hidden="true"></span>
+            <span>Cargando préstamos...</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer" id="contacto">
+    <div class="footer__container">
+      <div class="footer__grid">
+
+        <div class="footer__col">
+          <div class="footer__brand">
+            <svg class="footer__brand-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="40" height="40" rx="8" fill="white"/>
+              <path d="M10 30V12C10 10.9 10.9 10 12 10H28C29.1 10 30 10.9 30 12V30L20 25L10 30Z" fill="#0F2B5B"/>
+              <path d="M14 16H26M14 20H22" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span class="footer__brand-name">CRESTA Biblioteca</span>
+          </div>
+          <p class="footer__description">
+            Comprometidos con el desarrollo educativo y cultural de la región.
+          </p>
+        </div>
+
+        <div class="footer__col">
+          <h3 class="footer__heading">Navegación</h3>
+          <ul class="footer__links">
+            <li><a href="catalog.html" class="footer__link">Catálogo</a></li>
+            <li><a href="loans.html" class="footer__link">Préstamos</a></li>
+            <li><a href="readers.html" class="footer__link">Lectores</a></li>
+          </ul>
+        </div>
+
+        <div class="footer__col">
+          <h3 class="footer__heading">Ubicación</h3>
+          <address class="footer__address">
+            <p>Maipú 270,</p>
+            <p>B7500 Tres Arroyos,</p>
+            <p>Provincia de Buenos Aires</p>
+            <p class="footer__phone">Tel: (02983) 43-1229</p>
+          </address>
+        </div>
+
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p>© 2024 CRESTA - Centro Regional de Estudios Superiores de Tres Arroyos. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <!--
+    Scripts — paths ../js/ porque estamos en /templates/
+    Cada página carga SOLO su propio page script.
+    modal.js NO se carga aquí; dashboard.js lo importa si lo necesita.
+  -->
+  <script type="module" src="../js/components/navbar.js"></script>
+  <script type="module" src="../js/components/footer.js"></script>
+  <script type="module" src="../js/pages/dashboard.js"></script>
+
+</body>
+</html>
