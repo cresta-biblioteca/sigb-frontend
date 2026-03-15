@@ -1,0 +1,11 @@
+/* ========== CATALOG PAGE STYLES ========== */
+
+/*
+ * Los estilos base del search form (.search-form__*) viven en components.css.
+ * Acá van los overrides específicos del catálogo: tamaño, layout, contexto.
+ *
+ * Ejemplo de override contextual cuando se implemente:
+ *
+ *   .catalog-search .search-form__input { ... }
+ *   .catalog-search .search-form__submit { ... }
+ */
