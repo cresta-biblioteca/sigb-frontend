@@ -18,16 +18,37 @@ class CatalogRenderer {
     this.categoryFilter = document.getElementById('categoryFilter');
     this.resultsCount = document.getElementById('resultsCount');
     this.viewControlBtns = document.querySelectorAll('.catalog-view-btn');
-    
-    // Elementos de filtros
-    this.searchInput = document.getElementById('searchInput');
+
+    // Elementos de búsqueda simple
+    this.simpleSearchInput = document.getElementById('simpleSearchInput');
     this.sortFilter = document.getElementById('sortFilter');
     this.clearFiltersBtn = document.getElementById('clearFilters');
     this.availabilityCheckboxes = document.querySelectorAll('.catalog-filter-checkbox input');
     this.searchForm = document.getElementById('searchForm');
 
+    // Elementos de búsqueda avanzada
+    this.toggleAdvancedSearchBtn = document.getElementById('toggleAdvancedBtn');
+    this.advancedSearchPopup = document.getElementById('advancedSearchPopup');
+    this.advancedSearchForm = document.getElementById('advancedSearchForm');
+    this.closeAdvancedBtn = document.getElementById('closeAdvancedBtn');
+    this.applyAdvancedBtn = document.getElementById('applyAdvancedBtn');
+    this.searchModeBadge = document.getElementById('searchModeBadge');
+    this.advTitulo = document.getElementById('advTitulo');
+    this.advAutor = document.getElementById('advAutor');
+    this.advISBN = document.getElementById('advISBN');
+    this.advEditorial = document.getElementById('advEditorial');
+    this.advAnioDesde = document.getElementById('advAnioDesde');
+    this.advAnioHasta = document.getElementById('advAnioHasta');
+    this.advIdioma = document.getElementById('advIdioma');
+    this.advTipoDocumento = document.getElementById('advTipoDocumento');
+    this.advMateria = document.getElementById('advMateria');
+    this.advCDU = document.getElementById('advCDU');
+    this.advEstante = document.getElementById('advEstante');
+    this.advDisponibilidad = document.getElementById('advDisponibilidad');
+
     // Callbacks registrados
-    this.onSearchCallback = null;
+    this.onSimpleSearchCallback = null;
+    this.onAdvancedSearchCallback = null;
     this.onCategoryChangeCallback = null;
     this.onSortChangeCallback = null;
     this.onAvailabilityChangeCallback = null;
@@ -37,47 +58,134 @@ class CatalogRenderer {
     this.onNextPageCallback = null;
     this.onPageClickCallback = null;
     this.onFavoriteToggleCallback = null;
-
-    // Debounce para búsqueda
-    this.searchDebounceTimer = null;
   }
 
   /**
-   * Registra callback para evento de búsqueda CON DEBOUNCE
-   * 
-   * IMPORTANTE: El callback se ejecuta SOLO después de que el usuario
-   * deja de escribir por al menos debounceMs (300ms por defecto).
-   * 
-   * Beneficios:
-   * - Reduce requests HTTP en 80%+ para búsquedas rápidas
-   * - Evita sobrecargar el servidor
-   * - Usuario sigue viendo la UI responsiva
-   * 
-   * Ejemplo de uso:
-   * Si el usuario escribe "javascript tutorial" (20 caracteres en 1 segundo),
-   * sin debounce: 20 requests HTTP
-   * con debounce: 1 request HTTP
-   * 
-   * @param {Function} callback - Función(searchTerm)
-   * @param {number} debounceMs - Milisegundos antes de ejecutar (default: 300ms)
+   * Registra callback para búsqueda simple (submit del formulario)
+   * @param {Function} callback - Función({search, category, sort})
    */
-  onSearch(callback, debounceMs = 300) {
-    this.onSearchCallback = callback;
-    if (this.searchInput) {
-      this.searchInput.addEventListener('input', (e) => {
-        // Cancelar el debounce anterior si está pendiente
-        if (this.searchDebounceTimer) {
-          clearTimeout(this.searchDebounceTimer);
-        }
-
-        // Programar nuevo debounce
-        this.searchDebounceTimer = setTimeout(() => {
-          const searchTerm = e.target.value;
-          console.log(`🔍 Ejecutando búsqueda: "${searchTerm}"`);
-          callback(searchTerm);
-          this.searchDebounceTimer = null;
-        }, debounceMs);
+  onSimpleSearch(callback) {
+    this.onSimpleSearchCallback = callback;
+    if (this.searchForm) {
+      this.searchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        callback(this.getSimpleFilters());
       });
+    }
+  }
+
+  /**
+   * Registra callback para búsqueda avanzada (submit del formulario avanzado)
+   * @param {Function} callback - Función(advancedFilters)
+   */
+  onAdvancedSearch(callback) {
+    this.onAdvancedSearchCallback = callback;
+    if (this.applyAdvancedBtn) {
+      this.applyAdvancedBtn.addEventListener('click', () => {
+        callback(this.getAdvancedFilters());
+      });
+    }
+    this.setupAdvancedPopup();
+  }
+
+  /**
+   * Devuelve los filtros del formulario simple
+   * @returns {Object} {search, category, sort}
+   */
+  getSimpleFilters() {
+    return {
+      search: this.simpleSearchInput ? this.simpleSearchInput.value.trim() : '',
+      category: this.categoryFilter ? this.categoryFilter.value : '',
+      sort: this.sortFilter ? this.sortFilter.value : 'relevance'
+    };
+  }
+
+  /**
+   * Devuelve los filtros del formulario avanzado
+   * @returns {Object}
+   */
+  getAdvancedFilters() {
+    return {
+      titulo: this.advTitulo ? this.advTitulo.value.trim() : '',
+      autor: this.advAutor ? this.advAutor.value.trim() : '',
+      isbn: this.advISBN ? this.advISBN.value.trim() : '',
+      editorial: this.advEditorial ? this.advEditorial.value.trim() : '',
+      anioDesde: this.advAnioDesde ? this.advAnioDesde.value : '',
+      anioHasta: this.advAnioHasta ? this.advAnioHasta.value : '',
+      idioma: this.advIdioma ? this.advIdioma.value : '',
+      tipoDocumento: this.advTipoDocumento ? this.advTipoDocumento.value : '',
+      materia: this.advMateria ? this.advMateria.value.trim() : '',
+      cdu: this.advCDU ? this.advCDU.value.trim() : '',
+      estante: this.advEstante ? this.advEstante.value.trim() : '',
+      disponibilidad: this.advDisponibilidad ? this.advDisponibilidad.value : '',
+      categoria: this.categoryFilter ? this.categoryFilter.value : ''
+    };
+  }
+
+  /**
+   * Configura los eventos del popup de búsqueda avanzada
+   */
+  setupAdvancedPopup() {
+    // Estado inicial: modo simple visible y avanzada oculta
+    this.closeAdvancedPopup();
+
+    if (this.toggleAdvancedSearchBtn) {
+      this.toggleAdvancedSearchBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    if (this.toggleAdvancedSearchBtn) {
+      this.toggleAdvancedSearchBtn.addEventListener('click', () => {
+        if (this.advancedSearchPopup && this.advancedSearchPopup.style.display === 'block') {
+          this.closeAdvancedPopup();
+        } else {
+          this.openAdvancedPopup();
+        }
+      });
+    }
+
+    if (this.closeAdvancedBtn) {
+      this.closeAdvancedBtn.addEventListener('click', () => {
+        this.closeAdvancedPopup();
+      });
+    }
+  }
+
+  /** Muestra el popup de búsqueda avanzada */
+  openAdvancedPopup() {
+    if (this.searchForm) {
+      this.searchForm.classList.add('is-advanced-mode');
+    }
+    if (this.advancedSearchPopup) {
+      this.advancedSearchPopup.classList.remove('is-hidden');
+      this.advancedSearchPopup.style.display = 'block';
+    }
+    if (this.toggleAdvancedSearchBtn) {
+      this.toggleAdvancedSearchBtn.setAttribute('aria-expanded', 'true');
+      this.toggleAdvancedSearchBtn.textContent = 'Cambiar a busqueda simple';
+    }
+    if (this.searchModeBadge) {
+      this.searchModeBadge.textContent = 'Modo: busqueda avanzada';
+    }
+    if (this.advTitulo) {
+      this.advTitulo.focus();
+    }
+  }
+
+  /** Oculta el popup de búsqueda avanzada */
+  closeAdvancedPopup() {
+    if (this.searchForm) {
+      this.searchForm.classList.remove('is-advanced-mode');
+    }
+    if (this.advancedSearchPopup) {
+      this.advancedSearchPopup.classList.add('is-hidden');
+      this.advancedSearchPopup.style.display = 'none';
+    }
+    if (this.toggleAdvancedSearchBtn) {
+      this.toggleAdvancedSearchBtn.setAttribute('aria-expanded', 'false');
+      this.toggleAdvancedSearchBtn.textContent = 'Cambiar a busqueda avanzada';
+    }
+    if (this.searchModeBadge) {
+      this.searchModeBadge.textContent = 'Modo: busqueda simple';
     }
   }
 
@@ -201,23 +309,33 @@ class CatalogRenderer {
 
   /**
    * Previene el submit del formulario de búsqueda
+   * @deprecated No es necesario en el nuevo diseño (el submit es el disparador)
    */
   preventSearchFormSubmit() {
-    if (this.searchForm) {
-      this.searchForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-      });
-    }
+    // No-op: mantenido por compatibilidad
   }
 
   /**
-   * Limpia los inputs de de los filtros
+   * Limpia los inputs de los filtros
    */
   clearFilterInputs() {
-    if (this.searchInput) this.searchInput.value = '';
+    if (this.simpleSearchInput) this.simpleSearchInput.value = '';
     if (this.categoryFilter) this.categoryFilter.value = '';
     if (this.sortFilter) this.sortFilter.value = 'relevance';
     this.availabilityCheckboxes.forEach(cb => cb.checked = false);
+    // Limpiar campos avanzados
+    if (this.advTitulo) this.advTitulo.value = '';
+    if (this.advAutor) this.advAutor.value = '';
+    if (this.advISBN) this.advISBN.value = '';
+    if (this.advEditorial) this.advEditorial.value = '';
+    if (this.advAnioDesde) this.advAnioDesde.value = '';
+    if (this.advAnioHasta) this.advAnioHasta.value = '';
+    if (this.advIdioma) this.advIdioma.value = '';
+    if (this.advTipoDocumento) this.advTipoDocumento.value = '';
+    if (this.advMateria) this.advMateria.value = '';
+    if (this.advCDU) this.advCDU.value = '';
+    if (this.advEstante) this.advEstante.value = '';
+    if (this.advDisponibilidad) this.advDisponibilidad.value = '';
   }
 
   /**

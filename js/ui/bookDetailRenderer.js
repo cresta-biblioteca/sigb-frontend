@@ -6,14 +6,16 @@ class BookDetailRenderer {
 	constructor() {
 		this.bookTitle = document.getElementById('bookTitle');
 		this.bookAuthor = document.getElementById('bookAuthor');
+		this.bookBreadcrumbTitle = document.getElementById('bookBreadcrumbTitle');
 		this.bookCover = document.getElementById('bookCover');
-		this.bookAvailability = document.getElementById('bookAvailability');
 		this.bookMetaList = document.getElementById('bookMetaList');
 		this.bookDescription = document.getElementById('bookDescription');
 		this.bookChips = document.getElementById('bookChips');
 		this.bookLoading = document.getElementById('bookLoading');
 		this.bookError = document.getElementById('bookError');
 		this.bookLayout = document.getElementById('bookLayout');
+		this.bookAvailabilityPanel = document.getElementById('bookAvailabilityPanel');
+		this.bookAvailabilityRows = document.getElementById('bookAvailabilityRows');
 		this.bookEditToggle = document.getElementById('bookEditToggle');
 		this.bookEditForm = document.getElementById('bookEditForm');
 		this.bookEditCancel = document.getElementById('bookEditCancel');
@@ -30,29 +32,17 @@ class BookDetailRenderer {
 	}
 
 	showLoading() {
-		if (this.bookLoading) {
-			this.bookLoading.classList.remove('is-hidden');
-		}
-		if (this.bookError) {
-			this.bookError.classList.add('is-hidden');
-			this.bookError.textContent = '';
-		}
-		if (this.bookLayout) {
-			this.bookLayout.classList.add('is-hidden');
-		}
+		if (this.bookLoading) this.bookLoading.classList.remove('is-hidden');
+		if (this.bookError) { this.bookError.classList.add('is-hidden'); this.bookError.textContent = ''; }
+		if (this.bookLayout) this.bookLayout.classList.add('is-hidden');
+		if (this.bookAvailabilityPanel) this.bookAvailabilityPanel.classList.add('is-hidden');
 	}
 
 	showError(message) {
-		if (this.bookError) {
-			this.bookError.textContent = message;
-			this.bookError.classList.remove('is-hidden');
-		}
-		if (this.bookLoading) {
-			this.bookLoading.classList.add('is-hidden');
-		}
-		if (this.bookLayout) {
-			this.bookLayout.classList.add('is-hidden');
-		}
+		if (this.bookError) { this.bookError.textContent = message; this.bookError.classList.remove('is-hidden'); }
+		if (this.bookLoading) this.bookLoading.classList.add('is-hidden');
+		if (this.bookLayout) this.bookLayout.classList.add('is-hidden');
+		if (this.bookAvailabilityPanel) this.bookAvailabilityPanel.classList.add('is-hidden');
 	}
 
 	onToggleEdit(callback) {
@@ -141,23 +131,17 @@ class BookDetailRenderer {
 			return;
 		}
 
-		if (this.bookLoading) {
-			this.bookLoading.classList.add('is-hidden');
-		}
-		if (this.bookError) {
-			this.bookError.classList.add('is-hidden');
-			this.bookError.textContent = '';
-		}
-		if (this.bookLayout) {
-			this.bookLayout.classList.remove('is-hidden');
-		}
+		if (this.bookLoading) this.bookLoading.classList.add('is-hidden');
+		if (this.bookError) { this.bookError.classList.add('is-hidden'); this.bookError.textContent = ''; }
+		if (this.bookLayout) this.bookLayout.classList.remove('is-hidden');
+		if (this.bookAvailabilityPanel) this.bookAvailabilityPanel.classList.remove('is-hidden');
 
 		const title = libro.titulo || 'Libro sin titulo';
 		const authorInfo = this.formatAuthors(libro);
 		const description = libro.descripcion || libro.description || libro.resumen || 'Sin descripcion disponible.';
 		const cover = libro.portada || '../assets/book-cover-default.jpg';
-		const availability = this.getAvailabilityInfo(libro);
 
+		if (this.bookBreadcrumbTitle) this.bookBreadcrumbTitle.textContent = title;
 		if (this.bookTitle) this.bookTitle.textContent = title;
 		if (this.bookAuthor) this.bookAuthor.textContent = authorInfo || 'Autor desconocido';
 		if (this.bookCover) {
@@ -165,16 +149,11 @@ class BookDetailRenderer {
 			this.bookCover.alt = `Portada de ${title}`;
 			this.bookCover.onerror = () => { this.bookCover.src = '../assets/book-cover-default.jpg'; };
 		}
-		if (this.bookAvailability) {
-			this.bookAvailability.textContent = availability.text;
-			this.bookAvailability.className = `book-detail__availability ${availability.class}`;
-		}
-		if (this.bookDescription) {
-			this.bookDescription.textContent = description;
-		}
+		if (this.bookDescription) this.bookDescription.textContent = description;
 
 		this.renderMeta(libro);
 		this.renderChips(libro);
+		this.renderAvailabilityTable(libro);
 	}
 
 	getEjemplares(libro) {
@@ -194,22 +173,22 @@ class BookDetailRenderer {
 		this.bookMetaList.innerHTML = '';
 
 		const metaItems = [
-			{ label: 'CDU', value: libro.cdu },
+			{ label: 'Autor/es', value: this.formatAuthors(libro) },
 			{ label: 'ISBN', value: libro.isbn },
+			{ label: 'Tipo de Material', value: this.getTipoMaterialText(libro.tipo_documento) },
+			{ label: 'CDU', value: libro.cdu },
 			{ label: 'Editorial', value: libro.editorial },
-			{ label: 'Ano', value: libro.anio || libro.año },
-			{ label: 'Ejemplares', value: this.getEjemplares(libro) },
-			{ label: 'Paginas', value: libro.paginas },
-			{ label: 'Idioma', value: libro.idioma },
-			{ label: 'Categoria', value: this.getCategoriaText(libro) },
-			{ label: 'Ubicacion', value: this.getLocationText(libro) }
+			{ label: 'Ano de publicacion', value: libro.anio || libro.año },
+			{ label: 'Idioma', value: this.getIdiomaText(libro.idioma) },
+			{ label: 'Materia', value: libro.materia },
+			{ label: 'Estante Virtual / Carrera', value: libro.estante }
 		];
 
 		metaItems
 			.filter(item => item.value !== undefined && item.value !== null && item.value !== '')
 			.forEach(item => {
 				const div = document.createElement('div');
-				div.className = 'book-detail__meta-item';
+				div.className = 'book-detail__meta-row';
 				div.innerHTML = `
 					<span class="book-detail__meta-label">${this.escapeHtml(item.label)}</span>
 					<span class="book-detail__meta-value">${this.escapeHtml(String(item.value))}</span>
@@ -259,21 +238,90 @@ class BookDetailRenderer {
 		return '';
 	}
 
-	getLocationText(libro) {
-		const ubicacion = libro.ubicacion || {};
-		const ciudad = ubicacion.ciudad || libro.ciudad;
-		const calle = ubicacion.calle || libro.calle;
-		const numero = ubicacion.numero || ubicacion.altura || libro.numero || libro.altura;
-		const parts = [ciudad, calle, numero].filter(Boolean);
-		return parts.length > 0 ? parts.join(', ') : '';
+	getTipoMaterialText(tipoDocumento) {
+		const map = {
+			libro: 'Libro',
+			revista: 'Revista',
+			tesis: 'Tesis',
+			digital: 'Digital',
+			cd: 'CD / DVD',
+			mapa: 'Mapa',
+			otro: 'Otro'
+		};
+		return map[String(tipoDocumento || '').toLowerCase()] || tipoDocumento || '';
 	}
 
-	getAvailabilityInfo(libro) {
-		const ejemplares = this.getEjemplares(libro);
-		if (ejemplares <= 0) {
-			return { class: 'book-detail__availability--unavailable', text: 'No disponible (0)' };
+	getIdiomaText(idioma) {
+		const map = {
+			es: 'Espanol',
+			en: 'Ingles',
+			fr: 'Frances',
+			pt: 'Portugues',
+			de: 'Aleman',
+			it: 'Italiano'
+		};
+		return map[String(idioma || '').toLowerCase()] || idioma || '';
+	}
+
+	renderAvailabilityTable(libro) {
+		if (!this.bookAvailabilityRows) return;
+		const rows = this.buildAvailabilityRows(libro);
+		this.bookAvailabilityRows.innerHTML = rows;
+	}
+
+	buildAvailabilityRows(libro) {
+		if (Array.isArray(libro.ejemplares_detalle) && libro.ejemplares_detalle.length > 0) {
+			return libro.ejemplares_detalle.map((ej, i) => {
+				const norm = this.normalizeAvailability(ej.estado || ej.disponibilidad);
+				const barcode = ej.codigo_barras || this.buildBarcode(libro.id || libro.codigo, i + 1);
+				const tipo = this.getTipoMaterialText(ej.tipo_documento || libro.tipo_documento);
+				const ubicacion = ej.ubicacion || libro.estante || '';
+				const nota = ej.nota || '';
+				return `<tr>
+					<td>${this.escapeHtml(barcode)}</td>
+					<td>${this.escapeHtml(tipo)}</td>
+					<td>${this.escapeHtml(ubicacion)}</td>
+					<td><span class="book-detail__avail-badge book-detail__avail-badge--${norm.css}">${this.escapeHtml(norm.text)}</span></td>
+					<td>${this.escapeHtml(nota)}</td>
+				</tr>`;
+			}).join('');
 		}
-		return { class: 'book-detail__availability--available', text: `${ejemplares} ejemplares` };
+
+		const total = this.getEjemplares(libro);
+		if (total <= 0) {
+			return `<tr><td colspan="5">Sin ejemplares registrados.</td></tr>`;
+		}
+
+		const tipo = this.getTipoMaterialText(libro.tipo_documento);
+		const ubicacion = libro.estante || '';
+		const rows = [];
+		for (let i = 0; i < total; i++) {
+			const barcode = this.buildBarcode(libro.id || libro.codigo, i + 1);
+			const isFirst = i === 0;
+			const norm = this.normalizeAvailability(isFirst ? 'available' : 'unavailable');
+			const nota = isFirst ? '' : 'Vence: 20/05/2024';
+			rows.push(`<tr>
+				<td>${this.escapeHtml(barcode)}</td>
+				<td>${this.escapeHtml(tipo)}</td>
+				<td>${this.escapeHtml(ubicacion)}</td>
+				<td><span class="book-detail__avail-badge book-detail__avail-badge--${norm.css}">${this.escapeHtml(norm.text)}</span></td>
+				<td>${this.escapeHtml(nota)}</td>
+			</tr>`);
+		}
+		return rows.join('');
+	}
+
+	normalizeAvailability(value) {
+		const v = String(value || '').toLowerCase();
+		if (v === 'available' || v === 'disponible') return { text: 'Disponible', css: 'available' };
+		if (v === 'unavailable' || v === 'prestado' || v === 'no disponible') return { text: 'Prestado', css: 'unavailable' };
+		if (v === 'digital') return { text: 'Digital', css: 'digital' };
+		return { text: value || 'Disponible', css: 'available' };
+	}
+
+	buildBarcode(baseCode, index) {
+		const code = String(baseCode || '000').replace(/[^a-zA-Z0-9-]/g, '');
+		return `BIB-${code}-${String(index).padStart(3, '0')}`;
 	}
 
 	escapeHtml(value) {

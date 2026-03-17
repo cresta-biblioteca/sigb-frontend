@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Detalle del Libro - Biblioteca CRESTA</title>
-	<meta name="description" content="Detalle del libro seleccionado en el catálogo de la Biblioteca CRESTA.">
+	<meta name="description" content="Detalle del libro seleccionado en el catÃ¡logo de la Biblioteca CRESTA.">
 	<link rel="stylesheet" href="../css/reset.css">
 	<link rel="stylesheet" href="../css/variables.css">
 	<link rel="stylesheet" href="../css/layout.css">
@@ -31,7 +31,7 @@
 				</div>
 			</a>
 
-			<button class="navbar__toggle" id="navbarToggle" aria-label="Abrir menú de navegación" aria-expanded="false">
+			<button class="navbar__toggle" id="navbarToggle" aria-label="Abrir menÃº de navegaciÃ³n" aria-expanded="false">
 				<span class="navbar__toggle-line"></span>
 				<span class="navbar__toggle-line"></span>
 				<span class="navbar__toggle-line"></span>
@@ -50,16 +50,16 @@
 							</svg>
 						</button>
 						<ul class="navbar__dropdown">
-							<li><a href="catalog.html" class="navbar__link navbar__link--active">Catálogo</a></li>
-							<li><a href="dashboard.html" class="navbar__link">Mi Área</a></li>
-							<li><a href="loans.html" class="navbar__link">Mis Préstamos</a></li>
+							<li><a href="catalog.html" class="navbar__link navbar__link--active">CatÃ¡logo</a></li>
+							<li><a href="dashboard.html" class="navbar__link">Mi Ãrea</a></li>
+							<li><a href="loans.html" class="navbar__link">Mis PrÃ©stamos</a></li>
 						</ul>
 					</li>
 					<li class="navbar__item">
 						<a href="readers.html" class="navbar__link">Lectores</a>
 					</li>
 					<li class="navbar__item navbar__item--auth">
-						<a href="login.html" class="btn btn--outline">Iniciar Sesión</a>
+						<a href="login.html" class="btn btn--outline">Iniciar SesiÃ³n</a>
 					</li>
 				</ul>
 			</nav>
@@ -68,17 +68,15 @@
 
 	<!-- ========== MAIN CONTENT ========== -->
 	<main class="book-detail-main">
-		<section class="book-detail-hero">
+
+		<!-- Breadcrumbs bar -->
+		<nav class="book-detail-breadcrumbs">
 			<div class="container">
-				<div class="book-detail-hero__breadcrumbs">
-					<a href="catalog.html" class="book-detail-hero__link">Catalogo</a>
-					<span class="book-detail-hero__separator">/</span>
-					<span class="book-detail-hero__current">Detalle del libro</span>
-				</div>
-				<h1 class="book-detail-hero__title" id="bookTitle">Detalle del libro</h1>
-				<p class="book-detail-hero__subtitle" id="bookAuthor">Cargando autor...</p>
+				<a href="catalog.html" class="book-detail-breadcrumbs__link">Catalogo</a>
+				<span class="book-detail-breadcrumbs__separator">/</span>
+				<span class="book-detail-breadcrumbs__current" id="bookBreadcrumbTitle">Detalle del libro</span>
 			</div>
-		</section>
+		</nav>
 
 		<section class="book-detail-content">
 			<div class="container">
@@ -86,79 +84,127 @@
 					<div class="book-detail__loading" id="bookLoading" aria-live="polite">Cargando informacion del libro...</div>
 					<div class="book-detail__error is-hidden" id="bookError" role="alert"></div>
 
-					<div class="book-detail__layout" id="bookLayout">
-						<aside class="book-detail__aside">
-							<div class="book-detail__cover-wrapper">
-								<img id="bookCover" class="book-detail__cover" src="../assets/book-cover-default.jpg" alt="Portada del libro">
-								<span class="book-detail__availability" id="bookAvailability">Disponibilidad</span>
+					<!-- Layout: panel principal + sidebar -->
+					<div class="book-detail__layout is-hidden" id="bookLayout">
+
+						<!-- Panel principal -->
+						<div class="book-detail__main-panel">
+							<h1 class="book-detail__title" id="bookTitle">Titulo del libro</h1>
+							<p class="book-detail__author" id="bookAuthor">Autor</p>
+
+							<!-- Tabla de metadatos -->
+							<div class="book-detail__meta-table" id="bookMetaList"></div>
+
+							<!-- Descripcion -->
+							<h2 class="book-detail__section-title">Descripcion</h2>
+							<p class="book-detail__description-text" id="bookDescription">Sin descripcion disponible.</p>
+
+							<!-- Chips adicionales -->
+							<h2 class="book-detail__section-title">Informacion adicional</h2>
+							<div class="book-detail__chips" id="bookChips"></div>
+						</div>
+
+						<!-- Sidebar -->
+						<aside class="book-detail__sidebar">
+							<div class="book-detail__sidebar-card">
+
+								<!-- Portada -->
+								<div class="book-detail__cover-wrapper">
+									<img id="bookCover" class="book-detail__cover" src="../assets/book-cover-default.jpg" alt="Portada del libro">
+								</div>
+
+								<!-- Acciones principales -->
+								<div class="book-detail__sidebar-actions">
+									<button class="btn btn--primary" type="button">Reservar</button>
+								</div>
+
+								<!-- Links de accion -->
+								<div class="book-detail__action-links">
+									<a href="#" class="book-detail__action-link">Imprimir ficha</a>
+									<a href="#" class="book-detail__action-link">Guardar en favoritos</a>
+								</div>
+
+								<!-- Acciones de administracion -->
+								<div class="book-detail__admin-actions">
+									<button class="btn btn--outline book-detail__edit-toggle" id="bookEditToggle" type="button">Editar (Administracion)</button>
+									<a href="catalog.html" class="btn btn--outline book-detail__back">Volver al catalogo</a>
+								</div>
+
 							</div>
-							<button class="btn btn--primary book-detail__edit-toggle" id="bookEditToggle" type="button">Editar (Administracion)</button>
-							<a href="catalog.html" class="btn btn--outline book-detail__back">Volver al catalogo</a>
 						</aside>
+					</div>
 
-						<div class="book-detail__info">
-							<form class="book-detail__edit-form is-hidden" id="bookEditForm" novalidate>
-								<h2 class="book-detail__section-title">Edicion de libro</h2>
-								<div class="book-detail__edit-grid">
-									<div class="book-detail__field">
-										<label for="editTitulo" class="book-detail__label">Titulo</label>
-										<input id="editTitulo" name="titulo" class="book-detail__input" type="text" required>
-									</div>
-									<div class="book-detail__field">
-										<label for="editAutor" class="book-detail__label">Autor</label>
-										<input id="editAutor" name="autor" class="book-detail__input" type="text">
-									</div>
-									<div class="book-detail__field">
-										<label for="editISBN" class="book-detail__label">ISBN</label>
-										<input id="editISBN" name="isbn" class="book-detail__input" type="text">
-									</div>
-									<div class="book-detail__field">
-										<label for="editEditorial" class="book-detail__label">Editorial</label>
-										<input id="editEditorial" name="editorial" class="book-detail__input" type="text">
-									</div>
-									<div class="book-detail__field">
-										<label for="editAnio" class="book-detail__label">Ano</label>
-										<input id="editAnio" name="anio" class="book-detail__input" type="number" min="0" step="1">
-									</div>
-									<div class="book-detail__field">
-										<label for="editCDU" class="book-detail__label">CDU</label>
-										<input id="editCDU" name="cdu" class="book-detail__input" type="text">
-									</div>
-									<div class="book-detail__field book-detail__field--full">
-										<label for="editDescripcion" class="book-detail__label">Descripcion</label>
-										<textarea id="editDescripcion" name="descripcion" class="book-detail__textarea" rows="4"></textarea>
-									</div>
-									<div class="book-detail__field">
-										<label for="editEjemplares" class="book-detail__label">Ejemplares disponibles</label>
-										<input id="editEjemplares" name="ejemplares" class="book-detail__input" type="number" min="0" step="1" required>
-									</div>
-								</div>
-								<p class="book-detail__form-message is-hidden" id="bookEditMessage"></p>
-								<div class="book-detail__edit-actions">
-									<button type="button" class="btn btn--outline" id="bookEditCancel">Cancelar</button>
-									<button type="submit" class="btn btn--primary" id="bookEditSave">Guardar cambios</button>
-								</div>
-							</form>
-
-							<div class="book-detail__meta" id="bookMeta">
-								<h2 class="book-detail__section-title">Detalles</h2>
-								<div class="book-detail__meta-list" id="bookMetaList"></div>
-							</div>
-
-							<div class="book-detail__description">
-								<h2 class="book-detail__section-title">Descripcion</h2>
-								<p id="bookDescription">Sin descripcion disponible.</p>
-							</div>
-
-							<div class="book-detail__extras" id="bookExtras">
-								<h2 class="book-detail__section-title">Informacion adicional</h2>
-								<div class="book-detail__chips" id="bookChips"></div>
-							</div>
+					<!-- Tabla de disponibilidad de ejemplares -->
+					<div class="book-detail__availability-panel is-hidden" id="bookAvailabilityPanel">
+						<h2>Disponibilidad de ejemplares</h2>
+						<div class="book-detail__availability-table-wrapper">
+							<table class="book-detail__availability-table">
+								<thead>
+									<tr>
+										<th>Codigo de barras</th>
+										<th>Tipo de material</th>
+										<th>Ubicacion</th>
+										<th>Estado</th>
+										<th>Nota</th>
+									</tr>
+								</thead>
+								<tbody id="bookAvailabilityRows"></tbody>
+							</table>
 						</div>
 					</div>
+
 				</div>
 			</div>
 		</section>
+
+		<!-- Formulario de edicion (fuera del layout para no afectar el grid) -->
+		<section class="book-detail-content" style="padding-top:0;">
+			<div class="container">
+				<form class="book-detail__edit-form is-hidden" id="bookEditForm" novalidate>
+					<h2 class="book-detail__section-title">Edicion de libro</h2>
+					<div class="book-detail__edit-grid">
+						<div class="book-detail__field">
+							<label for="editTitulo" class="book-detail__label">Titulo</label>
+							<input id="editTitulo" name="titulo" class="book-detail__input" type="text" required>
+						</div>
+						<div class="book-detail__field">
+							<label for="editAutor" class="book-detail__label">Autor</label>
+							<input id="editAutor" name="autor" class="book-detail__input" type="text">
+						</div>
+						<div class="book-detail__field">
+							<label for="editISBN" class="book-detail__label">ISBN</label>
+							<input id="editISBN" name="isbn" class="book-detail__input" type="text">
+						</div>
+						<div class="book-detail__field">
+							<label for="editEditorial" class="book-detail__label">Editorial</label>
+							<input id="editEditorial" name="editorial" class="book-detail__input" type="text">
+						</div>
+						<div class="book-detail__field">
+							<label for="editAnio" class="book-detail__label">Ano</label>
+							<input id="editAnio" name="anio" class="book-detail__input" type="number" min="0" step="1">
+						</div>
+						<div class="book-detail__field">
+							<label for="editCDU" class="book-detail__label">CDU</label>
+							<input id="editCDU" name="cdu" class="book-detail__input" type="text">
+						</div>
+						<div class="book-detail__field book-detail__field--full">
+							<label for="editDescripcion" class="book-detail__label">Descripcion</label>
+							<textarea id="editDescripcion" name="descripcion" class="book-detail__textarea" rows="4"></textarea>
+						</div>
+						<div class="book-detail__field">
+							<label for="editEjemplares" class="book-detail__label">Ejemplares disponibles</label>
+							<input id="editEjemplares" name="ejemplares" class="book-detail__input" type="number" min="0" step="1" required>
+						</div>
+					</div>
+					<p class="book-detail__form-message is-hidden" id="bookEditMessage"></p>
+					<div class="book-detail__edit-actions">
+						<button type="button" class="btn btn--outline" id="bookEditCancel">Cancelar</button>
+						<button type="submit" class="btn btn--primary" id="bookEditSave">Guardar cambios</button>
+					</div>
+				</form>
+			</div>
+		</section>
+
 	</main>
 
 	<!-- ========== FOOTER ========== -->
@@ -167,6 +213,34 @@
 	<!-- ========== SCRIPTS ========== -->
 	<script src="../js/components/navbar.js"></script>
 	<script src="../js/components/footer.js"></script>
+
+	<!-- Mock data (comentar para usar API real) -->
+	<script src="../js/data/librosMock.js"></script>
+
+	<script src="../js/services/libroService.js"></script>
+	<script src="../js/state/bookDetailState.js"></script>
+	<script src="../js/ui/bookDetailRenderer.js"></script>
+	<script src="../js/controllers/bookDetailController.js"></script>
+	<script src="../js/pages/bookDetail.js"></script>
+</body>
+</html>
+						<button type="submit" class="btn btn--primary" id="bookEditSave">Guardar cambios</button>
+					</div>
+				</form>
+			</div>
+		</section>
+
+	</main>
+
+	<!-- ========== FOOTER ========== -->
+	<footer class="footer" id="footer"></footer>
+
+	<!-- ========== SCRIPTS ========== -->
+	<script src="../js/components/navbar.js"></script>
+	<script src="../js/components/footer.js"></script>
+
+	<!-- Mock data (comentar para usar API real) -->
+	<script src="../js/data/librosMock.js"></script>
 
 	<script src="../js/services/libroService.js"></script>
 	<script src="../js/state/bookDetailState.js"></script>

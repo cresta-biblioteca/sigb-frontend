@@ -11,7 +11,6 @@
   <link rel="stylesheet" href="../css/components.css">
   <link rel="stylesheet" href="../css/pages/catalog.css">
   <link rel="stylesheet" href="../css/pages/addBook.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css">
 </head>
 <body>
 
@@ -70,78 +69,134 @@
   <!-- ========== MAIN CONTENT ========== -->
   <main class="catalog-main">
     
-    <!-- ========== HERO SECTION ========== -->
-    <section class="catalog-hero">
-      <div class="container">
-        <h1 class="catalog-hero__title">Catálogo de Recursos</h1>
-        <p class="catalog-hero__subtitle">Descubre miles de libros, revistas y recursos digitales disponibles para ti</p>
-      </div>
-    </section>
-
     <!-- ========== SEARCH & FILTERS ========== -->
     <section class="catalog-filters-section">
       <div class="container catalog-filters-container">
-        
-        <!-- Search Form -->
         <div class="catalog-search-wrapper">
-          <form class="catalog-search-form" id="searchForm">
-            <label for="searchInput" class="search-form__label">Buscar libros</label>
-            <div class="search-form__group">
-              <input 
-                type="text" 
-                id="searchInput" 
-                class="search-form__input" 
-                placeholder="Título, autor, ISBN..."
-                aria-label="Buscar libros"
-              >
-              <button type="submit" class="search-form__submit" aria-label="Buscar">
-                Buscar
-              </button>
+
+          <form class="catalog-simple-form" id="searchForm">
+            <div class="catalog-simple-panel" id="simpleSearchPanel">
+              <div class="catalog-search-head">
+                <h2 class="catalog-search-title">Buscar en el catalogo</h2>
+                <p class="catalog-search-subtitle">Combina busqueda rapida con filtros avanzados para encontrar resultados precisos.</p>
+              </div>
+              <div class="catalog-simple-grid">
+                <div class="catalog-filter-group">
+                  <label class="catalog-filter-label" for="simpleSearchInput">Busqueda simple</label>
+                  <input
+                    type="text"
+                    id="simpleSearchInput"
+                    class="catalog-filter-input"
+                    placeholder="Titulo, autor, ISBN..."
+                    autocomplete="off"
+                  >
+                </div>
+                <div class="catalog-filter-group">
+                  <label class="catalog-filter-label" for="categoryFilter">Categoria</label>
+                  <select id="categoryFilter" class="catalog-filter-select" aria-label="Filtrar por categoria">
+                    <option value="">Todas las categorias</option>
+                  </select>
+                </div>
+                <div class="catalog-filter-group">
+                  <label class="catalog-filter-label" for="sortFilter">Ordenar por</label>
+                  <select id="sortFilter" class="catalog-filter-select" aria-label="Ordenar resultados">
+                    <option value="relevance">Relevancia</option>
+                    <option value="newest">Mas recientes</option>
+                    <option value="rating">Mejor calificacion</option>
+                    <option value="title">Titulo A-Z</option>
+                  </select>
+                </div>
+              </div>
+              <div class="catalog-simple-actions">
+                <button type="submit" class="btn btn--primary">Buscar</button>
+                <button type="button" class="btn btn--outline" id="toggleAdvancedBtn">Cambiar a busqueda avanzada</button>
+                <button type="button" id="clearFilters" class="btn btn--outline catalog-clear-btn" aria-label="Limpiar filtros">Limpiar filtros</button>
+              </div>
+
+              <div class="catalog-search-mode-badge" id="searchModeBadge">Modo: busqueda simple</div>
+            </div>
+
+            <!-- Advanced search inline panel -->
+            <div class="catalog-advanced-popup is-hidden" id="advancedSearchPopup" aria-labelledby="advancedSearchTitle">
+              <div id="advancedSearchForm" class="catalog-advanced-form">
+                <div class="catalog-advanced-head">
+                  <h3 id="advancedSearchTitle" class="catalog-advanced-title">Busqueda avanzada</h3>
+                  <p class="catalog-advanced-subtitle">Filtra por metadatos bibliograficos y disponibilidad.</p>
+                </div>
+                <div class="catalog-advanced-grid">
+                  <div class="catalog-filter-group">
+                    <label class="catalog-filter-label" for="advTitulo">Titulo</label>
+                    <input type="text" id="advTitulo" class="catalog-filter-input" placeholder="Titulo del libro">
+                  </div>
+                  <div class="catalog-filter-group">
+                    <label class="catalog-filter-label" for="advAutor">Autor</label>
+                    <input type="text" id="advAutor" class="catalog-filter-input" placeholder="Nombre del autor">
+                  </div>
+                  <div class="catalog-filter-group">
+                    <label class="catalog-filter-label" for="advISBN">ISBN</label>
+                    <input type="text" id="advISBN" class="catalog-filter-input" placeholder="ISBN">
+                  </div>
+                  <div class="catalog-filter-group">
+                    <label class="catalog-filter-label" for="advEditorial">Editorial</label>
+                    <input type="text" id="advEditorial" class="catalog-filter-input" placeholder="Editorial">
+                  </div>
+                  <div class="catalog-filter-group">
+                    <label class="catalog-filter-label" for="advAnioDesde">Ano desde</label>
+                    <input type="number" id="advAnioDesde" class="catalog-filter-input" placeholder="2000" min="1800" max="2100">
+                  </div>
+                  <div class="catalog-filter-group">
+                    <label class="catalog-filter-label" for="advAnioHasta">Ano hasta</label>
+                    <input type="number" id="advAnioHasta" class="catalog-filter-input" placeholder="2024" min="1800" max="2100">
+                  </div>
+                  <div class="catalog-filter-group">
+                    <label class="catalog-filter-label" for="advIdioma">Idioma</label>
+                    <select id="advIdioma" class="catalog-filter-select">
+                      <option value="">Cualquier idioma</option>
+                      <option value="es">Espanol</option>
+                      <option value="en">Ingles</option>
+                      <option value="pt">Portugues</option>
+                    </select>
+                  </div>
+                  <div class="catalog-filter-group">
+                    <label class="catalog-filter-label" for="advTipoDocumento">Tipo de material</label>
+                    <select id="advTipoDocumento" class="catalog-filter-select">
+                      <option value="">Cualquier tipo</option>
+                      <option value="libro">Libro</option>
+                      <option value="revista">Revista</option>
+                      <option value="tesis">Tesis</option>
+                      <option value="digital">Digital</option>
+                    </select>
+                  </div>
+                  <div class="catalog-filter-group">
+                    <label class="catalog-filter-label" for="advMateria">Materia</label>
+                    <input type="text" id="advMateria" class="catalog-filter-input" placeholder="Materia">
+                  </div>
+                  <div class="catalog-filter-group">
+                    <label class="catalog-filter-label" for="advCDU">CDU</label>
+                    <input type="text" id="advCDU" class="catalog-filter-input" placeholder="CDU">
+                  </div>
+                  <div class="catalog-filter-group">
+                    <label class="catalog-filter-label" for="advEstante">Estante / Carrera</label>
+                    <input type="text" id="advEstante" class="catalog-filter-input" placeholder="Estante o carrera">
+                  </div>
+                  <div class="catalog-filter-group">
+                    <label class="catalog-filter-label" for="advDisponibilidad">Disponibilidad</label>
+                    <select id="advDisponibilidad" class="catalog-filter-select">
+                      <option value="">Cualquier estado</option>
+                      <option value="available">Disponible</option>
+                      <option value="unavailable">No disponible</option>
+                      <option value="digital">Digital</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="catalog-advanced-actions">
+                  <button type="button" class="btn btn--outline" id="closeAdvancedBtn">Cerrar</button>
+                  <button type="button" class="btn btn--primary" id="applyAdvancedBtn">Aplicar busqueda avanzada</button>
+                </div>
+              </div>
             </div>
           </form>
-        </div>
 
-        <!-- Filters Panel -->
-        <div class="catalog-filters-panel">
-          
-          <!-- Categories Filter -->
-          <div class="catalog-filter-group">
-            <label class="catalog-filter-label">Categoría</label>
-            <select id="categoryFilter" class="catalog-filter-select" aria-label="Filtrar por categoría">
-              <option value="">Todas las categorías</option>
-            </select>
-          </div>
-
-          <!-- Availability Filter -->
-          <div class="catalog-filter-group">
-            <label class="catalog-filter-label">Disponibilidad</label>
-            <div class="catalog-filter-checkbox-group">
-              <label class="catalog-filter-checkbox">
-                <input type="checkbox" value="available" aria-label="Disponibles">
-                <span>Disponibles</span>
-              </label>
-              <label class="catalog-filter-checkbox">
-                <input type="checkbox" value="digital" aria-label="Digitales">
-                <span>Digitales</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Sort Options -->
-          <div class="catalog-filter-group">
-            <label class="catalog-filter-label">Ordenar por</label>
-            <select id="sortFilter" class="catalog-filter-select" aria-label="Ordenar resultados">
-              <option value="relevance">Relevancia</option>
-              <option value="newest">Más recientes</option>
-              <option value="rating">Mejor calificación</option>
-              <option value="title">Título A-Z</option>
-            </select>
-          </div>
-
-          <!-- Clear Filters Button -->
-          <button id="clearFilters" class="btn btn--outline catalog-clear-btn" aria-label="Limpiar filtros">
-            Limpiar filtros
-          </button>
         </div>
       </div>
     </section>
@@ -152,7 +207,7 @@
         
         <!-- Results Info -->
         <div class="catalog-results-info">
-          <h2 id="resultsCount" class="catalog-results-count">Mostrando 10 resultados</h2>
+          <h2 id="resultsCount" class="catalog-results-count">Mostrando resultados</h2>
           <div class="catalog-view-controls">
             <button id="addBookBtn" class="btn btn--primary" aria-label="Abrir panel de administracion para agregar libro">
               + Alta de Libro (Admin)
@@ -292,6 +347,9 @@
   <!-- Componentes base -->
   <script src="../js/components/navbar.js"></script>
   <script src="../js/components/footer.js"></script>
+
+  <!-- Mock data (comentar para usar API real) -->
+  <script src="../js/data/librosMock.js"></script>
 
   <!-- Capa de Servicios (Comunicación HTTP) -->
   <script src="../js/services/libroService.js"></script>

@@ -21,7 +21,7 @@ class CatalogState {
 
     // Paginación
     this.currentPage = 1;
-    this.itemsPerPage = 10;
+    this.itemsPerPage = 12;
 
     // Vista actual
     this.currentView = 'grid'; // 'grid' o 'list'
@@ -31,7 +31,8 @@ class CatalogState {
       search: '',
       category: '',
       availability: [],
-      sort: 'relevance'
+      sort: 'relevance',
+      advanced: this.getDefaultAdvancedFilters()
     };
   }
 
@@ -61,6 +62,37 @@ class CatalogState {
    */
   setCategorias(categorias) {
     this.allCategorias = categorias;
+  }
+
+  /**
+   * Devuelve el objeto de filtros avanzados por defecto (todos vacíos)
+   * @returns {Object}
+   */
+  getDefaultAdvancedFilters() {
+    return {
+      titulo: '',
+      autor: '',
+      isbn: '',
+      editorial: '',
+      anioDesde: '',
+      anioHasta: '',
+      idioma: '',
+      tipoDocumento: '',
+      materia: '',
+      cdu: '',
+      estante: '',
+      disponibilidad: '',
+      categoria: ''
+    };
+  }
+
+  /**
+   * Actualiza los filtros avanzados
+   * @param {Object} advancedFilters - Objeto con los nuevos filtros avanzados
+   */
+  setAdvancedFilters(advancedFilters) {
+    this.filters.advanced = { ...this.getDefaultAdvancedFilters(), ...advancedFilters };
+    this.resetPage();
   }
 
   /**
@@ -190,7 +222,8 @@ class CatalogState {
       search: '',
       category: '',
       availability: [],
-      sort: 'relevance'
+      sort: 'relevance',
+      advanced: this.getDefaultAdvancedFilters()
     };
     this.currentPage = 1;
   }

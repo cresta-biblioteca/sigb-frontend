@@ -62,15 +62,21 @@ class CatalogController {
    * Configura los event listeners de filtros y controles
    */
   setupEventListeners() {
-    // Búsqueda CON DEBOUNCE (300ms)
-    // El Renderer se encarga de hacer debounce automáticamente
-    // Esto evita múltiples requests mientras el usuario está escribiendo
-    this.renderer.onSearch((searchTerm) => {
-      this.state.setSearch(searchTerm);
+    // Búsqueda simple (submit del formulario)
+    this.renderer.onSimpleSearch((simpleFilters) => {
+      if (simpleFilters.search !== undefined) this.state.setSearch(simpleFilters.search);
+      if (simpleFilters.category !== undefined) this.state.setCategory(simpleFilters.category);
+      if (simpleFilters.sort !== undefined) this.state.setSort(simpleFilters.sort);
       this.applyFiltersAndRender();
     });
 
-    // Categoría (sin debounce, es un dropdown con cambio discreto)
+    // Búsqueda avanzada
+    this.renderer.onAdvancedSearch((advancedFilters) => {
+      this.state.setAdvancedFilters(advancedFilters);
+      this.applyFiltersAndRender();
+    });
+
+    // Categoría (cambio directo en dropdown)
     this.renderer.onCategoryChange((categoryId) => {
       this.state.setCategory(categoryId);
       this.applyFiltersAndRender();
@@ -97,9 +103,6 @@ class CatalogController {
     this.renderer.onViewChange((view) => {
       this.handleViewChange(view);
     });
-
-    // Prevenir submit del formulario
-    this.renderer.preventSearchFormSubmit();
 
     // Botones de paginación (previo/siguiente)
     this.renderer.onPrevPage(() => {
@@ -239,21 +242,29 @@ class CatalogController {
     const params = new URLSearchParams();
     const filters = this.state.getFilters();
 
-    // Agregar filtros al query string
-    if (filters.search) {
-      params.set('search', filters.search);
-    }
-    if (filters.category) {
-      params.set('category', filters.category);
-    }
-    if (filters.availability.length > 0) {
-      params.set('availability', filters.availability.join(','));
-    }
-    if (filters.sort) {
-      params.set('sort', filters.sort);
-    }
+    // Filtros simples
+    if (filters.search) params.set('search', filters.search);
+    if (filters.category) params.set('category', filters.category);
+    if (filters.availability.length > 0) params.set('availability', filters.availability.join(','));
+    if (filters.sort) params.set('sort', filters.sort);
 
-    // Agregar paginación
+    // Filtros avanzados
+    const adv = filters.advanced || {};
+    if (adv.titulo) params.set('titulo', adv.titulo);
+    if (adv.autor) params.set('autor', adv.autor);
+    if (adv.isbn) params.set('isbn', adv.isbn);
+    if (adv.editorial) params.set('editorial', adv.editorial);
+    if (adv.anioDesde) params.set('anio_desde', adv.anioDesde);
+    if (adv.anioHasta) params.set('anio_hasta', adv.anioHasta);
+    if (adv.idioma) params.set('idioma', adv.idioma);
+    if (adv.tipoDocumento) params.set('tipo_documento', adv.tipoDocumento);
+    if (adv.materia) params.set('materia', adv.materia);
+    if (adv.cdu) params.set('cdu', adv.cdu);
+    if (adv.estante) params.set('estante', adv.estante);
+    if (adv.disponibilidad) params.set('disponibilidad', adv.disponibilidad);
+    if (adv.categoria) params.set('categoria', adv.categoria);
+
+    // Paginación
     params.set('page', String(this.state.getCurrentPage()));
     params.set('per_page', String(this.state.itemsPerPage));
 
