@@ -136,6 +136,7 @@ logoutBtn?.addEventListener('click', () => {
   Modal.create({
     title: 'Cerrar sesión',
     content: '¿Estás seguro que querés cerrar tu sesión?',
+    onCancel: () => {},
     onConfirm: async () => {
       logoutBtn.disabled = true;
 
