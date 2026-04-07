@@ -1,27 +1,31 @@
 /**
- * Dashboard Page Script
+ * Dashboard Page Script — Mi Cuenta
  *
  * Primera línea siempre: requireAuth(). Si no hay sesión, redirige antes
  * de que se ejecute cualquier otra cosa en esta página.
  *
  * Flujo:
- *   1. requireAuth()       → verifica sesión, redirige si no hay
- *   2. store.getUser()     → obtiene datos del usuario del JWT decodificado
- *   3. Renderiza el saludo con el nombre del usuario
- *   4. Carga los préstamos activos (cuando el endpoint esté disponible)
- *   5. Maneja el logout
+ *   1. requireAuth()     → verifica sesión, redirige si no hay
+ *   2. store.getUser()   → obtiene datos del usuario del JWT decodificado
+ *   3. Renderiza el saludo y el nombre en la navbar
+ *   4. Secciones de datos (préstamos, reservas, historial, stats) se activarán
+ *      de a una cuando los endpoints del backend estén disponibles.
  *
- * Para agregar más secciones a este dashboard:
- *   - Agregar el contenedor vacío en dashboard.html
- *   - Importar el service correspondiente
- *   - Hacer el fetch y llamar el renderer dentro de un try/catch
+ * Contenedores en el HTML (todos con datos de muestra hasta que el endpoint esté listo):
+ *   #statActiveLoans         — contador de préstamos activos
+ *   #statActiveReservations  — contador de reservas activas
+ *   #statFines               — monto de multas
+ *   #statReturned            — total de devoluciones
+ *   #activeLoans             — tabla de préstamos vigentes
+ *   #activeReservations      — lista de reservas activas
+ *   #loanHistory             — historial de préstamos
+ *   #reservationHistory      — historial de reservas
  */
 
-import { requireAuth }            from '../core/authGuard.js';
-import { store }                  from '../core/store.js';
-import { authService }            from '../services/authService.js';
-import { Modal }                  from '../components/modal.js';
-import { showError, showEmpty }   from '../components/ui.js';
+import { requireAuth }          from '../core/authGuard.js';
+import { store }                from '../core/store.js';
+import { authService }          from '../services/authService.js';
+import { Modal }                from '../components/modal.js';
 
 // ---------------------------------------------------------------------------
 // Guard — debe ser lo primero que corre en cualquier página protegida
@@ -35,8 +39,7 @@ const user = store.getUser();
 // Nombre del usuario en navbar y bienvenida
 //
 // Los claims exactos del JWT dependen del backend.
-// Ajustar los nombres de campo (nombre, apellido, etc.)
-// cuando se conozca la estructura real del token.
+// Ajustar los nombres de campo cuando se conozca la estructura real del token.
 // ---------------------------------------------------------------------------
 const fullName = [user?.nombre, user?.apellido].filter(Boolean).join(' ') || 'Usuario';
 
@@ -47,31 +50,82 @@ if (navUserName)      navUserName.textContent     = fullName;
 if (dashboardWelcome) dashboardWelcome.textContent = `Bienvenido, ${fullName}`;
 
 // ---------------------------------------------------------------------------
-// Préstamos activos
+// Estadísticas de cuenta
 //
-// Por ahora muestra "sin préstamos" porque el endpoint no está disponible aún.
-// Cuando esté listo, reemplazar el bloque comentado con el fetch real.
+// TODO: reemplazar con datos reales cuando el endpoint esté disponible.
+// Ejemplo de integración futura:
+//
+// import { accountService } from '../services/accountService.js';
+// try {
+//   const summary = await accountService.getMySummary();
+//   document.getElementById('statActiveLoans').textContent        = summary.prestamosActivos;
+//   document.getElementById('statActiveReservations').textContent = summary.reservasActivas;
+//   document.getElementById('statFines').textContent              = `$${summary.multas.toFixed(2)}`;
+//   document.getElementById('statReturned').textContent           = summary.devoluciones;
+// } catch {
+//   // silenciar: los valores quedan en "—"
+// }
 // ---------------------------------------------------------------------------
-const activeLoansContainer = document.getElementById('activeLoans');
 
-// TODO: reemplazar con fetch real cuando el endpoint esté disponible
-// import { loansService } from '../services/loansService.js';
-// import { renderLoanList } from '../renderers/loanRenderer.js';
+// ---------------------------------------------------------------------------
+// Préstamos vigentes (#activeLoans)
 //
+// El HTML ya contiene datos de muestra para el diseño.
+// TODO: reemplazar con fetch real cuando el endpoint esté disponible.
+//
+// import { loansService }       from '../services/loansService.js';
+// import { renderActiveLoans }  from '../renderers/loanRenderer.js';
+// import { showEmpty, showError } from '../components/ui.js';
+//
+// const activeLoansEl = document.getElementById('activeLoans');
 // try {
 //   const loans = await loansService.getMyActive();
 //   if (loans.length === 0) {
-//     showEmpty(activeLoansContainer, 'No tenés préstamos activos en este momento.');
+//     showEmpty(activeLoansEl, 'No tenés préstamos activos en este momento.');
 //   } else {
-//     renderLoanList(activeLoansContainer, loans);
+//     renderActiveLoans(activeLoansEl, loans);
+//     document.getElementById('renewAllBtn').disabled = false;
 //   }
-// } catch (error) {
-//   showError(activeLoansContainer, 'No se pudieron cargar los préstamos. Intentá recargar la página.');
+// } catch {
+//   showError(activeLoansEl, 'No se pudieron cargar los préstamos. Intentá recargar la página.');
 // }
+// ---------------------------------------------------------------------------
 
-if (activeLoansContainer) {
-  showEmpty(activeLoansContainer, 'No tenés préstamos activos en este momento.');
-}
+// ---------------------------------------------------------------------------
+// Reservas activas (#activeReservations)
+//
+// El HTML ya contiene datos de muestra para el diseño.
+// TODO: reemplazar con fetch real cuando el endpoint esté disponible.
+//
+// import { reservationsService }     from '../services/reservationsService.js';
+// import { renderActiveReservations } from '../renderers/reservationRenderer.js';
+//
+// const activeReservationsEl = document.getElementById('activeReservations');
+// try {
+//   const reservations = await reservationsService.getMyActive();
+//   if (reservations.length === 0) {
+//     showEmpty(activeReservationsEl, 'No tenés reservas activas.');
+//   } else {
+//     renderActiveReservations(activeReservationsEl, reservations);
+//   }
+// } catch {
+//   showError(activeReservationsEl, 'No se pudieron cargar las reservas.');
+// }
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Historial de préstamos (#loanHistory)
+//
+// El HTML ya contiene datos de muestra para el diseño.
+// TODO: reemplazar con fetch real cuando el endpoint esté disponible.
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Historial de reservas (#reservationHistory)
+//
+// El HTML ya contiene datos de muestra para el diseño.
+// TODO: reemplazar con fetch real cuando el endpoint esté disponible.
+// ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
 // Logout
