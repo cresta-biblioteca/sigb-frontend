@@ -40,37 +40,16 @@
       <nav class="navbar__nav" id="navbarMenu">
         <ul class="navbar__list">
           <li class="navbar__item">
-            <a href="../index.html" class="navbar__link">Inicio</a>
+            <a href="dashboard.html" class="navbar__link navbar__link--active" aria-current="page" >Inicio</a>
           </li>
           <li class="navbar__item">
             <a href="catalog.html" class="navbar__link">Catálogo</a>
           </li>
           <li class="navbar__item">
-            <a href="dashboard.html" class="navbar__link navbar__link--active" aria-current="page">Mi Cuenta</a>
-          </li>
-          <li class="navbar__item navbar__item--dropdown">
-            <button class="navbar__link navbar__link--dropdown" aria-expanded="false" aria-haspopup="true">
-              Servicios
-              <svg class="navbar__dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            <ul class="navbar__dropdown">
-              <li><a href="loans.html" class="navbar__dropdown-link">Préstamos</a></li>
-              <li><a href="readers.html" class="navbar__dropdown-link">Lectores</a></li>
-            </ul>
+            <a href="mi-perfil.html" class="navbar__link">Mi Perfil</a>
           </li>
         </ul>
-
-        <!--
-          Bloque de usuario autenticado.
-          #navUserName: llenado por dashboard.js con el nombre del JWT.
-          Es un link a mi-perfil.html.
-        -->
-        <div class="navbar__user">
-          <a href="mi-perfil.html" class="navbar__user-link" id="navUserName" title="Ver mi perfil"></a>
-          <button class="btn btn--outline btn--sm" id="logoutBtn">Cerrar sesión</button>
-        </div>
+          <button class="navbar__link" id="logoutBtn" type="button">Cerrar sesión</button>
       </nav>
     </div>
   </header>
