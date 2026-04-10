@@ -238,6 +238,13 @@
   margin-bottom: var(--spacing-md);
 }
 
+.footer__brand-image {
+  display: block;
+  width: clamp(150px, 17vw, 210px);
+  height: auto;
+  object-fit: contain;
+}
+
 .footer__brand-icon {
   width: 32px;
   height: 32px;
