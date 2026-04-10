@@ -51,6 +51,14 @@
   flex-direction: column;
 }
 
+.navbar__brand-image {
+  display: block;
+  width: clamp(180px, 19vw, 240px);
+  height: auto;
+  max-height: calc(var(--navbar-height) - 20px);
+  object-fit: contain;
+}
+
 .navbar__brand-name {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-bold);
@@ -316,6 +324,10 @@
 
 /* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
+  .navbar__brand-image {
+    width: 150px;
+  }
+
   .navbar__toggle {
     display: flex;
   }
