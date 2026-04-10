@@ -29,11 +29,6 @@
   color: var(--color-gray-600);
 }
 
-.dashboard__profile-link {
-  align-self: flex-start;
-  flex-shrink: 0;
-}
-
 /* ---- Sección genérica ---- */
 .dashboard__section {
   margin-bottom: var(--spacing-2xl);
@@ -66,7 +61,7 @@
 /* ---- Barra de estadísticas ---- */
 .stats-bar {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-2xl);
 }
@@ -94,8 +89,6 @@
 
 .stat-card--loans        { --stat-color: var(--color-primary); }
 .stat-card--reservations { --stat-color: var(--color-accent); }
-.stat-card--fines        { --stat-color: var(--color-error); }
-.stat-card--returned     { --stat-color: var(--color-gray-500); }
 
 .stat-card__label {
   font-size: var(--font-size-xs);
@@ -406,7 +399,7 @@
 
 @media (max-width: 480px) {
   .stats-bar {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: var(--spacing-sm);
   }
 

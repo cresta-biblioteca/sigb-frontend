@@ -14,8 +14,6 @@
  * Contenedores en el HTML (todos con datos de muestra hasta que el endpoint esté listo):
  *   #statActiveLoans         — contador de préstamos activos
  *   #statActiveReservations  — contador de reservas activas
- *   #statFines               — monto de multas
- *   #statReturned            — total de devoluciones
  *   #activeLoans             — tabla de préstamos vigentes
  *   #activeReservations      — lista de reservas activas
  *   #loanHistory             — historial de préstamos
@@ -60,8 +58,6 @@ if (dashboardWelcome) dashboardWelcome.textContent = `Bienvenido, ${fullName}`;
 //   const summary = await accountService.getMySummary();
 //   document.getElementById('statActiveLoans').textContent        = summary.prestamosActivos;
 //   document.getElementById('statActiveReservations').textContent = summary.reservasActivas;
-//   document.getElementById('statFines').textContent              = `$${summary.multas.toFixed(2)}`;
-//   document.getElementById('statReturned').textContent           = summary.devoluciones;
 // } catch {
 //   // silenciar: los valores quedan en "—"
 // }
@@ -84,7 +80,6 @@ if (dashboardWelcome) dashboardWelcome.textContent = `Bienvenido, ${fullName}`;
 //     showEmpty(activeLoansEl, 'No tenés préstamos activos en este momento.');
 //   } else {
 //     renderActiveLoans(activeLoansEl, loans);
-//     document.getElementById('renewAllBtn').disabled = false;
 //   }
 // } catch {
 //   showError(activeLoansEl, 'No se pudieron cargar los préstamos. Intentá recargar la página.');
