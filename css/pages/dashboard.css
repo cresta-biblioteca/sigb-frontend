@@ -18,10 +18,17 @@
 }
 
 .dashboard__title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-primary);
   margin-bottom: var(--spacing-xs);
+}
+
+.dashboard__title svg {
+  flex-shrink: 0;
 }
 
 .dashboard__subtitle {

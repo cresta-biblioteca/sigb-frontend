@@ -6,9 +6,7 @@
  *
  * Flujo:
  *   1. requireAuth()     → verifica sesión, redirige si no hay
- *   2. store.getUser()   → obtiene datos del usuario del JWT decodificado
- *   3. Renderiza el saludo y el nombre en la navbar
- *   4. Secciones de datos (préstamos, reservas, historial, stats) se activarán
+ *   2. Secciones de datos (préstamos, reservas, historial, stats) se activarán
  *      de a una cuando los endpoints del backend estén disponibles.
  *
  * Contenedores en el HTML (todos con datos de muestra hasta que el endpoint esté listo):
@@ -29,23 +27,6 @@ import { Modal }                from '../components/modal.js';
 // Guard — debe ser lo primero que corre en cualquier página protegida
 // ---------------------------------------------------------------------------
 requireAuth('../index.html');
-
-// A partir de acá, store ya fue inicializado por requireAuth()
-const user = store.getUser();
-
-// ---------------------------------------------------------------------------
-// Nombre del usuario en navbar y bienvenida
-//
-// Los claims exactos del JWT dependen del backend.
-// Ajustar los nombres de campo cuando se conozca la estructura real del token.
-// ---------------------------------------------------------------------------
-const fullName = [user?.nombre, user?.apellido].filter(Boolean).join(' ') || 'Usuario';
-
-const navUserName      = document.getElementById('navUserName');
-const dashboardWelcome = document.getElementById('dashboardWelcome');
-
-if (navUserName)      navUserName.textContent     = fullName;
-if (dashboardWelcome) dashboardWelcome.textContent = `Bienvenido, ${fullName}`;
 
 // ---------------------------------------------------------------------------
 // Estadísticas de cuenta
