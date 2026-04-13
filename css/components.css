@@ -172,3 +172,52 @@
   background-color: var(--color-accent-hover);
 }
 
+/* ========== UI STATES ========== */
+.ui-loading,
+.ui-error,
+.ui-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.ui-loading {
+  gap: var(--spacing-sm);
+  color: var(--color-gray-600);
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+}
+
+.ui-loading__spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--color-gray-200);
+  border-top-color: var(--color-accent);
+  animation: ui-spin 0.8s linear infinite;
+}
+
+.ui-error,
+.ui-empty {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+}
+
+.ui-error {
+  color: var(--color-error);
+}
+
+.ui-empty {
+  color: var(--color-gray-600);
+}
+
+@keyframes ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+

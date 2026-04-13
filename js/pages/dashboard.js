@@ -1,5 +1,5 @@
 /**
- * Dashboard Page Script — Mi Cuenta
+ * Dashboard Page Script — Panel de Gestión
  *
  * Primera línea siempre: requireAuth(). Si no hay sesión, redirige antes
  * de que se ejecute cualquier otra cosa en esta página.
@@ -21,7 +21,10 @@
 import { requireAuth }          from '../core/authGuard.js';
 import { store }                from '../core/store.js';
 import { authService }          from '../services/authService.js';
+import { reservationsService }   from '../services/reservationsService.js';
+import { ApiError }              from '../services/api.js';
 import { Modal }                from '../components/modal.js';
+import { showLoading, showError, showEmpty, setButtonLoading, resetButton } from '../components/ui.js';
 
 // ---------------------------------------------------------------------------
 // Guard — debe ser lo primero que corre en cualquier página protegida
@@ -71,23 +74,283 @@ requireAuth('../index.html');
 // Reservas activas (#activeReservations)
 //
 // El HTML ya contiene datos de muestra para el diseño.
-// TODO: reemplazar con fetch real cuando el endpoint esté disponible.
-//
-// import { reservationsService }     from '../services/reservationsService.js';
-// import { renderActiveReservations } from '../renderers/reservationRenderer.js';
-//
-// const activeReservationsEl = document.getElementById('activeReservations');
-// try {
-//   const reservations = await reservationsService.getMyActive();
-//   if (reservations.length === 0) {
-//     showEmpty(activeReservationsEl, 'No tenés reservas activas.');
-//   } else {
-//     renderActiveReservations(activeReservationsEl, reservations);
-//   }
-// } catch {
-//   showError(activeReservationsEl, 'No se pudieron cargar las reservas.');
-// }
+// Ahora consume las reservas pendientes del backend, enriquece cada una con
+// datos del artículo asociado y mantiene un cache por articulo_id para evitar
+// llamadas repetidas cuando varias reservas apuntan al mismo recurso.
 // ---------------------------------------------------------------------------
+
+const activeReservationsEl = document.getElementById('activeReservations');
+const statActiveReservationsEl = document.getElementById('statActiveReservations');
+
+activeReservationsEl?.addEventListener('click', handleActiveReservationsClick);
+
+void loadActiveReservations();
+
+async function loadActiveReservations() {
+  if (!activeReservationsEl) return;
+
+  showLoading(activeReservationsEl);
+
+  try {
+    const reservationsResponse = await reservationsService.getMyActive({ page: 1, perPage: 20 });
+    const reservations = reservationsResponse.data;
+    const enrichedReservations = await enrichReservations(reservations);
+    const activeReservationsTotal = reservationsResponse.pagination?.total ?? enrichedReservations.length;
+
+    if (statActiveReservationsEl) {
+      statActiveReservationsEl.textContent = String(activeReservationsTotal);
+    }
+
+    if (enrichedReservations.length === 0) {
+      showEmpty(activeReservationsEl, 'No tenés reservas activas en este momento.');
+      return;
+    }
+
+    activeReservationsEl.innerHTML = renderReservationsList(enrichedReservations);
+  } catch (error) {
+    if (statActiveReservationsEl) {
+      statActiveReservationsEl.textContent = '0';
+    }
+
+    const message = error instanceof ApiError
+      ? 'No se pudieron cargar las reservas activas.'
+      : 'No se pudo conectar con el servidor. Intentá recargar la página.';
+
+    showError(activeReservationsEl, message);
+  }
+}
+
+async function handleActiveReservationsClick(event) {
+  const cancelButton = event.target.closest('[data-cancel-reservation]');
+
+  if (!cancelButton || !activeReservationsEl.contains(cancelButton)) {
+    return;
+  }
+
+  const reservationId = cancelButton.dataset.reservationId;
+
+  if (!reservationId) {
+    return;
+  }
+
+  Modal.create({
+    title: 'Cancelar reserva',
+    content: '¿Estás seguro que querés cancelar esta reserva activa?',
+    onCancel: () => {},
+    onConfirm: () => {
+      void executeReservationCancellation(cancelButton, reservationId);
+    },
+  });
+}
+
+async function executeReservationCancellation(cancelButton, reservationId) {
+  setButtonLoading(cancelButton, 'Cancelando...');
+
+  try {
+    const response = await reservationsService.cancelReservation(reservationId);
+
+    Modal.create({
+      title: 'Reserva cancelada',
+      content: response?.message ?? 'Reserva cancelada exitosamente',
+    });
+
+    await loadActiveReservations();
+  } catch (error) {
+    const message = error instanceof ApiError
+      ? (error.data?.message ?? mapCancelErrorByStatus(error.status) ?? error.message ?? 'No se pudo cancelar la reserva.')
+      : 'No se pudo conectar con el servidor. Intentá nuevamente.';
+
+    Modal.create({
+      title: 'No se pudo cancelar',
+      content: message,
+    });
+  } finally {
+    resetButton(cancelButton);
+  }
+}
+
+function mapCancelErrorByStatus(status) {
+  const messagesByStatus = {
+    400: 'El identificador de la reserva es inválido.',
+    401: 'Tu sesión venció. Volvé a iniciar sesión.',
+    404: 'La reserva no existe o ya fue procesada.',
+    422: 'La reserva no puede cancelarse en su estado actual.',
+    500: 'Ocurrió un error interno al cancelar la reserva.',
+  };
+
+  return messagesByStatus[status] ?? null;
+}
+
+async function enrichReservations(reservations) {
+  const uniqueArticleIds = [...new Set(
+    reservations
+      .map((reservation) => getArticleId(reservation))
+      .filter((articleId) => articleId !== null && articleId !== undefined && articleId !== '')
+  )];
+
+  const articleCache = new Map();
+
+  await Promise.all(uniqueArticleIds.map(async (articleId) => {
+    try {
+      articleCache.set(String(articleId), await reservationsService.getArticleById(articleId));
+    } catch {
+      articleCache.set(String(articleId), null);
+    }
+  }));
+
+  return reservations.map((reservation) => {
+    const articleId = getArticleId(reservation);
+    const article = articleCache.get(String(articleId)) ?? null;
+
+    return {
+      ...reservation,
+      article,
+      articleId,
+      title: getArticleTitle(article, reservation),
+      author: getArticleAuthor(article),
+      reservedAt: getReservationDate(reservation),
+    };
+  });
+}
+
+function renderReservationsList(reservations) {
+  return `
+    <ul class="reservation-list" aria-label="Reservas activas">
+      ${reservations.map(renderReservationCard).join('')}
+    </ul>
+  `;
+}
+
+function renderReservationCard(reservation) {
+  const reservationId = reservation.id ?? '';
+
+  return `
+    <li class="reservation-card" data-reservation-id="${escapeHtml(reservationId)}">
+      <div class="reservation-card__icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+      </div>
+      <div class="reservation-card__info">
+        <p class="reservation-card__title">${escapeHtml(reservation.title)}</p>
+        <p class="reservation-card__meta">${escapeHtml(buildReservationMeta(reservation))}</p>
+      </div>
+      <button class="btn btn--danger btn--xs reservation-card__cancel" type="button" data-cancel-reservation data-reservation-id="${escapeHtml(reservationId)}" title="Cancelar reserva">
+        Cancelar
+      </button>
+    </li>
+  `;
+}
+
+function getArticleId(reservation) {
+  return reservation?.articulo_id
+    ?? reservation?.articuloId
+    ?? reservation?.article_id
+    ?? reservation?.articleId
+    ?? reservation?.libro_id
+    ?? reservation?.libroId
+    ?? null;
+}
+
+function getArticleTitle(article, reservation) {
+  return article?.articulo?.titulo
+    ?? article?.titulo
+    ?? article?.title
+    ?? reservation?.titulo
+    ?? reservation?.title
+    ?? 'Sin título';
+}
+
+function getArticleAuthor(article) {
+  const author = article?.personas?.[0];
+
+  if (typeof author === 'string') {
+    return author;
+  }
+
+  if (author?.nombre && author?.apellido) {
+    return `${author.nombre} ${author.apellido}`;
+  }
+
+  return article?.autor
+    ?? article?.author
+    ?? article?.persona
+    ?? '';
+}
+
+function getReservationDate(reservation) {
+  const rawDate = reservation?.fecha_inicio
+    ?? reservation?.fechaReserva
+    ?? reservation?.created_at
+    ?? reservation?.createdAt
+    ?? reservation?.fecha
+    ?? null;
+
+  if (!rawDate) return '';
+
+  const parsedDate = parseBackendDate(rawDate);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return String(rawDate);
+  }
+
+  return new Intl.DateTimeFormat('es-AR').format(parsedDate);
+}
+
+function getReservationEndDate(reservation) {
+  const rawDate = reservation?.fecha_vencimiento
+    ?? reservation?.fechaVencimiento
+    ?? reservation?.due_date
+    ?? null;
+
+  if (!rawDate) return '';
+
+  const parsedDate = parseBackendDate(rawDate);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return String(rawDate);
+  }
+
+  return new Intl.DateTimeFormat('es-AR').format(parsedDate);
+}
+
+function buildReservationMeta(reservation) {
+  const pieces = [];
+
+  if (reservation.author) {
+    pieces.push(reservation.author);
+  } else {
+    pieces.push('Autor no disponible');
+  }
+
+  const reservedAt = getReservationDate(reservation);
+  if (reservedAt) {
+    pieces.push(`Reservado el ${reservedAt}`);
+  }
+
+  const expiresAt = getReservationEndDate(reservation);
+  if (expiresAt) {
+    pieces.push(`Vence el ${expiresAt}`);
+  }
+
+  return pieces.join(' · ');
+}
+
+function parseBackendDate(value) {
+  const normalizedValue = String(value).includes(' ')
+    ? String(value).replace(' ', 'T')
+    : String(value);
+
+  return new Date(normalizedValue);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
 
 // ---------------------------------------------------------------------------
 // Historial de préstamos (#loanHistory)

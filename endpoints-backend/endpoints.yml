@@ -9,6 +9,361 @@
   "servers": [{ "url": "/api/v1", "description": "Servidor de desarrollo" }],
   "paths":
     {
+      "/lectores/me/reservas":
+        {
+          "get":
+            {
+              "tags": ["Reservas"],
+              "summary": "Listar reservas activas del lector autenticado",
+              "description": "Devuelve las reservas del lector autenticado. El frontend la usa con estado=PENDIENTE para mostrar las reservas activas.",
+              "operationId": "getMyActiveReservas",
+              "parameters":
+                [
+                  {
+                    "name": "estado",
+                    "in": "query",
+                    "required": false,
+                    "description": "Filtra por estado de la reserva (por ejemplo: PENDIENTE)",
+                    "schema": { "type": "string" },
+                  },
+                  {
+                    "name": "page",
+                    "in": "query",
+                    "required": false,
+                    "description": "Número de página",
+                    "schema": { "type": "integer", "default": 1 },
+                  },
+                  {
+                    "name": "per_page",
+                    "in": "query",
+                    "required": false,
+                    "description": "Cantidad de elementos por página",
+                    "schema": { "type": "integer", "default": 20 },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Lista paginada de reservas activas",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                { "$ref": "#/components/schemas/ReservasActivasResponse" },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Parámetro de filtro inválido",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401":
+                    {
+                      "description": "No autenticado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/reservas/{id}/cancelar":
+        {
+          "patch":
+            {
+              "tags": ["Reservas"],
+              "summary": "Cancelar una reserva activa",
+              "description": "Cancela una reserva del lector autenticado.",
+              "operationId": "cancelReserva",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Reserva cancelada exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "ID inválido",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401":
+                    {
+                      "description": "No autenticado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Reserva no encontrada",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "422":
+                    {
+                      "description": "La reserva no puede ser cancelada",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/libros/{id}":
+        {
+          "get":
+            {
+              "tags": ["Libros"],
+              "summary": "Obtener un libro por ID",
+              "description": "Primera opción para enriquecer reservas activas con título y autor.",
+              "operationId": "getLibroById",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Libro encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                { "$ref": "#/components/schemas/LibroResponse" },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "ID inválido",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401":
+                    {
+                      "description": "No autenticado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Libro no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/articulos/{id}":
+        {
+          "get":
+            {
+              "tags": ["Articulos"],
+              "summary": "Obtener un artículo por ID",
+              "description": "Fallback para enriquecer reservas si /libros/{id} no está disponible.",
+              "operationId": "getArticuloById",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Artículo encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                { "$ref": "#/components/schemas/ArticuloResponse" },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "ID inválido",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401":
+                    {
+                      "description": "No autenticado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Artículo no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
       "/auth/register":
         {
           "post":
@@ -246,6 +601,91 @@
     {
       "schemas":
         {
+          "ReservaItem":
+            {
+              "properties":
+                {
+                  "id": { "type": "integer", "example": 1 },
+                  "lector_id": { "type": "integer", "example": 3 },
+                  "articulo_id": { "type": "integer", "example": 5 },
+                  "fecha_inicio":
+                    { "type": "string", "format": "date-time", "example": "2026-04-06 10:00:00" },
+                  "fecha_vencimiento":
+                    { "type": "string", "format": "date-time", "example": "2026-04-09 10:00:00" },
+                },
+              "type": "object",
+            },
+          "ReservasActivasResponse":
+            {
+              "properties":
+                {
+                  "data":
+                    {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ReservaItem" },
+                    },
+                  "pagination":
+                    {
+                      "properties":
+                        {
+                          "page": { "type": "integer", "example": 1 },
+                          "per_page": { "type": "integer", "example": 20 },
+                          "total": { "type": "integer", "example": 1 },
+                          "total_pages": { "type": "integer", "example": 1 },
+                        },
+                      "type": "object",
+                    },
+                },
+              "type": "object",
+            },
+          "LibroResponse":
+            {
+              "properties":
+                {
+                  "data":
+                    {
+                      "properties":
+                        {
+                          "id": { "type": "integer", "example": 5 },
+                          "personas":
+                            {
+                              "type": "array",
+                              "items":
+                                {
+                                  "properties":
+                                    {
+                                      "nombre": { "type": "string", "example": "M." },
+                                      "apellido": { "type": "string", "example": "Garcia" },
+                                      "rol": { "type": "string", "example": "autor" },
+                                      "orden": { "type": "integer", "example": 0 },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                          "articulo":
+                            {
+                              "properties":
+                                {
+                                  "titulo": { "type": "string", "example": "Introducción al Derecho" },
+                                  "anio_publicacion": { "type": "integer", "example": 2023 },
+                                },
+                              "type": "object",
+                            },
+                        },
+                      "type": "object",
+                    },
+                },
+              "type": "object",
+            },
+          "ArticuloResponse":
+            {
+              "properties":
+                {
+                  "id": { "type": "integer", "example": 5 },
+                  "titulo": { "type": "string", "example": "Introducción al Derecho" },
+                },
+              "type": "object",
+            },
           "ChangePasswordRequest":
             {
               "required": ["current_password", "new_password"],
