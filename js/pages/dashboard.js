@@ -80,15 +80,18 @@ requireAuth('../index.html');
 // ---------------------------------------------------------------------------
 
 const activeReservationsEl = document.getElementById('activeReservations');
+const statActiveLoansEl = document.getElementById('statActiveLoans');
 const statActiveReservationsEl = document.getElementById('statActiveReservations');
 
 activeReservationsEl?.addEventListener('click', handleActiveReservationsClick);
 
+setStatsLoading(true);
 void loadActiveReservations();
 
 async function loadActiveReservations() {
   if (!activeReservationsEl) return;
 
+  setStatsLoading(true);
   showLoading(activeReservationsEl);
 
   try {
@@ -117,6 +120,12 @@ async function loadActiveReservations() {
       : 'No se pudo conectar con el servidor. Intentá recargar la página.';
 
     showError(activeReservationsEl, message);
+  } finally {
+    setStatsLoading(false);
+
+    if (statActiveLoansEl && !statActiveLoansEl.textContent?.trim()) {
+      statActiveLoansEl.textContent = '0';
+    }
   }
 }
 
@@ -157,7 +166,7 @@ async function executeReservationCancellation(cancelButton, reservationId) {
     await loadActiveReservations();
   } catch (error) {
     const message = error instanceof ApiError
-      ? (error.data?.message ?? mapCancelErrorByStatus(error.status) ?? error.message ?? 'No se pudo cancelar la reserva.')
+      ? (error.data?.message ?? error.message ?? 'No se pudo cancelar la reserva.')
       : 'No se pudo conectar con el servidor. Intentá nuevamente.';
 
     Modal.create({
@@ -169,16 +178,20 @@ async function executeReservationCancellation(cancelButton, reservationId) {
   }
 }
 
-function mapCancelErrorByStatus(status) {
-  const messagesByStatus = {
-    400: 'El identificador de la reserva es inválido.',
-    401: 'Tu sesión venció. Volvé a iniciar sesión.',
-    404: 'La reserva no existe o ya fue procesada.',
-    422: 'La reserva no puede cancelarse en su estado actual.',
-    500: 'Ocurrió un error interno al cancelar la reserva.',
-  };
+function setStatsLoading(isLoading) {
+  const statValues = [statActiveLoansEl, statActiveReservationsEl].filter(Boolean);
 
-  return messagesByStatus[status] ?? null;
+  statValues.forEach((element) => {
+    if (isLoading) {
+      element.classList.add('stat-card__value--loading');
+      element.textContent = '';
+      element.setAttribute('aria-busy', 'true');
+      return;
+    }
+
+    element.classList.remove('stat-card__value--loading');
+    element.removeAttribute('aria-busy');
+  });
 }
 
 async function enrichReservations(reservations) {

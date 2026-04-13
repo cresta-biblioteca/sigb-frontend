@@ -57,7 +57,7 @@ const reservationsService = {
       per_page: options.perPage ?? 20,
     });
 
-    const response = await api.get(`/lectores/me/reservas?${queryString}`);
+    const response = await api.get(`/lectores/me/reservas?${queryString}`, { cache: 'no-store' });
     return normalizeReservationsResponse(response);
   },
 
@@ -68,7 +68,10 @@ const reservationsService = {
    * @returns {Promise<{ message?: string }>}
    */
   cancelReservation(reservationId) {
-    return api.patch(`/reservas/${reservationId}/cancelar`);
+    const normalizedId = Number.parseInt(String(reservationId), 10);
+    const safeId = Number.isNaN(normalizedId) ? String(reservationId).trim() : normalizedId;
+
+    return api.patch(`/reservas/${safeId}/cancelar`, {});
   },
 
   /**
