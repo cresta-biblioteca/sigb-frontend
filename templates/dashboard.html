@@ -157,28 +157,9 @@
 
         <!--
           Contenedor #activeReservations.
-          HTML de muestra con datos ficticios para diseño.
-          Cuando el endpoint esté disponible, JS reemplazará este contenido.
+          Render dinámico por JS.
         -->
-        <div id="activeReservations">
-          <ul class="reservation-list" aria-label="Reservas activas">
-            <li class="reservation-card">
-              <div class="reservation-card__icon" aria-hidden="true">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                </svg>
-              </div>
-              <div class="reservation-card__info">
-                <p class="reservation-card__title">Introducción al Derecho</p>
-                <p class="reservation-card__meta">M. Garcia · Reservado el 15/10/2023</p>
-              </div>
-              <button class="btn btn--danger btn--xs reservation-card__cancel" title="Cancelar reserva">
-                Cancelar
-              </button>
-            </li>
-          </ul>
-        </div>
+        <div id="activeReservations"></div>
       </section>
 
       <!-- ---- Historial (grilla de 2 columnas) ---- -->
@@ -243,35 +224,9 @@
 
           <!--
             Contenedor #reservationHistory.
-            HTML de muestra con datos ficticios para diseño.
-            JS reemplazará con datos reales cuando el endpoint esté disponible.
+            Render dinámico por JS.
           -->
-          <div id="reservationHistory">
-            <ul class="history-list">
-              <li class="history-item">
-                <div class="history-item__info">
-                  <p class="history-item__title">Derecho Constitucional</p>
-                  <p class="history-item__meta">Cancelada el 02/10/2023</p>
-                </div>
-                <span class="badge badge--cancelled">Cancelada</span>
-              </li>
-              <li class="history-item">
-                <div class="history-item__info">
-                  <p class="history-item__title">Álgebra Lineal</p>
-                  <p class="history-item__meta">Completada el 20/09/2023</p>
-                </div>
-                <span class="badge badge--closed">Completada</span>
-              </li>
-              <li class="history-item">
-                <div class="history-item__info">
-                  <p class="history-item__title">Química General</p>
-                  <p class="history-item__meta">Expirada el 10/09/2023</p>
-                </div>
-                <span class="badge badge--overdue">Expirada</span>
-              </li>
-            </ul>
-            <a href="#" class="section-footer-link">Ver historial completo →</a>
-          </div>
+          <div id="reservationHistory"></div>
         </section>
 
       </div><!-- /history-grid -->

@@ -80,6 +80,7 @@ requireAuth('../index.html');
 // ---------------------------------------------------------------------------
 
 const activeReservationsEl = document.getElementById('activeReservations');
+const reservationHistoryEl = document.getElementById('reservationHistory');
 const statActiveLoansEl = document.getElementById('statActiveLoans');
 const statActiveReservationsEl = document.getElementById('statActiveReservations');
 
@@ -87,6 +88,7 @@ activeReservationsEl?.addEventListener('click', handleActiveReservationsClick);
 
 setStatsLoading(true);
 void loadActiveReservations();
+void loadReservationHistory();
 
 async function loadActiveReservations() {
   if (!activeReservationsEl) return;
@@ -163,7 +165,7 @@ async function executeReservationCancellation(cancelButton, reservationId) {
       content: response?.message ?? 'Reserva cancelada exitosamente',
     });
 
-    await loadActiveReservations();
+    await Promise.all([loadActiveReservations(), loadReservationHistory()]);
   } catch (error) {
     const message = error instanceof ApiError
       ? (error.data?.message ?? error.message ?? 'No se pudo cancelar la reserva.')
@@ -176,6 +178,50 @@ async function executeReservationCancellation(cancelButton, reservationId) {
   } finally {
     resetButton(cancelButton);
   }
+}
+
+async function loadReservationHistory() {
+  if (!reservationHistoryEl) return;
+
+  showLoading(reservationHistoryEl);
+
+  try {
+    const historyResponse = await reservationsService.getMyHistory({ page: 1, perPage: 20 });
+    const enrichedHistory = await enrichReservations(historyResponse.data ?? []);
+    const uniqueHistory = dedupeReservationHistoryForDisplay(enrichedHistory);
+
+    const sortedHistory = [...uniqueHistory]
+      .sort((a, b) => getReservationSortTimestamp(b) - getReservationSortTimestamp(a))
+      .slice(0, 5);
+
+    if (sortedHistory.length === 0) {
+      showEmpty(reservationHistoryEl, 'Todavía no tenés reservas en el historial.');
+      return;
+    }
+
+    reservationHistoryEl.innerHTML = renderReservationHistory(sortedHistory);
+  } catch {
+    showError(reservationHistoryEl, 'No se pudo cargar el historial de reservas.');
+  }
+}
+
+function dedupeReservationHistoryForDisplay(reservations) {
+  const seen = new Set();
+
+  return reservations.filter((reservation) => {
+    const key = buildReservationHistoryDisplayKey(reservation);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function buildReservationHistoryDisplayKey(reservation) {
+  const statusInfo = getReservationHistoryStatusInfo(reservation);
+  const statusDate = getReservationHistoryDate(reservation) || 'sin-fecha';
+  const normalizedTitle = String(reservation?.title ?? '').trim().toLowerCase();
+
+  return `${normalizedTitle}|${statusInfo.label}|${statusDate}`;
 }
 
 function setStatsLoading(isLoading) {
@@ -256,6 +302,31 @@ function renderReservationCard(reservation) {
   `;
 }
 
+function renderReservationHistory(reservations) {
+  return `
+    <ul class="history-list">
+      ${reservations.map(renderReservationHistoryItem).join('')}
+    </ul>
+    <a href="javascript:void(0)" class="section-footer-link" aria-disabled="true">Ver historial completo →</a>
+  `;
+}
+
+function renderReservationHistoryItem(reservation) {
+  const statusInfo = getReservationHistoryStatusInfo(reservation);
+  const statusDate = getReservationHistoryDate(reservation);
+  const meta = statusDate ? `${statusInfo.label} el ${statusDate}` : statusInfo.label;
+
+  return `
+    <li class="history-item">
+      <div class="history-item__info">
+        <p class="history-item__title">${escapeHtml(reservation.title)}</p>
+        <p class="history-item__meta">${escapeHtml(meta)}</p>
+      </div>
+      <span class="badge ${escapeHtml(statusInfo.badgeClass)}">${escapeHtml(statusInfo.label)}</span>
+    </li>
+  `;
+}
+
 function getArticleId(reservation) {
   return reservation?.articulo_id
     ?? reservation?.articuloId
@@ -324,6 +395,80 @@ function getReservationEndDate(reservation) {
   }
 
   return new Intl.DateTimeFormat('es-AR').format(parsedDate);
+}
+
+function getReservationHistoryDate(reservation) {
+  const rawDate = reservation?.fecha_cancelacion
+    ?? reservation?.fechaCancelacion
+    ?? reservation?.fecha_fin
+    ?? reservation?.fechaFin
+    ?? reservation?.updated_at
+    ?? reservation?.updatedAt
+    ?? reservation?.fecha_vencimiento
+    ?? reservation?.fechaVencimiento
+    ?? reservation?.fecha_inicio
+    ?? reservation?.fechaInicio
+    ?? null;
+
+  if (!rawDate) return '';
+
+  const parsedDate = parseBackendDate(rawDate);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return String(rawDate);
+  }
+
+  return new Intl.DateTimeFormat('es-AR').format(parsedDate);
+}
+
+function getReservationHistoryStatusInfo(reservation) {
+  const rawStatus = String(
+    reservation?.estado
+      ?? reservation?.status
+      ?? ''
+  ).toUpperCase();
+
+  if (rawStatus.includes('CANCEL')) {
+    return { label: 'Cancelada', badgeClass: 'badge--cancelled' };
+  }
+
+  if (rawStatus.includes('EXPIR')) {
+    return { label: 'Expirada', badgeClass: 'badge--overdue' };
+  }
+
+  if (rawStatus.includes('COMPLET') || rawStatus.includes('FINAL') || rawStatus.includes('DEVUEL')) {
+    return { label: 'Completada', badgeClass: 'badge--closed' };
+  }
+
+  const expiresAtRaw = reservation?.fecha_vencimiento ?? reservation?.fechaVencimiento ?? null;
+  if (expiresAtRaw) {
+    const expiresAtDate = parseBackendDate(expiresAtRaw);
+    if (!Number.isNaN(expiresAtDate.getTime()) && expiresAtDate.getTime() < Date.now()) {
+      return { label: 'Expirada', badgeClass: 'badge--overdue' };
+    }
+  }
+
+  return { label: 'Cancelada', badgeClass: 'badge--cancelled' };
+}
+
+function getReservationSortTimestamp(reservation) {
+  const rawDate = reservation?.fecha_cancelacion
+    ?? reservation?.fechaCancelacion
+    ?? reservation?.fecha_fin
+    ?? reservation?.fechaFin
+    ?? reservation?.updated_at
+    ?? reservation?.updatedAt
+    ?? reservation?.fecha_vencimiento
+    ?? reservation?.fechaVencimiento
+    ?? reservation?.fecha_inicio
+    ?? reservation?.fechaInicio
+    ?? null;
+
+  if (!rawDate) return 0;
+
+  const parsedDate = parseBackendDate(rawDate);
+  if (Number.isNaN(parsedDate.getTime())) return 0;
+
+  return parsedDate.getTime();
 }
 
 function buildReservationMeta(reservation) {

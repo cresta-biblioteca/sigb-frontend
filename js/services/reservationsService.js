@@ -42,7 +42,47 @@ function buildQueryString(params) {
   return searchParams.toString();
 }
 
+function dedupeById(items) {
+  const seen = new Set();
+
+  return items.filter((item) => {
+    const key = buildReservationKey(item);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function buildReservationKey(item) {
+  if (item?.id !== undefined && item?.id !== null) {
+    return `id:${String(item.id)}`;
+  }
+
+  const articuloId = item?.articulo_id ?? item?.articuloId ?? 'na';
+  const fechaInicio = item?.fecha_inicio ?? item?.fechaInicio ?? 'na';
+  const fechaVencimiento = item?.fecha_vencimiento ?? item?.fechaVencimiento ?? 'na';
+
+  return `fallback:${String(articuloId)}|${String(fechaInicio)}|${String(fechaVencimiento)}`;
+}
+
 const reservationsService = {
+  /**
+   * Consulta reservas del lector autenticado con filtros opcionales.
+   *
+   * @param {{ page?: number, perPage?: number, estado?: string }} [options]
+   * @returns {Promise<{ data: Array<object>, pagination: object|null }>}
+   */
+  async getMyReservations(options = {}) {
+    const queryString = buildQueryString({
+      estado: options.estado,
+      page: options.page ?? 1,
+      per_page: options.perPage ?? 20,
+    });
+
+    const response = await api.get(`/lectores/me/reservas?${queryString}`, { cache: 'no-store' });
+    return normalizeReservationsResponse(response);
+  },
+
   /**
    * Retorna las reservas activas del lector autenticado.
    * En el backend, esto corresponde a las reservas en estado PENDIENTE.
@@ -51,14 +91,33 @@ const reservationsService = {
    * @returns {Promise<{ data: Array<object>, pagination: object|null }>}
    */
   async getMyActive(options = {}) {
-    const queryString = buildQueryString({
-      estado: 'PENDIENTE',
-      page: options.page ?? 1,
-      per_page: options.perPage ?? 20,
-    });
+    return this.getMyReservations({ ...options, estado: 'PENDIENTE' });
+  },
 
-    const response = await api.get(`/lectores/me/reservas?${queryString}`, { cache: 'no-store' });
-    return normalizeReservationsResponse(response);
+  /**
+   * Retorna historial de reservas del lector.
+   * Se calcula como: todas las reservas menos reservas activas.
+   * Esto evita duplicados cuando el backend no aplica filtro de estado
+   * o no devuelve el campo estado en el payload.
+   *
+   * @param {{ page?: number, perPage?: number }} [options]
+   * @returns {Promise<{ data: Array<object>, pagination: object|null }>}
+   */
+  async getMyHistory(options = {}) {
+    const [allReservations, activeReservations] = await Promise.all([
+      this.getMyReservations(options),
+      this.getMyActive(options).catch(() => ({ data: [] })),
+    ]);
+
+    const activeKeys = new Set((activeReservations.data ?? []).map((reservation) => buildReservationKey(reservation)));
+    const historyData = dedupeById((allReservations.data ?? []).filter(
+      (reservation) => !activeKeys.has(buildReservationKey(reservation))
+    ));
+
+    return {
+      data: historyData,
+      pagination: allReservations.pagination ?? null,
+    };
   },
 
   /**
