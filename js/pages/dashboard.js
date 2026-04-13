@@ -4,18 +4,23 @@
  * Primera línea siempre: requireAuth(). Si no hay sesión, redirige antes
  * de que se ejecute cualquier otra cosa en esta página.
  *
- * Flujo:
- *   1. requireAuth()     → verifica sesión, redirige si no hay
- *   2. Secciones de datos (préstamos, reservas, historial, stats) se activarán
- *      de a una cuando los endpoints del backend estén disponibles.
+ * Estado actual de integración:
+ *   - Reservas activas: integrado con backend (/lectores/me/reservas?estado=PENDIENTE)
+ *   - Cancelación de reserva: integrado (/reservas/{id}/cancelar)
+ *   - Historial de reservas (resumen en dashboard): integrado
+ *   - Préstamos activos/historial de préstamos: pendiente de endpoint dedicado
  *
- * Contenedores en el HTML (todos con datos de muestra hasta que el endpoint esté listo):
- *   #statActiveLoans         — contador de préstamos activos
+ * Flujo principal:
+ *   1. requireAuth()         → verifica sesión y redirige si no hay token
+ *   2. loadActiveReservations() → carga y renderiza reservas activas
+ *   3. loadReservationHistory() → carga y renderiza últimas reservas del historial
+ *   4. setStatsLoading()     → maneja loading visual de tarjetas de estadísticas
+ *
+ * Contenedores usados en el HTML:
+ *   #statActiveLoans         — contador (por ahora fallback en 0)
  *   #statActiveReservations  — contador de reservas activas
- *   #activeLoans             — tabla de préstamos vigentes
  *   #activeReservations      — lista de reservas activas
- *   #loanHistory             — historial de préstamos
- *   #reservationHistory      — historial de reservas
+ *   #reservationHistory      — historial resumido de reservas
  */
 
 import { requireAuth }          from '../core/authGuard.js';
@@ -34,67 +39,46 @@ requireAuth('../index.html');
 // ---------------------------------------------------------------------------
 // Estadísticas de cuenta
 //
-// TODO: reemplazar con datos reales cuando el endpoint esté disponible.
-// Ejemplo de integración futura:
+// Estado actual:
+// - Reservas activas: se actualiza con datos reales del backend.
+// - Préstamos activos: aún sin endpoint dedicado; se mantiene fallback en 0.
 //
-// import { accountService } from '../services/accountService.js';
-// try {
-//   const summary = await accountService.getMySummary();
-//   document.getElementById('statActiveLoans').textContent        = summary.prestamosActivos;
-//   document.getElementById('statActiveReservations').textContent = summary.reservasActivas;
-// } catch {
-//   // silenciar: los valores quedan en "—"
-// }
+// Nota: setStatsLoading() controla el estado visual de carga para ambas tarjetas.
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
 // Préstamos vigentes (#activeLoans)
 //
-// El HTML ya contiene datos de muestra para el diseño.
-// TODO: reemplazar con fetch real cuando el endpoint esté disponible.
-//
-// import { loansService }       from '../services/loansService.js';
-// import { renderActiveLoans }  from '../renderers/loanRenderer.js';
-// import { showEmpty, showError } from '../components/ui.js';
-//
-// const activeLoansEl = document.getElementById('activeLoans');
-// try {
-//   const loans = await loansService.getMyActive();
-//   if (loans.length === 0) {
-//     showEmpty(activeLoansEl, 'No tenés préstamos activos en este momento.');
-//   } else {
-//     renderActiveLoans(activeLoansEl, loans);
-//   }
-// } catch {
-//   showError(activeLoansEl, 'No se pudieron cargar los préstamos. Intentá recargar la página.');
-// }
+// Estado actual:
+// - No está integrado en este script porque el backend de préstamos no está disponible.
+// - La tarjeta de estadísticas muestra 0 como valor de respaldo.
+// - El render de la tabla/listado de préstamos queda pendiente para una siguiente etapa.
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
 // Reservas activas (#activeReservations)
 //
-// El HTML ya contiene datos de muestra para el diseño.
-// Ahora consume las reservas pendientes del backend, enriquece cada una con
-// datos del artículo asociado y mantiene un cache por articulo_id para evitar
-// llamadas repetidas cuando varias reservas apuntan al mismo recurso.
+// Este bloque ya consume datos reales del backend.
+// Carga las reservas en estado PENDIENTE, las enriquece con título/autor
+// del artículo asociado y deduplica las llamadas por articleId/articulo_id.
 // ---------------------------------------------------------------------------
 
-const activeReservationsEl = document.getElementById('activeReservations');
-const reservationHistoryEl = document.getElementById('reservationHistory');
-const statActiveLoansEl = document.getElementById('statActiveLoans');
-const statActiveReservationsEl = document.getElementById('statActiveReservations');
+const activeReservationsElement = document.getElementById('activeReservations');
+const reservationHistoryElement = document.getElementById('reservationHistory');
+const statActiveLoansElement = document.getElementById('statActiveLoans');
+const statActiveReservationsElement = document.getElementById('statActiveReservations');
 
-activeReservationsEl?.addEventListener('click', handleActiveReservationsClick);
+activeReservationsElement?.addEventListener('click', handleActiveReservationsClick);
 
 setStatsLoading(true);
 void loadActiveReservations();
 void loadReservationHistory();
 
 async function loadActiveReservations() {
-  if (!activeReservationsEl) return;
+  if (!activeReservationsElement) return;
 
   setStatsLoading(true);
-  showLoading(activeReservationsEl);
+  showLoading(activeReservationsElement);
 
   try {
     const reservationsResponse = await reservationsService.getMyActive({ page: 1, perPage: 20 });
@@ -102,39 +86,41 @@ async function loadActiveReservations() {
     const enrichedReservations = await enrichReservations(reservations);
     const activeReservationsTotal = reservationsResponse.pagination?.total ?? enrichedReservations.length;
 
-    if (statActiveReservationsEl) {
-      statActiveReservationsEl.textContent = String(activeReservationsTotal);
+    if (statActiveReservationsElement) {
+      statActiveReservationsElement.textContent = String(activeReservationsTotal);
     }
 
     if (enrichedReservations.length === 0) {
-      showEmpty(activeReservationsEl, 'No tenés reservas activas en este momento.');
+      showEmpty(activeReservationsElement, 'No tenés reservas activas en este momento.');
       return;
     }
 
-    activeReservationsEl.innerHTML = renderReservationsList(enrichedReservations);
+    activeReservationsElement.innerHTML = renderReservationsList(enrichedReservations);
   } catch (error) {
-    if (statActiveReservationsEl) {
-      statActiveReservationsEl.textContent = '0';
+    if (statActiveReservationsElement) {
+      statActiveReservationsElement.textContent = '0';
     }
 
     const message = error instanceof ApiError
       ? 'No se pudieron cargar las reservas activas.'
       : 'No se pudo conectar con el servidor. Intentá recargar la página.';
 
-    showError(activeReservationsEl, message);
+    showError(activeReservationsElement, message);
   } finally {
     setStatsLoading(false);
 
-    if (statActiveLoansEl && !statActiveLoansEl.textContent?.trim()) {
-      statActiveLoansEl.textContent = '0';
+    if (statActiveLoansElement && !statActiveLoansElement.textContent?.trim()) {
+      statActiveLoansElement.textContent = '0';
     }
   }
 }
 
 async function handleActiveReservationsClick(event) {
+  // Delegación de eventos: escucha un solo click en la lista y detecta
+  // si el target real fue un botón de cancelar.
   const cancelButton = event.target.closest('[data-cancel-reservation]');
 
-  if (!cancelButton || !activeReservationsEl.contains(cancelButton)) {
+  if (!cancelButton || !activeReservationsElement.contains(cancelButton)) {
     return;
   }
 
@@ -155,6 +141,7 @@ async function handleActiveReservationsClick(event) {
 }
 
 async function executeReservationCancellation(cancelButton, reservationId) {
+  // Bloquea el botón mientras corre la request para evitar doble envío.
   setButtonLoading(cancelButton, 'Cancelando...');
 
   try {
@@ -181,12 +168,13 @@ async function executeReservationCancellation(cancelButton, reservationId) {
 }
 
 async function loadReservationHistory() {
-  if (!reservationHistoryEl) return;
+  if (!reservationHistoryElement) return;
 
-  showLoading(reservationHistoryEl);
+  showLoading(reservationHistoryElement);
 
   try {
     const historyResponse = await reservationsService.getMyHistory({ page: 1, perPage: 20 });
+    // Enriquecemos con título/autor y luego deduplicamos para evitar ítems repetidos.
     const enrichedHistory = await enrichReservations(historyResponse.data ?? []);
     const uniqueHistory = dedupeReservationHistoryForDisplay(enrichedHistory);
 
@@ -195,13 +183,13 @@ async function loadReservationHistory() {
       .slice(0, 5);
 
     if (sortedHistory.length === 0) {
-      showEmpty(reservationHistoryEl, 'Todavía no tenés reservas en el historial.');
+      showEmpty(reservationHistoryElement, 'Todavía no tenés reservas en el historial.');
       return;
     }
 
-    reservationHistoryEl.innerHTML = renderReservationHistory(sortedHistory);
+    reservationHistoryElement.innerHTML = renderReservationHistory(sortedHistory);
   } catch {
-    showError(reservationHistoryEl, 'No se pudo cargar el historial de reservas.');
+    showError(reservationHistoryElement, 'No se pudo cargar el historial de reservas.');
   }
 }
 
@@ -217,6 +205,7 @@ function dedupeReservationHistoryForDisplay(reservations) {
 }
 
 function buildReservationHistoryDisplayKey(reservation) {
+  // Clave visual: si dos filas muestran lo mismo en UI, se consideran duplicadas.
   const statusInfo = getReservationHistoryStatusInfo(reservation);
   const statusDate = getReservationHistoryDate(reservation) || 'sin-fecha';
   const normalizedTitle = String(reservation?.title ?? '').trim().toLowerCase();
@@ -225,7 +214,8 @@ function buildReservationHistoryDisplayKey(reservation) {
 }
 
 function setStatsLoading(isLoading) {
-  const statValues = [statActiveLoansEl, statActiveReservationsEl].filter(Boolean);
+  // Mantiene ambos contadores sincronizados con el estado de carga.
+  const statValues = [statActiveLoansElement, statActiveReservationsElement].filter(Boolean);
 
   statValues.forEach((element) => {
     if (isLoading) {
@@ -241,6 +231,7 @@ function setStatsLoading(isLoading) {
 }
 
 async function enrichReservations(reservations) {
+  // Resuelve artículos por lote usando cache por articleId para minimizar llamadas repetidas.
   const uniqueArticleIds = [...new Set(
     reservations
       .map((reservation) => getArticleId(reservation))
@@ -307,7 +298,6 @@ function renderReservationHistory(reservations) {
     <ul class="history-list">
       ${reservations.map(renderReservationHistoryItem).join('')}
     </ul>
-    <a href="javascript:void(0)" class="section-footer-link" aria-disabled="true">Ver historial completo →</a>
   `;
 }
 
@@ -364,6 +354,7 @@ function getArticleAuthor(article) {
 }
 
 function getReservationDate(reservation) {
+  // Fecha base de la reserva (inicio/creación) con tolerancia a distintos contratos.
   const rawDate = reservation?.fecha_inicio
     ?? reservation?.fechaReserva
     ?? reservation?.created_at
@@ -382,6 +373,7 @@ function getReservationDate(reservation) {
 }
 
 function getReservationEndDate(reservation) {
+  // Fecha de vencimiento de la reserva para mostrar en el meta de la card.
   const rawDate = reservation?.fecha_vencimiento
     ?? reservation?.fechaVencimiento
     ?? reservation?.due_date
@@ -398,6 +390,7 @@ function getReservationEndDate(reservation) {
 }
 
 function getReservationHistoryDate(reservation) {
+  // Selecciona la mejor fecha disponible para historial (cancelación, fin, update, etc.).
   const rawDate = reservation?.fecha_cancelacion
     ?? reservation?.fechaCancelacion
     ?? reservation?.fecha_fin
@@ -421,6 +414,7 @@ function getReservationHistoryDate(reservation) {
 }
 
 function getReservationHistoryStatusInfo(reservation) {
+  // Normaliza estados backend y deriva label + badge para render.
   const rawStatus = String(
     reservation?.estado
       ?? reservation?.status
@@ -451,6 +445,7 @@ function getReservationHistoryStatusInfo(reservation) {
 }
 
 function getReservationSortTimestamp(reservation) {
+  // Timestamp numérico para ordenar historial de más nuevo a más viejo.
   const rawDate = reservation?.fecha_cancelacion
     ?? reservation?.fechaCancelacion
     ?? reservation?.fecha_fin
@@ -472,6 +467,7 @@ function getReservationSortTimestamp(reservation) {
 }
 
 function buildReservationMeta(reservation) {
+  // Arma texto secundario de la card (autor, fecha de reserva y vencimiento).
   const pieces = [];
 
   if (reservation.author) {
@@ -494,6 +490,7 @@ function buildReservationMeta(reservation) {
 }
 
 function parseBackendDate(value) {
+  // Soporta formatos con espacio ("YYYY-MM-DD HH:mm:ss") o ISO con "T".
   const normalizedValue = String(value).includes(' ')
     ? String(value).replace(' ', 'T')
     : String(value);
@@ -513,29 +510,29 @@ function escapeHtml(value) {
 // ---------------------------------------------------------------------------
 // Historial de préstamos (#loanHistory)
 //
-// El HTML ya contiene datos de muestra para el diseño.
-// TODO: reemplazar con fetch real cuando el endpoint esté disponible.
+// Pendiente de integración real: el backend de préstamos todavía no expone
+// el endpoint necesario para renderizar este bloque.
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
 // Historial de reservas (#reservationHistory)
 //
-// El HTML ya contiene datos de muestra para el diseño.
-// TODO: reemplazar con fetch real cuando el endpoint esté disponible.
+// Ya se carga con datos reales del backend y se muestra un resumen de las
+// últimas reservas para acceso rápido desde el dashboard.
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
 // Logout
 // ---------------------------------------------------------------------------
-const logoutBtn = document.getElementById('logoutBtn');
+const logoutButton = document.getElementById('logoutBtn');
 
-logoutBtn?.addEventListener('click', () => {
+logoutButton?.addEventListener('click', () => {
   Modal.create({
     title: 'Cerrar sesión',
     content: '¿Estás seguro que querés cerrar tu sesión?',
     onCancel: () => {},
     onConfirm: async () => {
-      logoutBtn.disabled = true;
+      logoutButton.disabled = true;
 
       try {
         // Notificar al backend para que invalide el token

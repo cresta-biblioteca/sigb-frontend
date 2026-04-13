@@ -7,6 +7,11 @@
 
 import { api, ApiError } from './api.js';
 
+// ---------------------------------------------------------------------------
+// Helpers de normalización
+// ---------------------------------------------------------------------------
+
+// Normaliza respuestas que pueden venir como array directo o como { data, pagination }.
 function normalizeReservationsResponse(response) {
   if (Array.isArray(response)) {
     return { data: response, pagination: null };
@@ -25,11 +30,13 @@ function normalizeReservationsResponse(response) {
   };
 }
 
+// Normaliza recursos puntuales que pueden venir anidados en { data }.
 function normalizeResource(response) {
   if (response?.data && !Array.isArray(response.data)) return response.data;
   return response;
 }
 
+// Construye query string omitiendo valores vacíos/undefined.
 function buildQueryString(params) {
   const searchParams = new URLSearchParams();
 
@@ -42,6 +49,11 @@ function buildQueryString(params) {
   return searchParams.toString();
 }
 
+// ---------------------------------------------------------------------------
+// Helpers de deduplicación
+// ---------------------------------------------------------------------------
+
+// Elimina reservas duplicadas usando una clave estable por item.
 function dedupeById(items) {
   const seen = new Set();
 
@@ -53,6 +65,7 @@ function dedupeById(items) {
   });
 }
 
+// Genera clave robusta: prioriza id y usa fallback por campos compuestos.
 function buildReservationKey(item) {
   if (item?.id !== undefined && item?.id !== null) {
     return `id:${String(item.id)}`;
@@ -65,6 +78,9 @@ function buildReservationKey(item) {
   return `fallback:${String(articuloId)}|${String(fechaInicio)}|${String(fechaVencimiento)}`;
 }
 
+// ---------------------------------------------------------------------------
+// Service API
+// ---------------------------------------------------------------------------
 const reservationsService = {
   /**
    * Consulta reservas del lector autenticado con filtros opcionales.
@@ -104,6 +120,7 @@ const reservationsService = {
    * @returns {Promise<{ data: Array<object>, pagination: object|null }>}
    */
   async getMyHistory(options = {}) {
+    // Se consultan ambas fuentes en paralelo para minimizar latencia.
     const [allReservations, activeReservations] = await Promise.all([
       this.getMyReservations(options),
       this.getMyActive(options).catch(() => ({ data: [] })),
@@ -127,6 +144,7 @@ const reservationsService = {
    * @returns {Promise<{ message?: string }>}
    */
   cancelReservation(reservationId) {
+    // Acepta string/number y asegura un id seguro para la URL.
     const normalizedId = Number.parseInt(String(reservationId), 10);
     const safeId = Number.isNaN(normalizedId) ? String(reservationId).trim() : normalizedId;
 
@@ -144,6 +162,7 @@ const reservationsService = {
     const endpoints = [`/libros/${articleId}`, `/articulos/${articleId}`];
     let lastError = null;
 
+    // Fallback progresivo: si no existe en libros (404), busca en articulos.
     for (const endpoint of endpoints) {
       try {
         const response = await api.get(endpoint);
