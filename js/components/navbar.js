@@ -15,6 +15,31 @@ if (!navbar || !navbarToggle || !navbarMenu) {
   throw new Error('Navbar: elementos requeridos no encontrados en el DOM.');
 }
 
+function normalizePath(pathname) {
+  if (!pathname || pathname === '/') return '/index.html';
+  return pathname.replace(/\/$/, '').toLowerCase();
+}
+
+function setActiveLinkByPath() {
+  const currentPath = normalizePath(window.location.pathname);
+  const links = navbarMenu.querySelectorAll('a.navbar__link');
+
+  links.forEach((link) => {
+    const linkPath = normalizePath(new URL(link.href, window.location.origin).pathname);
+    const isActive = linkPath === currentPath;
+
+    link.classList.toggle('navbar__link--active', isActive);
+
+    if (isActive) {
+      link.setAttribute('aria-current', 'page');
+    } else {
+      link.removeAttribute('aria-current');
+    }
+  });
+}
+
+setActiveLinkByPath();
+
 // Mobile menu toggle
 navbarToggle.addEventListener('click', () => {
   const isOpen = navbarMenu.classList.toggle('is-open');

@@ -1,0 +1,348 @@
+/**
+ * User History Page Script
+ *
+ * Pantalla dedicada para ver el historial completo del usuario.
+ */
+
+import { requireAuth } from '../core/authGuard.js';
+import { store } from '../core/store.js';
+import { authService } from '../services/authService.js';
+import { reservationsService } from '../services/reservationsService.js';
+import { ApiError } from '../services/api.js';
+import { Modal } from '../components/modal.js';
+import { showLoading, showError, showEmpty } from '../components/ui.js';
+
+// ---------------------------------------------------------------------------
+// Guard — debe ejecutarse primero en páginas privadas
+// ---------------------------------------------------------------------------
+requireAuth('../index.html');
+
+// ---------------------------------------------------------------------------
+// Referencias de DOM
+// ---------------------------------------------------------------------------
+const reservationsHistoryElement = document.getElementById('reservationHistoryPage');
+const reservationsHistoryPrevBtn = document.getElementById('reservationHistoryPrev');
+const reservationsHistoryNextBtn = document.getElementById('reservationHistoryNext');
+const reservationsHistoryPageInfoElement = document.getElementById('reservationHistoryPageInfo');
+const reservationsHistoryPaginationElement = document.querySelector('.history-pagination');
+const loansHistoryElement = document.getElementById('loanHistoryPage');
+const logoutBtn = document.getElementById('logoutBtn');
+
+const RESERVATION_HISTORY_PAGE_SIZE = 30;
+
+let currentHistoryPage = 1;
+let totalHistoryPages = 1;
+
+// ---------------------------------------------------------------------------
+// Eventos de paginación
+// ---------------------------------------------------------------------------
+reservationsHistoryPrevBtn?.addEventListener('click', () => {
+  if (currentHistoryPage > 1) {
+    void loadReservationsHistoryPage(currentHistoryPage - 1);
+  }
+});
+
+reservationsHistoryNextBtn?.addEventListener('click', () => {
+  if (currentHistoryPage < totalHistoryPages) {
+    void loadReservationsHistoryPage(currentHistoryPage + 1);
+  }
+});
+
+void loadReservationsHistoryPage(currentHistoryPage);
+loadLoansHistoryPlaceholder();
+
+// Carga una página del historial de reservas con estado de loading/error/empty.
+async function loadReservationsHistoryPage(page = 1) {
+  if (!reservationsHistoryElement) return;
+
+  currentHistoryPage = Math.max(1, page);
+  showLoading(reservationsHistoryElement);
+  setHistoryPaginationLoading(true);
+
+  try {
+    const historyResponse = await reservationsService.getMyHistory({ page: currentHistoryPage, perPage: RESERVATION_HISTORY_PAGE_SIZE });
+    const reservations = dedupeReservationsForDisplay(await enrichReservations(historyResponse.data ?? []));
+    const sortedReservations = [...reservations].sort((a, b) => getReservationSortTimestamp(b) - getReservationSortTimestamp(a));
+    const totalReservations = historyResponse.pagination?.total ?? sortedReservations.length;
+    const calculatedTotalPages = historyResponse.pagination?.total_pages
+      ?? Math.max(1, Math.ceil(totalReservations / RESERVATION_HISTORY_PAGE_SIZE));
+
+    // Si el historial se calcula por diferencia (todas - activas), el total de
+    // paginación del backend puede no coincidir con el historial resultante.
+    // En ese caso, si la primera página ya trae menos que el tamaño de página,
+    // ocultamos la paginación para no mostrar controles inútiles.
+    totalHistoryPages = (currentHistoryPage === 1 && sortedReservations.length < RESERVATION_HISTORY_PAGE_SIZE)
+      ? 1
+      : calculatedTotalPages;
+
+    if (sortedReservations.length === 0) {
+      showEmpty(reservationsHistoryElement, 'Todavía no tenés reservas para mostrar en el historial.');
+      updateHistoryPaginationInfo();
+      return;
+    }
+
+    reservationsHistoryElement.innerHTML = `
+      <ul class="history-list">
+        ${sortedReservations.map(renderReservationsHistoryItem).join('')}
+      </ul>
+    `;
+
+    updateHistoryPaginationInfo();
+  } catch (error) {
+    const message = error instanceof ApiError
+      ? 'No se pudo cargar el historial de reservas.'
+      : 'No se pudo conectar con el servidor. Intentá nuevamente.';
+
+    showError(reservationsHistoryElement, message);
+    totalHistoryPages = 1;
+    updateHistoryPaginationInfo();
+  } finally {
+    setHistoryPaginationLoading(false);
+  }
+}
+
+async function enrichReservations(reservations) {
+  const uniqueArticleIds = [...new Set(
+    reservations
+      .map((reservation) => getArticleId(reservation))
+      .filter((articleId) => articleId !== null && articleId !== undefined && articleId !== '')
+  )];
+
+  const articleCache = new Map();
+
+  await Promise.all(uniqueArticleIds.map(async (articleId) => {
+    try {
+      articleCache.set(String(articleId), await reservationsService.getArticleById(articleId));
+    } catch {
+      articleCache.set(String(articleId), null);
+    }
+  }));
+
+  return reservations.map((reservation) => {
+    const articleId = getArticleId(reservation);
+    const article = articleCache.get(String(articleId)) ?? null;
+
+    return {
+      ...reservation,
+      article,
+      title: getArticleTitle(article, reservation),
+      author: getArticleAuthor(article),
+      historyLabel: getReservationHistoryLabel(reservation),
+      historyDate: getReservationHistoryDate(reservation),
+      historyTimestamp: getReservationHistoryTimestamp(reservation),
+    };
+  });
+}
+
+// Renderiza una fila del historial de reservas.
+function renderReservationsHistoryItem(reservation) {
+  return `
+    <li class="history-item">
+      <div class="history-item__info">
+        <p class="history-item__title">${escapeHtml(reservation.title)}</p>
+        <p class="history-item__meta">${escapeHtml(reservation.historyLabel)}${reservation.historyDate ? ` el ${escapeHtml(reservation.historyDate)}` : ''}${reservation.author ? ` · ${escapeHtml(reservation.author)}` : ''}</p>
+      </div>
+      <span class="badge ${escapeHtml(getReservationHistoryBadgeClass(reservation))}">${escapeHtml(reservation.historyLabel)}</span>
+    </li>
+  `;
+}
+
+// Actualiza controles de paginación (botones, texto y visibilidad).
+function updateHistoryPaginationInfo() {
+  if (reservationsHistoryPaginationElement) {
+    reservationsHistoryPaginationElement.hidden = totalHistoryPages <= 1;
+  }
+
+  if (reservationsHistoryPageInfoElement) {
+    reservationsHistoryPageInfoElement.textContent = `Página ${currentHistoryPage} de ${totalHistoryPages}`;
+  }
+
+  if (reservationsHistoryPrevBtn) {
+    reservationsHistoryPrevBtn.disabled = currentHistoryPage <= 1;
+  }
+
+  if (reservationsHistoryNextBtn) {
+    reservationsHistoryNextBtn.disabled = currentHistoryPage >= totalHistoryPages;
+  }
+}
+
+// Bloquea o desbloquea los botones de paginación durante la carga.
+function setHistoryPaginationLoading(isLoading) {
+  if (reservationsHistoryPrevBtn) {
+    reservationsHistoryPrevBtn.disabled = isLoading || currentHistoryPage <= 1;
+  }
+
+  if (reservationsHistoryNextBtn) {
+    reservationsHistoryNextBtn.disabled = isLoading || currentHistoryPage >= totalHistoryPages;
+  }
+}
+
+// Elimina duplicados de visualización para evitar ítems repetidos en pantalla.
+function dedupeReservationsForDisplay(reservations) {
+  const seen = new Set();
+
+  return reservations.filter((reservation) => {
+    const key = `${String(reservation.title ?? '').trim().toLowerCase()}|${String(reservation.historyLabel ?? '').trim().toLowerCase()}|${String(reservation.historyDate ?? '').trim().toLowerCase()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+// Obtiene el ID del artículo soportando distintos nombres de campo del backend.
+function getArticleId(reservation) {
+  return reservation?.articulo_id
+    ?? reservation?.articuloId
+    ?? reservation?.article_id
+    ?? reservation?.articleId
+    ?? reservation?.libro_id
+    ?? reservation?.libroId
+    ?? null;
+}
+
+// Resuelve el título a mostrar con fallback entre libro/artículo/reserva.
+function getArticleTitle(article, reservation) {
+  return article?.articulo?.titulo
+    ?? article?.titulo
+    ?? article?.title
+    ?? reservation?.titulo
+    ?? reservation?.title
+    ?? 'Sin título';
+}
+
+// Resuelve el autor a mostrar según la estructura disponible en la respuesta.
+function getArticleAuthor(article) {
+  const author = article?.personas?.[0];
+
+  if (typeof author === 'string') return author;
+  if (author?.nombre && author?.apellido) return `${author.nombre} ${author.apellido}`;
+
+  return article?.autor ?? article?.author ?? article?.persona ?? '';
+}
+
+// Normaliza estado backend y lo traduce a una etiqueta legible en UI.
+function getReservationHistoryLabel(reservation) {
+  const rawStatus = String(reservation?.estado ?? reservation?.status ?? '').toUpperCase();
+
+  if (rawStatus.includes('CANCEL')) return 'Cancelada';
+  if (rawStatus.includes('EXPIR')) return 'Expirada';
+  if (rawStatus.includes('COMPLET') || rawStatus.includes('FINAL') || rawStatus.includes('DEVUEL')) return 'Completada';
+
+  const endDate = reservation?.fecha_vencimiento ?? reservation?.fechaVencimiento ?? null;
+  if (endDate) {
+    const parsedEndDate = parseApiDate(endDate);
+    if (!Number.isNaN(parsedEndDate.getTime()) && parsedEndDate.getTime() < Date.now()) {
+      return 'Expirada';
+    }
+  }
+
+  return 'Cancelada';
+}
+
+// Calcula la fecha de referencia para mostrar en el historial.
+function getReservationHistoryDate(reservation) {
+  const rawDate = reservation?.fecha_cancelacion
+    ?? reservation?.fechaCancelacion
+    ?? reservation?.fecha_fin
+    ?? reservation?.fechaFin
+    ?? reservation?.updated_at
+    ?? reservation?.updatedAt
+    ?? reservation?.fecha_vencimiento
+    ?? reservation?.fechaVencimiento
+    ?? reservation?.fecha_inicio
+    ?? reservation?.fechaInicio
+    ?? null;
+
+  if (!rawDate) return '';
+
+  const parsedDate = parseApiDate(rawDate);
+  if (Number.isNaN(parsedDate.getTime())) return String(rawDate);
+
+  return new Intl.DateTimeFormat('es-AR').format(parsedDate);
+}
+
+// Mapea la etiqueta de historial a la clase visual del badge.
+function getReservationHistoryBadgeClass(reservation) {
+  const label = getReservationHistoryLabel(reservation);
+  if (label === 'Cancelada') return 'badge--cancelled';
+  if (label === 'Expirada') return 'badge--overdue';
+  return 'badge--closed';
+}
+
+// Devuelve timestamp numérico para ordenar historial de más nuevo a más viejo.
+function getReservationSortTimestamp(reservation) {
+  const rawDate = reservation?.historyTimestamp ?? reservation?.fecha_cancelacion ?? reservation?.fecha_vencimiento ?? reservation?.fecha_inicio ?? null;
+  if (!rawDate) return 0;
+
+  const parsedDate = parseApiDate(rawDate);
+  if (Number.isNaN(parsedDate.getTime())) return 0;
+
+  return parsedDate.getTime();
+}
+
+// Obtiene la fecha "más representativa" para histórico y ordenamiento.
+function getReservationHistoryTimestamp(reservation) {
+  return reservation?.fecha_cancelacion
+    ?? reservation?.fechaCancelacion
+    ?? reservation?.fecha_fin
+    ?? reservation?.fechaFin
+    ?? reservation?.updated_at
+    ?? reservation?.updatedAt
+    ?? reservation?.fecha_vencimiento
+    ?? reservation?.fechaVencimiento
+    ?? reservation?.fecha_inicio
+    ?? reservation?.fechaInicio
+    ?? null;
+}
+
+// Parsea fechas backend permitiendo formatos con espacio o con 'T'.
+function parseApiDate(value) {
+  const normalizedValue = String(value).includes(' ')
+    ? String(value).replace(' ', 'T')
+    : String(value);
+
+  return new Date(normalizedValue);
+}
+
+// Placeholder temporal: préstamos aún no integrados al backend.
+function loadLoansHistoryPlaceholder() {
+  if (!loansHistoryElement) return;
+
+  showEmpty(
+    loansHistoryElement,
+    'Próximamente vas a ver acá tu historial de préstamos.'
+  );
+}
+
+// Sanitiza texto antes de inyectar HTML (previene XSS básico).
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+// ---------------------------------------------------------------------------
+// Logout
+// ---------------------------------------------------------------------------
+logoutBtn?.addEventListener('click', () => {
+  Modal.create({
+    title: 'Cerrar sesión',
+    content: '¿Estás seguro que querés cerrar tu sesión?',
+    onCancel: () => {},
+    onConfirm: async () => {
+      logoutBtn.disabled = true;
+
+      try {
+        await authService.logout();
+      } catch {
+        // Si el backend falla, igual limpiamos la sesión local.
+      } finally {
+        store.clearSession();
+        window.location.href = '../index.html';
+      }
+    },
+  });
+});
