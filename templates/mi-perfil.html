@@ -62,15 +62,10 @@
         <div class="profile-header__info">
           <!--
             JS llena #profileName con el nombre completo del JWT.
-            #profileRole y los badges se actualizarán cuando
-            el endpoint /users/me esté disponible.
+            #profileRole mostrará la tarjeta del lector cuando el endpoint responda.
           -->
           <h1 class="profile-header__name" id="profileName">Cargando...</h1>
           <p class="profile-header__role" id="profileRole">—</p>
-          <div class="profile-header__badges">
-            <span class="badge badge--success" id="profileStatusBadge">Activo</span>
-            <span class="badge badge--info" id="profilePlanBadge">Plan Regular</span>
-          </div>
         </div>
 
         <a href="dashboard.html" class="btn btn--outline btn--sm profile-header__back">
@@ -95,7 +90,7 @@
           </h2>
 
           <!--
-            Los campos se llenan con JS cuando el endpoint /users/me esté disponible.
+            Los campos se llenan con JS cuando el endpoint /lectores/mi-perfil esté disponible.
             Por ahora muestran "—" como estado pendiente.
           -->
           <dl class="profile-data">
@@ -115,63 +110,30 @@
               <dt class="profile-data__label">Teléfono</dt>
               <dd class="profile-data__value" id="pdPhone">—</dd>
             </div>
-            <div class="profile-data__row">
-              <dt class="profile-data__label">Fecha de nacimiento</dt>
-              <dd class="profile-data__value" id="pdBirthdate">—</dd>
-            </div>
           </dl>
         </section>
 
-        <!-- Información de cuenta -->
-        <section class="profile-section" aria-labelledby="accountInfoTitle">
-          <h2 class="profile-section__title" id="accountInfoTitle">
+        <!-- Datos de lector -->
+        <section class="profile-section" aria-labelledby="readerInfoTitle">
+          <h2 class="profile-section__title" id="readerInfoTitle">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
               <line x1="8" y1="21" x2="16" y2="21"/>
               <line x1="12" y1="17" x2="12" y2="21"/>
             </svg>
-            Información de cuenta
+            Datos de lector
           </h2>
 
           <dl class="profile-data">
             <div class="profile-data__row">
-              <dt class="profile-data__label">Tipo de usuario</dt>
-              <dd class="profile-data__value" id="pdRole">—</dd>
+              <dt class="profile-data__label">Carnet de biblioteca:</dt>
+              <dd class="profile-data__value profile-data__value--mono" id="pdCard">—</dd>
             </div>
             <div class="profile-data__row">
-              <dt class="profile-data__label">Plan de membresía</dt>
-              <dd class="profile-data__value" id="pdPlan">—</dd>
-            </div>
-            <div class="profile-data__row">
-              <dt class="profile-data__label">Estado</dt>
-              <dd class="profile-data__value">
-                <span class="badge badge--success" id="pdStatus">Activo</span>
-              </dd>
-            </div>
-            <div class="profile-data__row">
-              <dt class="profile-data__label">Miembro desde</dt>
-              <dd class="profile-data__value" id="pdMemberSince">—</dd>
-            </div>
-            <div class="profile-data__row">
-              <dt class="profile-data__label">ID de lector</dt>
-              <dd class="profile-data__value profile-data__value--mono" id="pdReaderId">—</dd>
+              <dt class="profile-data__label">Legajo:</dt>
+              <dd class="profile-data__value profile-data__value--mono" id="pdLegajo">—</dd>
             </div>
           </dl>
-
-          <!-- Acción de seguridad -->
-          <div class="profile-section__footer">
-            <!--
-              El cambio de contraseña usará el endpoint POST /auth/change-password.
-              Por ahora se muestra el botón como parte del diseño.
-            -->
-            <button class="btn btn--outline btn--sm" id="changePasswordBtn">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-              Cambiar contraseña
-            </button>
-          </div>
         </section>
 
       </div><!-- /profile-grid -->

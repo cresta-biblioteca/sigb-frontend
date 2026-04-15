@@ -38,7 +38,8 @@ sigb-frontend/
 │   │   └── authGuard.js         # Protección de rutas: requireAuth(), requireGuest()
 │   ├── services/
 │   │   ├── api.js               # HTTP client — único lugar donde vive fetch()
-│   │   └── authService.js       # Endpoints de autenticación: login, logout, register
+│   │   ├── authService.js       # Endpoints de autenticación: login, logout, register
+│   │   └── lectoresService.js   # Endpoint del perfil autenticado del lector
 │   ├── components/
 │   │   ├── navbar.js            # Comportamiento del navbar (hamburguesa, dropdown)
 │   │   ├── footer.js            # Comportamiento del footer
@@ -199,5 +200,6 @@ El archivo `endpoints-backend/endpoints.yml` contiene la especificación OpenAPI
 | `POST` | `/auth/logout` | Cerrar sesión | Bearer |
 | `POST` | `/auth/register` | Registrar nuevo usuario y lector | No |
 | `POST` | `/auth/change-password` | Cambiar contraseña | Bearer |
+| `GET` | `/lectores/mi-perfil` | Obtener perfil del lector autenticado | Bearer |
 
 El token JWT se incluye automáticamente en todos los requests mediante `api.js`. Un `401` con token activo limpia la sesión y redirige al inicio.

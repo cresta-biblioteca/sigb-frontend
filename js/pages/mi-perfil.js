@@ -6,31 +6,28 @@
  *
  * Flujo:
  *   1. requireAuth()     → verifica sesión, redirige si no hay
- *   2. store.getUser()   → obtiene datos básicos del JWT (nombre, apellido)
- *   3. Renderiza nombre en navbar y encabezado del perfil
- *   4. Genera iniciales para el avatar
- *   5. Los campos detallados (DNI, email, teléfono, etc.) se llenarán
- *      cuando el endpoint /users/me esté disponible.
+ *   2. store.getUser()   → datos básicos del JWT usados como fallback
+ *   3. lectoresService.getMyProfile() → consume /lectores/mi-perfil
+ *   4. Renderiza nombre, tarjeta y datos del lector en la vista
+ *   5. Genera iniciales para el avatar
  *
  * Campos en el HTML:
  *   #navUserName       — nombre en navbar (estado activo, no link)
  *   #profileName       — nombre completo en encabezado
- *   #profileRole       — tipo de usuario
+ *   #profileRole       — tarjeta del lector
  *   #profileAvatar     — iniciales del avatar
  *   #pdFullName        — nombre completo en datos personales
- *   #pdDni             — DNI (pendiente endpoint)
- *   #pdEmail           — email (pendiente endpoint)
- *   #pdPhone           — teléfono (pendiente endpoint)
- *   #pdBirthdate       — fecha de nacimiento (pendiente endpoint)
- *   #pdRole            — tipo de usuario (pendiente endpoint)
- *   #pdPlan            — plan de membresía (pendiente endpoint)
- *   #pdMemberSince     — fecha de alta (pendiente endpoint)
- *   #pdReaderId        — ID de lector (pendiente endpoint)
+ *   #pdDni             — DNI
+ *   #pdEmail           — email
+ *   #pdPhone           — teléfono
+ *   #pdCard            — tarjeta del lector
+ *   #pdLegajo          — legajo del lector
  */
 
 import { requireAuth }  from '../core/authGuard.js';
 import { store }        from '../core/store.js';
 import { authService }  from '../services/authService.js';
+import { lectoresService } from '../services/lectoresService.js';
 import { Modal }        from '../components/modal.js';
 
 // ---------------------------------------------------------------------------
@@ -48,9 +45,11 @@ const fullName = [user?.nombre, user?.apellido].filter(Boolean).join(' ') || 'Us
 
 const navUserName  = document.getElementById('navUserName');
 const profileName  = document.getElementById('profileName');
+const profileRole  = document.getElementById('profileRole');
 
 if (navUserName) navUserName.textContent = fullName;
 if (profileName) profileName.textContent = fullName;
+if (profileRole) profileRole.textContent = 'Tarjeta: —';
 
 // ---------------------------------------------------------------------------
 // Avatar con iniciales
@@ -72,51 +71,54 @@ const pdFullName = document.getElementById('pdFullName');
 if (pdFullName) pdFullName.textContent = fullName;
 
 // ---------------------------------------------------------------------------
-// Datos del perfil completo
-//
-// TODO: reemplazar con fetch real cuando el endpoint /users/me esté disponible.
-//
-// import { userService } from '../services/userService.js';
-// import { showError }   from '../components/ui.js';
-//
-// try {
-//   const profile = await userService.getMyProfile();
-//
-//   document.getElementById('pdDni').textContent        = profile.dni;
-//   document.getElementById('pdEmail').textContent      = profile.email        ?? '—';
-//   document.getElementById('pdPhone').textContent      = profile.telefono     ?? '—';
-//   document.getElementById('pdBirthdate').textContent  = profile.fecha_nacimiento ?? '—';
-//   document.getElementById('pdRole').textContent       = profile.tipo_usuario;
-//   document.getElementById('pdPlan').textContent       = profile.plan;
-//   document.getElementById('pdMemberSince').textContent = profile.miembro_desde ?? '—';
-//   document.getElementById('pdReaderId').textContent   = profile.lector_id ?? '—';
-//
-//   document.getElementById('profileRole').textContent  = profile.tipo_usuario;
-//
-//   if (profile.estado === 'inactivo') {
-//     document.getElementById('profileStatusBadge').textContent = 'Inactivo';
-//     document.getElementById('profileStatusBadge').classList.replace('badge--success', 'badge--overdue');
-//     document.getElementById('pdStatus').textContent = 'Inactivo';
-//     document.getElementById('pdStatus').classList.replace('badge--success', 'badge--overdue');
-//   }
-// } catch {
-//   // Los campos quedan en "—". No interrumpimos la experiencia del usuario.
-// }
+// Datos del perfil completo desde el backend
 // ---------------------------------------------------------------------------
+const pdDni = document.getElementById('pdDni');
+const pdEmail = document.getElementById('pdEmail');
+const pdPhone = document.getElementById('pdPhone');
+const pdCard = document.getElementById('pdCard');
+const pdLegajo = document.getElementById('pdLegajo');
 
-// ---------------------------------------------------------------------------
-// Cambio de contraseña
-//
-// TODO: implementar modal de cambio de contraseña cuando el endpoint
-// POST /auth/change-password esté disponible.
-// ---------------------------------------------------------------------------
-const changePasswordBtn = document.getElementById('changePasswordBtn');
+function setText(element, value) {
+  if (element) element.textContent = value ?? '—';
+}
 
-changePasswordBtn?.addEventListener('click', () => {
-  // TODO: abrir modal con campos current_password y new_password
-  // Modal.create({ title: 'Cambiar contraseña', ... });
-  alert('Cambio de contraseña: disponible cuando el endpoint esté listo.');
-});
+function getInitials(name, surname) {
+  const letters = [name, surname].filter(Boolean);
+
+  if (!letters.length) return '?';
+
+  const parts = letters.join(' ').trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  return parts[0].slice(0, 2).toUpperCase();
+}
+
+try {
+  const profileResponse = await lectoresService.getMyProfile();
+  const profile = profileResponse?.data ?? profileResponse ?? {};
+  const backendFullName = [profile.nombre, profile.apellido].filter(Boolean).join(' ') || fullName;
+
+  if (navUserName) navUserName.textContent = backendFullName;
+  if (profileName) profileName.textContent = backendFullName;
+  if (profileRole) profileRole.textContent = `Tarjeta: ${profile.tarjeta ?? '—'}`;
+
+  if (profileAvatar && backendFullName !== 'Usuario') {
+    profileAvatar.textContent = getInitials(profile.nombre, profile.apellido);
+  }
+
+  setText(pdFullName, backendFullName);
+  setText(pdDni, profile.dni);
+  setText(pdEmail, profile.email);
+  setText(pdPhone, profile.telefono);
+  setText(pdCard, profile.tarjeta);
+  setText(pdLegajo, profile.legajo);
+} catch {
+  if (profileRole) profileRole.textContent = 'Tarjeta: —';
+}
 
 // ---------------------------------------------------------------------------
 // Logout

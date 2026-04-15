@@ -9,6 +9,135 @@
   "servers": [{ "url": "/api/v1", "description": "Servidor de desarrollo" }],
   "paths":
     {
+      "/lectores/mi-perfil":
+        {
+          "get":
+            {
+              "tags": ["Lectores"],
+              "summary": "Obtener mi perfil",
+              "description": "Retorna el perfil del lector autenticado a partir del JWT.",
+              "operationId": "getMyProfile",
+              "security": [{ "bearerAuth": [] }],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Perfil obtenido correctamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                { "$ref": "#/components/schemas/MiPerfilResponse" },
+                              "examples":
+                                {
+                                  "ok":
+                                    {
+                                      "summary": "Perfil valido",
+                                      "value":
+                                        {
+                                          "data":
+                                            {
+                                              "nombre": "Juan",
+                                              "apellido": "Perez",
+                                              "tarjeta": "123456",
+                                              "dni": "35111222",
+                                              "legajo": "K1234",
+                                              "telefono": "2616123456",
+                                              "email": "juan.perez@example.com",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                  "401":
+                    {
+                      "description": "No autorizado (token ausente, invalido o expirado)",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "oneOf":
+                                    [
+                                      { "$ref": "#/components/schemas/UnauthorizedSimpleError" },
+                                      { "$ref": "#/components/schemas/ErrorEnvelope" },
+                                    ],
+                                },
+                              "examples":
+                                {
+                                  "noToken":
+                                    {
+                                      "summary": "Sin token",
+                                      "value": { "error": "Unauthorized." },
+                                    },
+                                  "invalidToken":
+                                    {
+                                      "summary": "Token invalido o expirado",
+                                      "value": { "error": "Invalid or expired token." },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Lector no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                { "$ref": "#/components/schemas/ErrorEnvelope" },
+                              "examples":
+                                {
+                                  "lectorNoEncontrado":
+                                    {
+                                      "value":
+                                        {
+                                          "error":
+                                            {
+                                              "code": "ENTITY_NOT_FOUND",
+                                              "message": "Lector no encontrado",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                  "500":
+                    {
+                      "description": "Error interno del servidor",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                { "$ref": "#/components/schemas/ErrorEnvelope" },
+                              "examples":
+                                {
+                                  "internal":
+                                    {
+                                      "value":
+                                        {
+                                          "error":
+                                            {
+                                              "code": "INTERNAL_SERVER_ERROR",
+                                              "message": "Error interno del servidor",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
       "/lectores/me/reservas":
         {
           "get":
@@ -792,6 +921,30 @@
                   "userId": { "type": "integer", "example": 1 },
                   "lectorId": { "type": "integer", "example": 1 },
                   "fullName": { "type": "string", "example": "Juan Pérez" },
+                },
+              "type": "object",
+            },
+          "MiPerfilResponse":
+            {
+              "required": ["data"],
+              "properties":
+                {
+                  "data": { "$ref": "#/components/schemas/LectorPerfilData" },
+                },
+              "type": "object",
+            },
+          "LectorPerfilData":
+            {
+              "required": ["nombre", "apellido", "tarjeta", "dni", "telefono", "email"],
+              "properties":
+                {
+                  "nombre": { "type": "string", "example": "Juan" },
+                  "apellido": { "type": "string", "example": "Perez" },
+                  "tarjeta": { "type": "string", "example": "123456" },
+                  "dni": { "type": "string", "example": "35111222" },
+                  "legajo": { "type": "string", "nullable": true, "example": "K1234" },
+                  "telefono": { "type": "string", "example": "2616123456" },
+                  "email": { "type": "string", "format": "email", "example": "juan.perez@example.com" },
                 },
               "type": "object",
             },
