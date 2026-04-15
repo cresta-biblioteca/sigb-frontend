@@ -78,6 +78,7 @@ const pdEmail = document.getElementById('pdEmail');
 const pdPhone = document.getElementById('pdPhone');
 const pdCard = document.getElementById('pdCard');
 const pdLegajo = document.getElementById('pdLegajo');
+const changePasswordBtn = document.getElementById('changePasswordBtn');
 
 function setText(element, value) {
   if (element) element.textContent = value ?? '—';
@@ -119,6 +120,153 @@ try {
 } catch {
   if (profileRole) profileRole.textContent = 'Tarjeta: —';
 }
+
+// ---------------------------------------------------------------------------
+// Cambio de contraseña
+// ---------------------------------------------------------------------------
+changePasswordBtn?.addEventListener('click', () => {
+  const form = document.createElement('form');
+  form.className = 'profile-password-form';
+  form.innerHTML = `
+    <p class="profile-password-form__intro">Ingresá tu contraseña actual y la nueva contraseña para actualizar el acceso.</p>
+    <label class="profile-password-form__label">
+      Contraseña actual
+      <div class="profile-password-form__field">
+        <input id="currentPassword" type="password" autocomplete="current-password" class="profile-password-form__input" />
+        <button type="button" class="password-toggle profile-password-form__toggle" data-target="currentPassword" aria-label="Mostrar contraseña actual" aria-pressed="false">
+          <i class="fas fa-eye" aria-hidden="true"></i>
+        </button>
+      </div>
+    </label>
+    <label class="profile-password-form__label">
+      Nueva contraseña
+      <div class="profile-password-form__field">
+        <input id="newPassword" type="password" autocomplete="new-password" class="profile-password-form__input" />
+        <button type="button" class="password-toggle profile-password-form__toggle" data-target="newPassword" aria-label="Mostrar nueva contraseña" aria-pressed="false">
+          <i class="fas fa-eye" aria-hidden="true"></i>
+        </button>
+      </div>
+    </label>
+    <label class="profile-password-form__label">
+      Repetir nueva contraseña
+      <div class="profile-password-form__field">
+        <input id="confirmPassword" type="password" autocomplete="new-password" class="profile-password-form__input" />
+        <button type="button" class="password-toggle profile-password-form__toggle" data-target="confirmPassword" aria-label="Mostrar confirmación de contraseña" aria-pressed="false">
+          <i class="fas fa-eye" aria-hidden="true"></i>
+        </button>
+      </div>
+    </label>
+    <p id="changePasswordError" class="profile-password-form__error"></p>
+  `;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'profile-password-modal';
+  overlay.className = 'profile-password-modal';
+
+  const modal = document.createElement('div');
+  modal.className = 'profile-password-modal__dialog';
+
+  modal.innerHTML = `
+    <h3 class="profile-password-modal__title">Cambiar contraseña</h3>
+    <div id="profile-password-content"></div>
+    <div class="profile-password-modal__actions">
+      <button type="button" id="profile-password-cancel" class="profile-password-modal__btn profile-password-modal__btn--cancel">Cancelar</button>
+      <button type="button" id="profile-password-confirm" class="profile-password-modal__btn profile-password-modal__btn--confirm">Cambiar contraseña</button>
+    </div>
+  `;
+
+  const contentHost = modal.querySelector('#profile-password-content');
+  contentHost.appendChild(form);
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  let keydownHandler = null;
+  const closeModal = () => {
+    if (keydownHandler) {
+      document.removeEventListener('keydown', keydownHandler);
+      keydownHandler = null;
+    }
+    overlay.remove();
+  };
+
+  const cancelButton = modal.querySelector('#profile-password-cancel');
+  const confirmButton = modal.querySelector('#profile-password-confirm');
+  const currentPasswordInput = form.querySelector('#currentPassword');
+  const newPasswordInput = form.querySelector('#newPassword');
+  const confirmPasswordInput = form.querySelector('#confirmPassword');
+  const passwordToggleButtons = form.querySelectorAll('.password-toggle');
+  const errorElement = form.querySelector('#changePasswordError');
+
+  passwordToggleButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const targetId = button.getAttribute('data-target');
+      const targetInput = form.querySelector(`#${targetId}`);
+      const icon = button.querySelector('i');
+
+      if (!targetInput || !icon) return;
+
+      const isVisible = targetInput.type === 'text';
+      targetInput.type = isVisible ? 'password' : 'text';
+      button.setAttribute('aria-pressed', String(!isVisible));
+      icon.classList.toggle('fa-eye', isVisible);
+      icon.classList.toggle('fa-eye-slash', !isVisible);
+    });
+  });
+
+  const runChangePassword = async () => {
+    const currentPassword = currentPasswordInput.value.trim();
+    const newPassword = newPasswordInput.value.trim();
+    const confirmPassword = confirmPasswordInput.value.trim();
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      errorElement.textContent = 'Completá los tres campos.';
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      errorElement.textContent = 'Las contraseñas nuevas no coinciden.';
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      errorElement.textContent = 'La nueva contraseña debe tener al menos 8 caracteres.';
+      return;
+    }
+
+    errorElement.textContent = '';
+    confirmButton.disabled = true;
+
+    try {
+      const response = await authService.changePassword({
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
+
+      window.alert(response?.message ?? 'Contraseña actualizada correctamente');
+      closeModal();
+    } catch (error) {
+      const backendMessage = error?.data?.error?.message || error?.message;
+      errorElement.textContent = backendMessage ?? 'No se pudo cambiar la contraseña.';
+    } finally {
+      confirmButton.disabled = false;
+    }
+  };
+
+  cancelButton.addEventListener('click', closeModal);
+  confirmButton.addEventListener('click', runChangePassword);
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) closeModal();
+  });
+  keydownHandler = function handler(event) {
+    if (event.key === 'Escape') {
+      closeModal();
+    }
+  };
+  document.addEventListener('keydown', keydownHandler);
+
+  if (currentPasswordInput) currentPasswordInput.focus();
+});
 
 // ---------------------------------------------------------------------------
 // Logout

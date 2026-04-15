@@ -28,6 +28,8 @@
 
 import { api } from './api.js';
 
+const API_BASE_URL = 'http://localhost:8080/api/v1';
+
 const authService = {
   /**
    * Autentica al usuario con DNI y contraseña.
@@ -72,6 +74,38 @@ const authService = {
    */
   register(data) {
     return api.post('/auth/register', data);
+  },
+
+  /**
+   * Cambia la contraseña del usuario autenticado.
+   *
+   * @param {{ current_password: string, new_password: string }} data
+   * @returns {Promise<{ message: string }>} 
+   */
+  async changePassword(data) {
+    const token = localStorage.getItem('auth_token');
+
+    const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (response.status === 204) return { message: 'Contraseña actualizada correctamente' };
+
+    const body = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      const error = new Error(body?.error?.message ?? body?.message ?? `Error ${response.status}`);
+      error.status = response.status;
+      error.data = body;
+      throw error;
+    }
+
+    return body;
   },
 };
 
