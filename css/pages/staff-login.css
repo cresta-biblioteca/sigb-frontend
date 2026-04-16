@@ -1,0 +1,132 @@
+/* ========== STAFF LOGIN ========== */
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-primary-dark);
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(21, 101, 192, 0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(15, 43, 91, 0.3) 0%, transparent 50%);
+  padding: var(--spacing-lg);
+}
+
+/* ── Card central ── */
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background-color: var(--color-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+}
+
+/* ── Header de la card (branding) ── */
+.login-card__header {
+  background-color: var(--color-primary);
+  padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  text-align: center;
+}
+
+.login-card__logo {
+  width: 48px;
+  height: 48px;
+  background-color: var(--color-white);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  font-size: 1.5rem;
+  margin-bottom: var(--spacing-xs);
+}
+
+.login-card__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-white);
+  letter-spacing: 1px;
+}
+
+.login-card__subtitle {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+/* ── Body de la card (formulario) ── */
+.login-card__body {
+  padding: var(--spacing-xl);
+}
+
+.login-card__welcome {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+}
+
+.login-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.login-form-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-gray-700);
+}
+
+.login-submit {
+  width: 100%;
+  margin-top: var(--spacing-sm);
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+/* ── Alert de error ── */
+.login-alert {
+  display: none;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-md);
+  background-color: #FDECEA;
+  border: 1px solid #F5B3AE;
+  color: #B3261E;
+}
+
+.login-alert--visible {
+  display: flex;
+}
+
+/* ── Footer de la card ── */
+.login-card__footer {
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-top: 1px solid var(--color-gray-100);
+  text-align: center;
+}
+
+.login-card__back-link {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-500);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  transition: color var(--transition-fast);
+}
+
+.login-card__back-link:hover {
+  color: var(--color-primary);
+}
