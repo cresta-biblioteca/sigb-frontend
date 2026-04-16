@@ -58,11 +58,13 @@ const api = {
    */
   async request(endpoint, options = {}) {
     const token = localStorage.getItem('auth_token');
+    const isFormData = options.body instanceof FormData;
 
     const config = {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        // FormData: el browser setea Content-Type con el boundary automáticamente
+        ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
         // Solo agrega Authorization si hay token
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         // Permite sobrescribir headers por request si es necesario
@@ -70,8 +72,8 @@ const api = {
       },
     };
 
-    // Serializar body automáticamente si es un objeto JS
-    if (config.body !== null && typeof config.body === 'object') {
+    // Serializar body si es objeto JS plano (no FormData)
+    if (config.body !== null && typeof config.body === 'object' && !isFormData) {
       config.body = JSON.stringify(config.body);
     }
 

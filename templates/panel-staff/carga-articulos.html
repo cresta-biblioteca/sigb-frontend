@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carga de Artículos | CRESTA Admin</title>
+    <meta name="robots" content="noindex">
+
+    <!-- CSS Base -->
+    <link rel="stylesheet" href="../../css/reset.css">
+    <link rel="stylesheet" href="../../css/variables.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+    <!-- CSS panel admin (sidebar, header, tablas) -->
+    <link rel="stylesheet" href="../../css/pages/vista-general.css">
+    <!-- CSS específico de esta vista -->
+    <link rel="stylesheet" href="../../css/pages/carga-articulos.css">
+
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<div class="admin-layout">
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="admin-sidebar" id="sidebar">
+        <div class="sidebar__header">
+            <div class="sidebar__logo-icon">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <div class="sidebar__title">
+                <span class="sidebar__title-main">CRESTA</span>
+                <span class="sidebar__title-sub">LIBRARY ADMIN</span>
+            </div>
+        </div>
+
+        <nav class="sidebar__menu">
+            <div class="sidebar__section-title">Principal</div>
+            <a href="vista-general.html" class="sidebar__link">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+
+            <div class="sidebar__section-title">Operaciones</div>
+            <a href="carga-articulos.html" class="sidebar__link sidebar__link--active">
+                <i class="fas fa-plus-square"></i> Carga de Artículos
+            </a>
+            <a href="#" class="sidebar__link">
+                <i class="fas fa-file-alt"></i> Tipos de Documentos
+            </a>
+            <a href="#" class="sidebar__link">
+                <i class="fas fa-calendar-alt"></i> Reservas y Préstamos
+            </a>
+
+            <div class="sidebar__section-title">Usuarios</div>
+            <a href="gestion-usuarios.html" class="sidebar__link">
+                <i class="fas fa-users-cog"></i> Gestión de Usuarios
+            </a>
+        </nav>
+
+        <div class="sidebar__footer">
+            <button class="btn btn--outline sidebar__logout" id="btnLogout"
+                    style="border-color: rgba(255,255,255,0.2); color: white;">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </button>
+        </div>
+    </aside>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="admin-main">
+
+        <!-- Navbar Superior -->
+        <header class="admin-header">
+            <button class="btn admin-header__mobile-toggle" id="sidebarToggle" aria-label="Abrir menú">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="admin-header__search">
+                <i class="fas fa-search"></i>
+                <input type="text" class="form-input" placeholder="Búsqueda global rápida..." id="globalSearch">
+            </div>
+
+            <div class="admin-header__actions">
+                <div class="admin-header__noti" title="Notificaciones">
+                    <i class="fas fa-bell"></i>
+                </div>
+
+                <div class="admin-header__user">
+                    <div class="admin-header__user-info">
+                        <span class="admin-header__user-name" id="headerUserName">Admin CRESTA</span>
+                        <span class="admin-header__user-role">Staff</span>
+                    </div>
+                    <div class="admin-header__avatar" id="headerUserAvatar">A</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Contenido de la pantalla -->
+        <div class="admin-content">
+
+            <!-- Page header -->
+            <div class="admin-page-header">
+                <div>
+                    <h1 class="admin-page-title">Carga de Artículos</h1>
+                    <p class="admin-page-subtitle">
+                        Ingresá nuevos libros, revistas y material al catálogo de forma manual
+                        o importando desde un archivo MARC21.
+                    </p>
+                </div>
+            </div>
+
+            <!-- ── Tabs de método ── -->
+            <div class="carga-tabs" role="tablist">
+                <button class="carga-tab carga-tab--active" data-tab="manual" role="tab" aria-selected="true">
+                    <i class="fas fa-pencil-alt"></i> Carga Manual
+                    <span class="tab-badge">Activo</span>
+                </button>
+                <button class="carga-tab" data-tab="marc21" role="tab" aria-selected="false">
+                    <i class="fas fa-file-import"></i> Importar MARC21
+                </button>
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <!-- PANEL: Carga Manual                                        -->
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <div class="carga-panel carga-panel--active" id="panel-manual" role="tabpanel">
+
+                <!-- Selector de tipo de artículo -->
+                <div class="type-selector">
+                    <p class="type-selector__label">
+                        <i class="fas fa-layer-group" style="margin-right:4px;"></i>
+                        Tipo de artículo
+                    </p>
+                    <div class="type-selector__grid">
+                        <button class="type-btn type-btn--active" data-type="libro" title="Libro">
+                            <i class="fas fa-book"></i>
+                            <span>Libro</span>
+                        </button>
+                        <button class="type-btn" data-type="revista" disabled title="Próximamente">
+                            <span class="type-btn__badge">Pronto</span>
+                            <i class="fas fa-newspaper"></i>
+                            <span>Revista</span>
+                        </button>
+                        <button class="type-btn" data-type="cd" disabled title="Próximamente">
+                            <span class="type-btn__badge">Pronto</span>
+                            <i class="fas fa-compact-disc"></i>
+                            <span>CD / DVD</span>
+                        </button>
+                        <button class="type-btn" data-type="audiovisual" disabled title="Próximamente">
+                            <span class="type-btn__badge">Pronto</span>
+                            <i class="fas fa-film"></i>
+                            <span>Audiovisual</span>
+                        </button>
+                        <button class="type-btn" data-type="mapa" disabled title="Próximamente">
+                            <span class="type-btn__badge">Pronto</span>
+                            <i class="fas fa-map"></i>
+                            <span>Mapa</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Alerta de feedback -->
+                <div class="alert alert--hidden" id="formAlert" role="alert">
+                    <i class="fas fa-circle-info"></i>
+                    <div class="alert__content">
+                        <p class="alert__title" id="formAlertTitle"></p>
+                        <p id="formAlertMsg"></p>
+                    </div>
+                </div>
+
+                <!-- Card: artículo creado (aparece tras éxito) -->
+                <div class="articulo-created-card" id="articuloCreatedCard">
+                    <div class="articulo-created-card__icon">
+                        <i class="fas fa-book-medical"></i>
+                    </div>
+                    <div class="articulo-created-card__info">
+                        <p class="articulo-created-card__title" id="createdTitle"></p>
+                        <div class="articulo-created-card__meta">
+                            <span><i class="fas fa-hashtag"></i> Artículo ID: <strong id="createdId"></strong></span>
+                            <span><i class="fas fa-barcode"></i> ISBN: <strong id="createdIsbn"></strong></span>
+                            <span><i class="fas fa-building"></i> Editorial: <strong id="createdEditorial"></strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Formulario principal ── -->
+                <div class="form-card">
+                    <div class="form-card__header">
+                        <h2 class="form-card__title">
+                            <i class="fas fa-book-medical"></i> Registrar Libro
+                        </h2>
+                        <p class="form-card__subtitle">
+                            Completá los campos obligatorios (<span style="color:var(--color-error)">*</span>).
+                            Los datos del libro son opcionales pero se recomienda completarlos.
+                        </p>
+                    </div>
+
+                    <div class="form-card__body">
+                        <form id="libroForm" novalidate autocomplete="off">
+
+                            <!-- ── Sección: Artículo base ── -->
+                            <div class="form-section">
+                                <p class="form-section__title">
+                                    <i class="fas fa-info-circle"></i> Datos del Artículo
+                                </p>
+                                <div class="form-grid form-grid--3">
+                                    <div class="form-group">
+                                        <label class="form-label" for="titulo">
+                                            Título <span class="required">*</span>
+                                        </label>
+                                        <input type="text" id="titulo" name="titulo"
+                                               class="form-input" placeholder="Ej: Algorithms"
+                                               autocomplete="off" maxlength="500">
+                                        <span class="field-error" id="tituloError"></span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="anio_publicacion">
+                                            Año de Publicación <span class="required">*</span>
+                                        </label>
+                                        <input type="number" id="anio_publicacion" name="anio_publicacion"
+                                               class="form-input" placeholder="Ej: 2011"
+                                               min="1000" max="2100" inputmode="numeric">
+                                        <span class="field-error" id="anio_publicacionError"></span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="tipo_documento_id">
+                                            Tipo de Documento <span class="required">*</span>
+                                        </label>
+                                        <select id="tipo_documento_id" name="tipo_documento_id" class="form-input">
+                                            <option value="">Cargando tipos...</option>
+                                        </select>
+                                        <span class="field-error" id="tipo_documento_idError"></span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="idioma">Idioma</label>
+                                        <select id="idioma" name="idioma" class="form-input">
+                                            <option value="">— No especificar —</option>
+                                            <option value="spa">Español</option>
+                                            <option value="eng">Inglés</option>
+                                            <option value="por">Portugués</option>
+                                            <option value="fra">Francés</option>
+                                            <option value="deu">Alemán</option>
+                                            <option value="ita">Italiano</option>
+                                            <option value="lat">Latín</option>
+                                            <option value="zxx">Sin contenido lingüístico</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group form-group--full">
+                                        <label class="form-label" for="descripcion">Descripción</label>
+                                        <textarea id="descripcion" name="descripcion"
+                                                  class="form-input" rows="3"
+                                                  placeholder="Descripción o resumen del artículo..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ── Sección: Datos del Libro ── -->
+                            <div class="form-section" id="seccionLibro">
+                                <p class="form-section__title">
+                                    <i class="fas fa-book"></i> Datos del Libro
+                                </p>
+
+                                <!-- Fila 1: identificadores y editorial -->
+                                <div class="form-grid form-grid--3">
+                                    <div class="form-group">
+                                        <label class="form-label" for="isbn">ISBN</label>
+                                        <input type="text" id="isbn" name="isbn"
+                                               class="form-input" placeholder="Ej: 9780321573513"
+                                               maxlength="17" autocomplete="off">
+                                        <span class="form-hint">ISBN-10 o ISBN-13</span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="issn">ISSN</label>
+                                        <input type="text" id="issn" name="issn"
+                                               class="form-input" placeholder="Ej: 1234-5678"
+                                               maxlength="9" autocomplete="off">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="edicion">Edición</label>
+                                        <input type="text" id="edicion" name="edicion"
+                                               class="form-input" placeholder="Ej: 4ta edición"
+                                               maxlength="100" autocomplete="off">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="editorial">Editorial</label>
+                                        <input type="text" id="editorial" name="editorial"
+                                               class="form-input" placeholder="Ej: Addison-Wesley"
+                                               maxlength="200" autocomplete="off">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="lugar_de_publicacion">Lugar de Publicación</label>
+                                        <input type="text" id="lugar_de_publicacion" name="lugar_de_publicacion"
+                                               class="form-input" placeholder="Ej: Boston"
+                                               maxlength="200" autocomplete="off">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="pais_publicacion">País de Publicación</label>
+                                        <input type="text" id="pais_publicacion" name="pais_publicacion"
+                                               class="form-input" placeholder="Ej: Estados Unidos"
+                                               maxlength="100" autocomplete="off">
+                                    </div>
+                                </div>
+
+                                <!-- Fila 2: datos físicos y clasificación -->
+                                <div class="form-grid form-grid--3" style="margin-top: var(--spacing-md);">
+                                    <div class="form-group">
+                                        <label class="form-label" for="paginas">Páginas</label>
+                                        <input type="number" id="paginas" name="paginas"
+                                               class="form-input" placeholder="Ej: 955"
+                                               min="1" inputmode="numeric">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="dimensiones">Dimensiones</label>
+                                        <input type="text" id="dimensiones" name="dimensiones"
+                                               class="form-input" placeholder="Ej: 24 cm"
+                                               maxlength="50" autocomplete="off">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="ilustraciones">Ilustraciones</label>
+                                        <input type="text" id="ilustraciones" name="ilustraciones"
+                                               class="form-input" placeholder="Ej: il., mapas, gráficos"
+                                               maxlength="200" autocomplete="off">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="cdu">CDU</label>
+                                        <input type="number" id="cdu" name="cdu"
+                                               class="form-input" placeholder="Ej: 519"
+                                               inputmode="numeric">
+                                        <span class="form-hint">Clasificación Decimal Universal</span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="serie">Serie</label>
+                                        <input type="text" id="serie" name="serie"
+                                               class="form-input" placeholder="Ej: Addison-Wesley Series"
+                                               maxlength="200" autocomplete="off">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="numero_serie">Número de Serie</label>
+                                        <input type="text" id="numero_serie" name="numero_serie"
+                                               class="form-input" placeholder="Ej: Vol. 3"
+                                               maxlength="50" autocomplete="off">
+                                    </div>
+
+                                    <div class="form-group form-group--full">
+                                        <label class="form-label" for="titulo_informativo">Título Informativo</label>
+                                        <input type="text" id="titulo_informativo" name="titulo_informativo"
+                                               class="form-input" placeholder="Título informativo complementario"
+                                               maxlength="500" autocomplete="off">
+                                    </div>
+
+                                    <div class="form-group form-group--full">
+                                        <label class="form-label" for="notas">Notas</label>
+                                        <textarea id="notas" name="notas"
+                                                  class="form-input" rows="2"
+                                                  placeholder="Notas adicionales sobre el libro..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ── Sección: Personas ── -->
+                            <div class="form-section">
+                                <div class="personas-section__header">
+                                    <p class="personas-section__title">
+                                        <i class="fas fa-users" style="margin-right:4px;"></i>
+                                        Autores y Colaboradores
+                                        <span style="font-weight:normal; text-transform:none; letter-spacing:0; font-size:var(--font-size-xs); color:var(--color-gray-400); margin-left:6px;">Opcionales</span>
+                                    </p>
+                                    <button type="button" class="btn btn--outline" id="btnAddPersona"
+                                            style="font-size:var(--font-size-xs); padding:6px 12px;">
+                                        <i class="fas fa-user-plus"></i> Agregar
+                                    </button>
+                                </div>
+
+                                <div id="personasList">
+                                    <!-- filas generadas dinámicamente -->
+                                </div>
+                                <p class="personas-empty" id="personasEmpty">
+                                    <i class="fas fa-user-slash" style="margin-right:6px;"></i>
+                                    Sin personas asociadas. Usá el botón para agregar autores, editores u otros colaboradores.
+                                </p>
+                            </div>
+
+                            <!-- ── Acciones ── -->
+                            <div class="form-actions">
+                                <button type="button" class="btn btn--outline" id="btnReset">
+                                    <i class="fas fa-undo"></i> Limpiar
+                                </button>
+                                <button type="submit" class="btn btn--primary" id="btnSubmit">
+                                    <i class="fas fa-book-medical"></i> Registrar Libro
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+            <!-- /panel-manual -->
+
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <!-- PANEL: MARC21                                              -->
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <div class="carga-panel" id="panel-marc21" role="tabpanel">
+
+                <!-- Zona de drop -->
+                <div class="marc-dropzone" id="marcDropzone" tabindex="0"
+                     role="button" aria-label="Zona de carga de archivo MARC21">
+                    <input type="file" id="marcFile" accept=".mrc,.marc,.xml" hidden aria-hidden="true">
+                    <div class="marc-dropzone__icon">
+                        <i class="fas fa-file-import"></i>
+                    </div>
+                    <p class="marc-dropzone__title">Arrastrá tu archivo MARC21 aquí</p>
+                    <p class="marc-dropzone__hint">Formatos soportados: .mrc / .marc (ISO 2709) · .xml (MARCXML)</p>
+                    <p class="marc-dropzone__separator">— o —</p>
+                    <button type="button" class="btn btn--primary" id="btnSelectFile">
+                        <i class="fas fa-folder-open"></i> Seleccionar archivo
+                    </button>
+                </div>
+
+                <!-- Archivo seleccionado (oculto hasta elegir archivo) -->
+                <div class="marc-file-selected" id="marcFileSelected" hidden>
+                    <div class="marc-file-selected__info">
+                        <i class="fas fa-file-alt marc-file-selected__icon"></i>
+                        <span id="marcFileName" class="marc-file-selected__name"></span>
+                    </div>
+                    <div class="marc-file-selected__actions">
+                        <button type="button" class="btn btn--outline" id="btnClearFile">
+                            <i class="fas fa-times"></i> Cambiar
+                        </button>
+                        <button type="button" class="btn btn--primary" id="btnImportMarc" disabled>
+                            <i class="fas fa-upload"></i> Importar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading (oculto hasta importar) -->
+                <div class="marc-loading" id="marcLoading" hidden>
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Procesando registros MARC21 en el servidor...
+                </div>
+
+                <!-- Resultados (oculto hasta que llegue respuesta) -->
+                <div id="marcResults" hidden></div>
+
+                <!-- Info sobre MARC21 -->
+                <div class="form-card" style="margin-top: var(--spacing-lg);">
+                    <div class="form-card__header">
+                        <h2 class="form-card__title">
+                            <i class="fas fa-circle-info"></i> ¿Cómo funciona?
+                        </h2>
+                    </div>
+                    <div class="form-card__body">
+                        <div class="form-grid">
+                            <div>
+                                <p class="form-section__title" style="border:none; padding:0; margin-bottom:var(--spacing-sm);">
+                                    <i class="fas fa-upload"></i> Paso 1 — Subir el archivo
+                                </p>
+                                <p style="font-size:var(--font-size-sm); color:var(--color-gray-600); line-height:var(--line-height-base);">
+                                    Arrastrá o seleccioná un archivo <strong>.mrc</strong>, <strong>.marc</strong>
+                                    (ISO 2709) o <strong>.xml</strong> (MARCXML). Se envía directamente al servidor
+                                    sin procesamiento en el navegador.
+                                </p>
+                            </div>
+                            <div>
+                                <p class="form-section__title" style="border:none; padding:0; margin-bottom:var(--spacing-sm);">
+                                    <i class="fas fa-server"></i> Paso 2 — Procesamiento en el backend
+                                </p>
+                                <p style="font-size:var(--font-size-sm); color:var(--color-gray-600); line-height:var(--line-height-base);">
+                                    El servidor parsea el archivo, determina el tipo de artículo según el
+                                    leader del registro MARC y persiste cada registro en la base de datos,
+                                    incluyendo personas, temas y demás relaciones.
+                                </p>
+                            </div>
+                            <div>
+                                <p class="form-section__title" style="border:none; padding:0; margin-bottom:var(--spacing-sm);">
+                                    <i class="fas fa-list-check"></i> Paso 3 — Ver resultados
+                                </p>
+                                <p style="font-size:var(--font-size-sm); color:var(--color-gray-600); line-height:var(--line-height-base);">
+                                    Se muestra un resumen con los registros importados exitosamente y
+                                    el detalle de cualquier error por registro, con el motivo específico
+                                    del fallo (campo faltante, duplicado, etc.).
+                                </p>
+                            </div>
+                            <div>
+                                <p class="form-section__title" style="border:none; padding:0; margin-bottom:var(--spacing-sm);">
+                                    <i class="fas fa-layer-group"></i> Importación masiva
+                                </p>
+                                <p style="font-size:var(--font-size-sm); color:var(--color-gray-600); line-height:var(--line-height-base);">
+                                    Un mismo archivo puede contener múltiples registros MARC21.
+                                    Todos se procesan en una sola operación transaccional en el servidor.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- /panel-marc21 -->
+
+        </div><!-- /admin-content -->
+    </main>
+</div><!-- /admin-layout -->
+
+<script type="module" src="../../js/pages/carga-articulos.js"></script>
+</body>
+</html>
