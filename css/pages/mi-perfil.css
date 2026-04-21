@@ -150,6 +150,27 @@
   border-top: 1px solid var(--color-gray-100);
 }
 
+.profile-contact-note {
+  margin: var(--spacing-2xl) auto 0;
+  max-width: 760px;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  text-align: center;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-contact-note__text {
+  margin: 0;
+  color: var(--color-gray-700);
+  line-height: 1.6;
+}
+
+.profile-contact-note__text a {
+  font-weight: var(--font-weight-semibold);
+}
+
 /* ---- Badge variante info ---- */
 .badge--info {
   background-color: #d1ecf1;
@@ -320,5 +341,9 @@
 
   .profile-data__value {
     text-align: left;
+  }
+
+  .profile-contact-note {
+    padding: var(--spacing-md) var(--spacing-lg);
   }
 }
