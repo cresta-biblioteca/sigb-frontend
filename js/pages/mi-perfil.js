@@ -20,6 +20,7 @@
  *   #pdDni             — DNI
  *   #pdEmail           — email
  *   #pdPhone           — teléfono
+ *   #pdCareers         — carrera/s
  *   #pdCard            — tarjeta del lector
  *   #pdLegajo          — legajo del lector
  */
@@ -76,12 +77,33 @@ if (pdFullName) pdFullName.textContent = fullName;
 const pdDni = document.getElementById('pdDni');
 const pdEmail = document.getElementById('pdEmail');
 const pdPhone = document.getElementById('pdPhone');
+const pdCareers = document.getElementById('pdCareers');
 const pdCard = document.getElementById('pdCard');
 const pdLegajo = document.getElementById('pdLegajo');
 const changePasswordBtn = document.getElementById('changePasswordBtn');
 
 function setText(element, value) {
   if (element) element.textContent = value ?? '—';
+}
+
+function getCareers(profile) {
+  const rawCareers = profile.carreras ?? profile.carrera ?? profile.carreras_usuario;
+
+  if (!rawCareers) return '—';
+
+  if (typeof rawCareers === 'string') {
+    const value = rawCareers.trim();
+    return value || '—';
+  }
+
+  if (!Array.isArray(rawCareers)) return '—';
+
+  const names = rawCareers
+    .filter((career) => typeof career === 'string')
+    .map((career) => career.trim())
+    .filter(Boolean);
+
+  return names.length ? names.join(', ') : '—';
 }
 
 function getInitials(name, surname) {
@@ -115,6 +137,7 @@ try {
   setText(pdDni, profile.dni);
   setText(pdEmail, profile.email);
   setText(pdPhone, profile.telefono);
+  setText(pdCareers, getCareers(profile));
   setText(pdCard, profile.tarjeta);
   setText(pdLegajo, profile.legajo);
 } catch {
