@@ -150,6 +150,27 @@
   border-top: 1px solid var(--color-gray-100);
 }
 
+.profile-contact-note {
+  margin: var(--spacing-2xl) auto 0;
+  max-width: 760px;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  text-align: center;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-contact-note__text {
+  margin: 0;
+  color: var(--color-gray-700);
+  line-height: 1.6;
+}
+
+.profile-contact-note__text a {
+  font-weight: var(--font-weight-semibold);
+}
+
 /* ---- Badge variante info ---- */
 .badge--info {
   background-color: #d1ecf1;
@@ -163,6 +184,123 @@
   padding: var(--spacing-xs) var(--spacing-sm);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
+}
+
+/* ---- Modal local: cambio de contraseña ---- */
+.profile-password-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+}
+
+.profile-password-modal__dialog {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  max-width: 520px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.profile-password-modal__title {
+  margin: 0 0 var(--spacing-md);
+  font-size: var(--font-size-lg);
+  color: var(--color-gray-900);
+}
+
+.profile-password-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-lg);
+}
+
+.profile-password-modal__btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: var(--font-weight-medium);
+}
+
+.profile-password-modal__btn--cancel {
+  border: 1.5px solid var(--color-gray-300);
+  background: var(--color-white);
+  color: var(--color-gray-700);
+}
+
+.profile-password-modal__btn--confirm {
+  border: 0;
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.profile-password-modal__btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.profile-password-form {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.profile-password-form__intro {
+  margin: 0;
+  color: var(--color-gray-700);
+  line-height: 1.6;
+}
+
+.profile-password-form__label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-900);
+  font-weight: var(--font-weight-semibold);
+}
+
+.profile-password-form__field {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.profile-password-form__input {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 0;
+  font: inherit;
+  color: var(--color-gray-900);
+}
+
+.profile-password-form__input:focus {
+  outline: none;
+}
+
+.profile-password-form__field:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(15, 43, 91, 0.18);
+}
+
+.profile-password-form__toggle {
+  border: 0;
+  background: transparent;
+  color: var(--color-gray-700);
+  cursor: pointer;
+  padding: 0 var(--spacing-md);
+}
+
+.profile-password-form__error {
+  margin: 0;
+  min-height: 1.2rem;
+  color: #b02a37;
+  font-size: var(--font-size-sm);
 }
 
 /* ========== RESPONSIVE ========== */
@@ -179,6 +317,18 @@
     padding: var(--spacing-lg);
   }
 
+  .profile-password-modal__dialog {
+    padding: var(--spacing-lg);
+  }
+
+  .profile-password-modal__actions {
+    flex-direction: column;
+  }
+
+  .profile-password-modal__btn {
+    width: 100%;
+  }
+
   .profile-header__back {
     width: 100%;
     justify-content: center;
@@ -191,5 +341,9 @@
 
   .profile-data__value {
     text-align: left;
+  }
+
+  .profile-contact-note {
+    padding: var(--spacing-md) var(--spacing-lg);
   }
 }

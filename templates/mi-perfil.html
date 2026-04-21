@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../css/components.css">
   <link rel="stylesheet" href="../css/pages/dashboard.css">
   <link rel="stylesheet" href="../css/pages/mi-perfil.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 <body>
 
@@ -19,17 +20,7 @@
   <header class="navbar" id="navbar">
     <div class="navbar__container">
       <a href="../index.html" class="navbar__brand">
-        <div class="navbar__logo">
-          <svg class="navbar__logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="40" height="40" rx="8" fill="white"/>
-            <path d="M10 30V12C10 10.9 10.9 10 12 10H28C29.1 10 30 10.9 30 12V30L20 25L10 30Z" fill="#0F2B5B"/>
-            <path d="M14 16H26M14 20H22" stroke="white" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="navbar__brand-text">
-          <span class="navbar__brand-name">BIBLIOTECA CRESTA</span>
-          <span class="navbar__brand-subtitle">CENTRO REGIONAL DE ESTUDIOS SUPERIORES</span>
-        </div>
+        <img src="../assets/logo_header.png" alt="Biblioteca CRESTA" class="navbar__brand-image">
       </a>
 
       <button class="navbar__toggle" id="navbarToggle" aria-label="Abrir menú de navegación" aria-expanded="false">
@@ -41,36 +32,16 @@
       <nav class="navbar__nav" id="navbarMenu">
         <ul class="navbar__list">
           <li class="navbar__item">
-            <a href="../index.html" class="navbar__link">Inicio</a>
+            <a href="dashboard.html" class="navbar__link">Inicio</a>
           </li>
           <li class="navbar__item">
             <a href="catalog.html" class="navbar__link">Catálogo</a>
           </li>
           <li class="navbar__item">
-            <a href="dashboard.html" class="navbar__link">Mi Cuenta</a>
-          </li>
-          <li class="navbar__item navbar__item--dropdown">
-            <button class="navbar__link navbar__link--dropdown" aria-expanded="false" aria-haspopup="true">
-              Servicios
-              <svg class="navbar__dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            <ul class="navbar__dropdown">
-              <li><a href="loans.html" class="navbar__dropdown-link">Préstamos</a></li>
-              <li><a href="readers.html" class="navbar__dropdown-link">Lectores</a></li>
-            </ul>
+            <a href="mi-perfil.html" class="navbar__link">Mi Perfil</a>
           </li>
         </ul>
-
-        <!--
-          #navUserName activo (página actual) → sin link en esta página.
-          JS llena el texto con el nombre del JWT.
-        -->
-        <div class="navbar__user">
-          <span class="navbar__user-link navbar__user-link--active" id="navUserName" aria-current="page"></span>
-          <button class="btn btn--outline btn--sm" id="logoutBtn">Cerrar sesión</button>
-        </div>
+          <button class="navbar__link" id="logoutBtn" type="button">Cerrar sesión</button>
       </nav>
     </div>
   </header>
@@ -91,22 +62,17 @@
         <div class="profile-header__info">
           <!--
             JS llena #profileName con el nombre completo del JWT.
-            #profileRole y los badges se actualizarán cuando
-            el endpoint /users/me esté disponible.
+            #profileRole mostrará la tarjeta del lector cuando el endpoint responda.
           -->
           <h1 class="profile-header__name" id="profileName">Cargando...</h1>
           <p class="profile-header__role" id="profileRole">—</p>
-          <div class="profile-header__badges">
-            <span class="badge badge--success" id="profileStatusBadge">Activo</span>
-            <span class="badge badge--info" id="profilePlanBadge">Plan Regular</span>
-          </div>
         </div>
 
         <a href="dashboard.html" class="btn btn--outline btn--sm profile-header__back">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
-          Volver a Mi Cuenta
+          Regresar al panel
         </a>
       </section>
 
@@ -123,10 +89,6 @@
             Datos personales
           </h2>
 
-          <!--
-            Los campos se llenan con JS cuando el endpoint /users/me esté disponible.
-            Por ahora muestran "—" como estado pendiente.
-          -->
           <dl class="profile-data">
             <div class="profile-data__row">
               <dt class="profile-data__label">Nombre completo</dt>
@@ -145,55 +107,36 @@
               <dd class="profile-data__value" id="pdPhone">—</dd>
             </div>
             <div class="profile-data__row">
-              <dt class="profile-data__label">Fecha de nacimiento</dt>
-              <dd class="profile-data__value" id="pdBirthdate">—</dd>
+              <dt class="profile-data__label">Carrera/s</dt>
+              <dd class="profile-data__value" id="pdCareers">—</dd>
             </div>
           </dl>
         </section>
 
-        <!-- Información de cuenta -->
-        <section class="profile-section" aria-labelledby="accountInfoTitle">
-          <h2 class="profile-section__title" id="accountInfoTitle">
+        <!-- Datos de lector -->
+        <section class="profile-section" aria-labelledby="readerInfoTitle">
+          <h2 class="profile-section__title" id="readerInfoTitle">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
               <line x1="8" y1="21" x2="16" y2="21"/>
               <line x1="12" y1="17" x2="12" y2="21"/>
             </svg>
-            Información de cuenta
+            Datos de lector
           </h2>
 
           <dl class="profile-data">
             <div class="profile-data__row">
-              <dt class="profile-data__label">Tipo de usuario</dt>
-              <dd class="profile-data__value" id="pdRole">—</dd>
+              <dt class="profile-data__label">Carnet de biblioteca:</dt>
+              <dd class="profile-data__value profile-data__value--mono" id="pdCard">—</dd>
             </div>
             <div class="profile-data__row">
-              <dt class="profile-data__label">Plan de membresía</dt>
-              <dd class="profile-data__value" id="pdPlan">—</dd>
-            </div>
-            <div class="profile-data__row">
-              <dt class="profile-data__label">Estado</dt>
-              <dd class="profile-data__value">
-                <span class="badge badge--success" id="pdStatus">Activo</span>
-              </dd>
-            </div>
-            <div class="profile-data__row">
-              <dt class="profile-data__label">Miembro desde</dt>
-              <dd class="profile-data__value" id="pdMemberSince">—</dd>
-            </div>
-            <div class="profile-data__row">
-              <dt class="profile-data__label">ID de lector</dt>
-              <dd class="profile-data__value profile-data__value--mono" id="pdReaderId">—</dd>
+              <dt class="profile-data__label">Legajo:</dt>
+              <dd class="profile-data__value profile-data__value--mono" id="pdLegajo">—</dd>
             </div>
           </dl>
 
-          <!-- Acción de seguridad -->
           <div class="profile-section__footer">
-            <!--
-              El cambio de contraseña usará el endpoint POST /auth/change-password.
-              Por ahora se muestra el botón como parte del diseño.
-            -->
-            <button class="btn btn--outline btn--sm" id="changePasswordBtn">
+            <button class="btn btn--outline btn--sm" id="changePasswordBtn" type="button">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -205,6 +148,10 @@
 
       </div><!-- /profile-grid -->
 
+      <section class="profile-contact-note" aria-label="Contacto para actualización de datos">
+        <p class="profile-contact-note__text">Si necesitás modificar tus datos personales, comunicate con la biblioteca al <strong>2983380689</strong> o por mail <a href="mailto:valeria.rodriguez@cresta.edu.ar">valeria.rodriguez@cresta.edu.ar</a>.</p>
+      </section>
+
     </div>
   </main>
 
@@ -215,35 +162,33 @@
 
         <div class="footer__col">
           <div class="footer__brand">
-            <svg class="footer__brand-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="40" height="40" rx="8" fill="white"/>
-              <path d="M10 30V12C10 10.9 10.9 10 12 10H28C29.1 10 30 10.9 30 12V30L20 25L10 30Z" fill="#0F2B5B"/>
-              <path d="M14 16H26M14 20H22" stroke="white" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <span class="footer__brand-name">CRESTA Biblioteca</span>
+            <img src="../assets/logo_footer.png" alt="CRESTA Biblioteca" class="footer__brand-image">
           </div>
-          <p class="footer__description">
-            Comprometidos con el desarrollo educativo y cultural de la región.
-          </p>
-        </div>
-
-        <div class="footer__col">
-          <h3 class="footer__heading">Navegación</h3>
-          <ul class="footer__links">
-            <li><a href="catalog.html" class="footer__link">Catálogo</a></li>
-            <li><a href="loans.html" class="footer__link">Préstamos</a></li>
-            <li><a href="readers.html" class="footer__link">Lectores</a></li>
-          </ul>
-        </div>
-
-        <div class="footer__col">
-          <h3 class="footer__heading">Ubicación</h3>
-          <address class="footer__address">
-            <p>Maipú 270,</p>
-            <p>B7500 Tres Arroyos,</p>
-            <p>Provincia de Buenos Aires</p>
-            <p class="footer__phone">Tel: (02983) 43-1229</p>
+          <address class="footer__address footer__contact">
+            <p>Maipú 270 - (7500) Tres Arroyos</p>
+            <p class="footer__phone"><strong>Consultas frecuentes:</strong> (02983) 430093</p>
+            <p><strong>Email:</strong> <a href="mailto:valeria.rodriguez@cresta.edu.ar" class="footer__link">valeria.rodriguez@cresta.edu.ar</a></p>
           </address>
+          <div class="footer__social" aria-label="Redes sociales">
+            <a href="https://www.facebook.com/crestaoficial/" class="footer__social-link" aria-label="Facebook" title="Facebook" target="_blank" rel="noopener noreferrer">
+              <i class="fab fa-facebook-f" aria-hidden="true"></i>
+            </a>
+            <a href="https://www.instagram.com/crestaoficial/" class="footer__social-link" aria-label="Instagram" title="Instagram" target="_blank" rel="noopener noreferrer">
+              <i class="fab fa-instagram" aria-hidden="true"></i>
+            </a>
+            <a href="https://wa.me/2983380689" class="footer__social-link" aria-label="WhatsApp" title="WhatsApp" target="_blank" rel="noopener noreferrer">
+              <i class="fab fa-whatsapp" aria-hidden="true"></i>
+            </a>
+          </div>
+        </div>
+
+        <div class="footer__col">
+          <h3 class="footer__heading">Links de interés</h3>
+          <ul class="footer__links footer__links--interest">
+            <li><a href="https://www.tresarroyos.gov.ar/" class="footer__link" target="_blank" rel="noopener noreferrer">Municipalidad de Tres Arroyos</a></li>
+            <li><a href="https://campus.cresta.edu.ar/" class="footer__link" target="_blank" rel="noopener noreferrer">Campus virtual</a></li>
+            <li><a href="https://sga.cresta.edu.ar/" class="footer__link" target="_blank" rel="noopener noreferrer">Sistema de gestión académica</a></li>
+          </ul>
         </div>
 
       </div>
