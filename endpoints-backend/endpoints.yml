@@ -2885,6 +2885,62 @@
                 },
             },
         },
+      "/lectores/me/prestamos":
+        {
+          "get":
+            {
+              "tags": ["Prestamos"],
+              "summary": "Mis préstamos",
+              "description": "Obtiene los préstamos del lector autenticado. El lector se resuelve desde el JWT.",
+              "operationId": "getMisPrestamos",
+              "security": [{ "bearerAuth": [] }],
+              "parameters":
+                [
+                  {
+                    "name": "estado",
+                    "in": "query",
+                    "required": false,
+                    "description": "Filtra por estado del préstamo.",
+                    "schema":
+                      {
+                        "type": "string",
+                        "enum":
+                          [
+                            "VIGENTE",
+                            "COMPLETADO_EXITO",
+                            "COMPLETADO_VENCIDO",
+                            "INCONVENIENTE",
+                          ],
+                      },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Listado de préstamos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "type": "array",
+                                  "items":
+                                    {
+                                      "$ref": "#/components/schemas/PrestamoResponse",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                  "400": { "description": "Parámetros inválidos" },
+                  "401": { "description": "No autenticado" },
+                  "403": { "description": "Sin permisos" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
       "/lectores/me/reservas":
         {
           "get":
