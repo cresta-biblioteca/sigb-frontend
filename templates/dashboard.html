@@ -93,52 +93,9 @@
 
         <!--
           Contenedor #activeLoans.
-          HTML de muestra con datos ficticios para diseño.
-          Cuando el endpoint esté disponible, JS reemplazará este contenido
-          con datos reales, o con ui.js showEmpty si no hay préstamos.
+          Render dinámico por JS (loading / empty / error / data).
         -->
-        <div id="activeLoans">
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead class="data-table__head">
-                <tr>
-                  <th class="data-table__th" scope="col">Título</th>
-                  <th class="data-table__th" scope="col">Autor</th>
-                  <th class="data-table__th" scope="col">Código</th>
-                  <th class="data-table__th" scope="col">Prestado el</th>
-                  <th class="data-table__th" scope="col">Vence el</th>
-                  <th class="data-table__th data-table__th--center" scope="col">Acción</th>
-                </tr>
-              </thead>
-              <tbody class="data-table__body">
-                <tr class="data-table__row">
-                  <td class="data-table__td data-table__td--title">Mercado</td>
-                  <td class="data-table__td">Kotler</td>
-                  <td class="data-table__td data-table__td--code">B0012345</td>
-                  <td class="data-table__td">10/10/2023</td>
-                  <td class="data-table__td">
-                    <span class="badge badge--warning">24/10/2023</span>
-                  </td>
-                  <td class="data-table__td data-table__td--center">
-                    <button class="btn btn--primary btn--xs">Renovar</button>
-                  </td>
-                </tr>
-                <tr class="data-table__row">
-                  <td class="data-table__td data-table__td--title">Economía</td>
-                  <td class="data-table__td">Samuelson</td>
-                  <td class="data-table__td data-table__td--code">B0098765</td>
-                  <td class="data-table__td">12/10/2023</td>
-                  <td class="data-table__td">
-                    <span class="badge badge--success">26/10/2023</span>
-                  </td>
-                  <td class="data-table__td data-table__td--center">
-                    <button class="btn btn--primary btn--xs">Renovar</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <div id="activeLoans"></div>
       </section>
 
       <!-- ---- Reservas activas ---- -->

@@ -8,7 +8,8 @@
  *   - Reservas activas: integrado con backend (/lectores/me/reservas?estado=PENDIENTE)
  *   - Cancelación de reserva: integrado (/reservas/{id}/cancelar)
  *   - Historial de reservas (resumen en dashboard): integrado
- *   - Préstamos activos/historial de préstamos: pendiente de endpoint dedicado
+ *   - Préstamos vigentes: integrado con backend (/lectores/me/prestamos?estado=VIGENTE)
+ *   - Historial de préstamos: pendiente de integración dedicada
  *
  * Flujo principal:
  *   1. requireAuth()         → verifica sesión y redirige si no hay token
@@ -17,7 +18,7 @@
  *   4. setStatsLoading()     → maneja loading visual de tarjetas de estadísticas
  *
  * Contenedores usados en el HTML:
- *   #statActiveLoans         — contador (por ahora fallback en 0)
+ *   #statActiveLoans         — contador de préstamos vigentes
  *   #statActiveReservations  — contador de reservas activas
  *   #activeReservations      — lista de reservas activas
  *   #reservationHistory      — historial resumido de reservas
@@ -27,6 +28,7 @@ import { requireAuth }          from '../core/authGuard.js';
 import { store }                from '../core/store.js';
 import { authService }          from '../services/authService.js';
 import { reservationsService }   from '../services/reservationsService.js';
+import { loansService }          from '../services/loansService.js';
 import { ApiError }              from '../services/api.js';
 import { Modal }                from '../components/modal.js';
 import { showLoading, showError, showEmpty, setButtonLoading, resetButton } from '../components/ui.js';
@@ -41,7 +43,7 @@ requireAuth('../index.html');
 //
 // Estado actual:
 // - Reservas activas: se actualiza con datos reales del backend.
-// - Préstamos activos: aún sin endpoint dedicado; se mantiene fallback en 0.
+// - Préstamos vigentes: se actualiza con datos reales del backend.
 //
 // Nota: setStatsLoading() controla el estado visual de carga para ambas tarjetas.
 // ---------------------------------------------------------------------------
@@ -50,9 +52,8 @@ requireAuth('../index.html');
 // Préstamos vigentes (#activeLoans)
 //
 // Estado actual:
-// - No está integrado en este script porque el backend de préstamos no está disponible.
-// - La tarjeta de estadísticas muestra 0 como valor de respaldo.
-// - El render de la tabla/listado de préstamos queda pendiente para una siguiente etapa.
+// - Integrado con el endpoint de préstamos del lector autenticado.
+// - Se muestra tabla de préstamos vigentes y contador en tarjetas de estadísticas.
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
@@ -64,6 +65,7 @@ requireAuth('../index.html');
 // ---------------------------------------------------------------------------
 
 const activeReservationsElement = document.getElementById('activeReservations');
+const activeLoansElement = document.getElementById('activeLoans');
 const reservationHistoryElement = document.getElementById('reservationHistory');
 const statActiveLoansElement = document.getElementById('statActiveLoans');
 const statActiveReservationsElement = document.getElementById('statActiveReservations');
@@ -71,8 +73,51 @@ const statActiveReservationsElement = document.getElementById('statActiveReserva
 activeReservationsElement?.addEventListener('click', handleActiveReservationsClick);
 
 setStatsLoading(true);
+void loadActiveLoans();
 void loadActiveReservations();
 void loadReservationHistory();
+
+async function loadActiveLoans() {
+  if (!activeLoansElement) return;
+
+  showLoading(activeLoansElement);
+
+  try {
+    const loansResponse = await loansService.getMyActive();
+    const loans = loansResponse.data ?? [];
+    const activeLoansTotal = loansResponse.pagination?.total ?? loans.length;
+
+    if (statActiveLoansElement) {
+      statActiveLoansElement.textContent = String(activeLoansTotal);
+    }
+
+    if (loans.length === 0) {
+      showEmpty(activeLoansElement, 'No tenés préstamos vigentes en este momento.');
+      return;
+    }
+
+    activeLoansElement.innerHTML = renderActiveLoansTable(loans);
+  } catch (error) {
+    if (statActiveLoansElement) {
+      statActiveLoansElement.textContent = '0';
+    }
+
+    if (isEmptyActiveLoansError(error)) {
+      showEmpty(activeLoansElement, 'No tenés préstamos vigentes en este momento.');
+      return;
+    }
+
+    const message = error instanceof ApiError
+      ? 'No se pudieron cargar los préstamos vigentes.'
+      : 'No se pudo conectar con el servidor. Intentá recargar la página.';
+
+    showError(activeLoansElement, message);
+  } finally {
+    if (statActiveReservationsElement?.textContent?.trim()) {
+      setStatsLoading(false);
+    }
+  }
+}
 
 async function loadActiveReservations() {
   if (!activeReservationsElement) return;
@@ -107,7 +152,9 @@ async function loadActiveReservations() {
 
     showError(activeReservationsElement, message);
   } finally {
-    setStatsLoading(false);
+    if (statActiveLoansElement?.textContent?.trim()) {
+      setStatsLoading(false);
+    }
 
     if (statActiveLoansElement && !statActiveLoansElement.textContent?.trim()) {
       statActiveLoansElement.textContent = '0';
@@ -315,6 +362,143 @@ function renderReservationHistoryItem(reservation) {
       <span class="badge ${escapeHtml(statusInfo.badgeClass)}">${escapeHtml(statusInfo.label)}</span>
     </li>
   `;
+}
+
+function renderActiveLoansTable(loans) {
+  return `
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead class="data-table__head">
+          <tr>
+            <th class="data-table__th" scope="col">Título</th>
+            <th class="data-table__th" scope="col">Autor</th>
+            <th class="data-table__th" scope="col">Código</th>
+            <th class="data-table__th" scope="col">Prestado el</th>
+            <th class="data-table__th" scope="col">Vence el</th>
+            <th class="data-table__th data-table__th--center" scope="col">Acción</th>
+          </tr>
+        </thead>
+        <tbody class="data-table__body">
+          ${loans.map(renderActiveLoanRow).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderActiveLoanRow(loan) {
+  const title = getLoanTitle(loan);
+  const author = getLoanAuthor(loan) || 'Autor no disponible';
+  const code = getLoanCode(loan) || '-';
+  const startDate = formatLoanDate(getLoanStartDate(loan)) || '-';
+  const dueDateRaw = getLoanDueDate(loan);
+  const dueDate = formatLoanDate(dueDateRaw) || '-';
+  const dueBadgeClass = getLoanDueBadgeClass(dueDateRaw);
+
+  return `
+    <tr class="data-table__row">
+      <td class="data-table__td data-table__td--title">${escapeHtml(title)}</td>
+      <td class="data-table__td">${escapeHtml(author)}</td>
+      <td class="data-table__td data-table__td--code">${escapeHtml(code)}</td>
+      <td class="data-table__td">${escapeHtml(startDate)}</td>
+      <td class="data-table__td">
+        <span class="badge ${escapeHtml(dueBadgeClass)}">${escapeHtml(dueDate)}</span>
+      </td>
+      <td class="data-table__td data-table__td--center">
+        <button class="btn btn--primary btn--xs" type="button" disabled title="Renovación disponible próximamente">Renovar</button>
+      </td>
+    </tr>
+  `;
+}
+
+function getLoanTitle(loan) {
+  return loan?.titulo
+    ?? loan?.title
+    ?? loan?.articulo?.titulo
+    ?? loan?.libro?.titulo
+    ?? 'Sin título';
+}
+
+function getLoanAuthor(loan) {
+  return loan?.autor
+    ?? loan?.author
+    ?? loan?.articulo?.autor
+    ?? loan?.libro?.autor
+    ?? loan?.persona
+    ?? '';
+}
+
+function getLoanCode(loan) {
+  return loan?.codigo
+    ?? loan?.codigo_ejemplar
+    ?? loan?.codigoEjemplar
+    ?? loan?.inventario
+    ?? loan?.articulo?.codigo
+    ?? loan?.libro?.codigo
+    ?? '';
+}
+
+function getLoanStartDate(loan) {
+  return loan?.fecha_prestamo
+    ?? loan?.fechaPrestamo
+    ?? loan?.fecha_inicio
+    ?? loan?.fechaInicio
+    ?? loan?.created_at
+    ?? loan?.createdAt
+    ?? null;
+}
+
+function getLoanDueDate(loan) {
+  return loan?.fecha_vencimiento
+    ?? loan?.fechaVencimiento
+    ?? loan?.due_date
+    ?? loan?.dueDate
+    ?? null;
+}
+
+function formatLoanDate(rawDate) {
+  if (!rawDate) return '';
+
+  const parsedDate = parseBackendDate(rawDate);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return String(rawDate);
+  }
+
+  return new Intl.DateTimeFormat('es-AR').format(parsedDate);
+}
+
+function getLoanDueBadgeClass(rawDate) {
+  if (!rawDate) return 'badge--closed';
+
+  const dueDate = parseBackendDate(rawDate);
+  if (Number.isNaN(dueDate.getTime())) return 'badge--closed';
+
+  const millisecondsInDay = 1000 * 60 * 60 * 24;
+  const daysUntilDue = Math.ceil((dueDate.getTime() - Date.now()) / millisecondsInDay);
+
+  if (daysUntilDue < 0) return 'badge--overdue';
+  if (daysUntilDue <= 3) return 'badge--warning';
+
+  return 'badge--success';
+}
+
+function isEmptyActiveLoansError(error) {
+  if (!(error instanceof ApiError)) {
+    return false;
+  }
+
+  if (error.status === 404) {
+    return true;
+  }
+
+  const backendMessage = String(error.data?.message ?? error.message ?? '').toLowerCase();
+
+  return backendMessage.includes('no se encontraron prestamos')
+    || backendMessage.includes('no se encontraron préstamos')
+    || backendMessage.includes('sin prestamos')
+    || backendMessage.includes('sin préstamos')
+    || backendMessage.includes('no tiene prestamos')
+    || backendMessage.includes('no tiene préstamos');
 }
 
 function getArticleId(reservation) {
