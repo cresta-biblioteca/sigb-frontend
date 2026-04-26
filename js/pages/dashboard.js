@@ -412,20 +412,11 @@ function renderActiveLoanRow(loan) {
 }
 
 function getLoanTitle(loan) {
-  return loan?.titulo
-    ?? loan?.title
-    ?? loan?.articulo?.titulo
-    ?? loan?.libro?.titulo
-    ?? 'Sin título';
+  return loan?.title ?? 'Sin título';
 }
 
 function getLoanAuthor(loan) {
-  return loan?.autor
-    ?? loan?.author
-    ?? loan?.articulo?.autor
-    ?? loan?.libro?.autor
-    ?? loan?.persona
-    ?? '';
+  return loan?.author ?? 'Autor no disponible';
 }
 
 function getLoanCode(loan) {

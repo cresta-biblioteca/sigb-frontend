@@ -3,6 +3,7 @@
  */
 
 import { api, ApiError } from './api.js';
+import { enrichLoansWithBibliographicData } from './loansBibliographicResolver.js';
 
 function normalizeLoansResponse(response) {
   if (Array.isArray(response)) {
@@ -39,6 +40,7 @@ function isLoanVigente(loan) {
   return rawStatus === 'VIGENTE';
 }
 
+
 const loansService = {
   /**
    * Consulta prestamos del lector autenticado con filtro opcional por estado.
@@ -63,16 +65,23 @@ const loansService = {
    */
   async getMyActive() {
     try {
-      return await this.getMyLoans({ estado: 'VIGENTE' });
+      const response = await this.getMyLoans({ estado: 'VIGENTE' });
+      const enrichedData = await enrichLoansWithBibliographicData(response.data ?? []);
+
+      return {
+        ...response,
+        data: enrichedData,
+      };
     } catch (error) {
       // Algunos backends no aceptan el filtro estado en query y responden 400.
       // En ese caso, consultamos todo y filtramos vigentes en frontend.
       if (error instanceof ApiError && error.status === 400) {
         const allLoansResponse = await this.getMyLoans();
         const activeLoans = (allLoansResponse.data ?? []).filter(isLoanVigente);
+        const enrichedData = await enrichLoansWithBibliographicData(activeLoans);
 
         return {
-          data: activeLoans,
+          data: enrichedData,
           pagination: allLoansResponse.pagination ?? null,
         };
       }
