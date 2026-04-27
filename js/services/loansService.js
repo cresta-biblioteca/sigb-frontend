@@ -1,5 +1,13 @@
 /**
- * Loans Service — Endpoints de prestamos del lector autenticado
+ * Loans Service — Gestión de préstamos del lector autenticado
+ *
+ * Consulta préstamos vigentes y del historial, normaliza respuestas y
+ * enriquece datos bibliográficos cuando corresponde.
+ *
+ * Funcionalidad actual:
+ *   - getMyLoans(): consulta con filtro opcional por estado
+ *   - getMyLoansEnriched(): agrega título/autor/código al resultado
+ *   - getMyActive(): retorna préstamos vigentes con fallback local
  */
 
 import { api, ApiError } from './api.js';
@@ -43,7 +51,7 @@ function isLoanVigente(loan) {
 
 const loansService = {
   /**
-   * Consulta prestamos del lector autenticado con filtro opcional por estado.
+   * Consulta préstamos del lector autenticado con filtro opcional por estado.
    *
    * @param {{ estado?: string }} [options]
    * @returns {Promise<{ data: Array<object>, pagination: object|null }>}
@@ -59,8 +67,7 @@ const loansService = {
   },
 
   /**
-   * Consulta préstamos del lector autenticado y enriquece datos bibliográficos
-   * (título/autor/código) igual que en préstamos vigentes.
+   * Consulta préstamos del lector autenticado y enriquece datos bibliográficos.
    *
    * @param {{ estado?: string }} [options]
    * @returns {Promise<{ data: Array<object>, pagination: object|null }>}
@@ -76,7 +83,7 @@ const loansService = {
   },
 
   /**
-   * Retorna los prestamos vigentes del lector autenticado.
+   * Retorna los préstamos vigentes del lector autenticado.
    *
    * @returns {Promise<{ data: Array<object>, pagination: object|null }>}
    */

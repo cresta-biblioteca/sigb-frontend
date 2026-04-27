@@ -1,9 +1,22 @@
+/**
+ * Loans Bibliographic Resolver — Enriquecimiento bibliográfico de préstamos
+ *
+ * Resuelve y cachea metadatos bibliográficos para préstamos a partir de
+ * artículos, libros y ejemplares. Normaliza distintos contratos de API y
+ * aplica fallbacks cuando faltan datos.
+ *
+ * Funcionalidad actual:
+ *   - enrichLoanWithBibliographicData(): agrega metadata a un préstamo
+ *   - enrichLoansWithBibliographicData(): aplica enriquecimiento en lote
+ *   - Cachés internas: evitan llamadas repetidas por id de recurso
+ */
 import { api, ApiError } from './api.js';
 
 const bibliographicCache = new Map();
 const loanDetailCache = new Map();
 const ejemplarArticleCache = new Map();
 
+// ── Normalización de recursos ────────────────────────────────────────────
 function normalizeResource(response) {
   let current = response;
 
@@ -18,6 +31,7 @@ function normalizeResource(response) {
   return current;
 }
 
+// ── Identificadores del préstamo ──────────────────────────────────────────
 function getLoanDetailId(loan) {
   return loan?.id
     ?? loan?.prestamo_id
@@ -27,6 +41,7 @@ function getLoanDetailId(loan) {
     ?? null;
 }
 
+// ── Resolución de ids y metadatos ────────────────────────────────────────
 function getLoanArticleId(loan) {
   return loan?.ejemplar?.articulo_id
     ?? loan?.ejemplar?.articuloId
@@ -62,6 +77,7 @@ function getLoanEjemplarId(loan) {
     ?? null;
 }
 
+// ── Normalización de año / autores ───────────────────────────────────────
 function parseYear(value) {
   if (value === undefined || value === null || value === '') return null;
 
@@ -149,6 +165,7 @@ function getBookBibliographicAuthor(resource) {
     ?? 'Autor no disponible';
 }
 
+// ── Normalización de respuestas bibliográficas ──────────────────────────
 function normalizeArticleBibliographicResource(response) {
   const resource = normalizeResource(response);
 
@@ -171,6 +188,7 @@ function normalizeBookBibliographicResource(response) {
   };
 }
 
+// ── Acceso a artículos/libros ────────────────────────────────────────────
 async function getArticleDetailByArticleId(articleId) {
   const cacheKey = String(articleId);
 
@@ -199,6 +217,7 @@ async function getBookDetailByArticleId(articleId) {
   return normalized;
 }
 
+// ── Acceso a préstamos y ejemplares ──────────────────────────────────────
 async function getLoanDetailById(loanId) {
   const cacheKey = String(loanId);
 
@@ -233,6 +252,7 @@ async function getArticleIdByEjemplarId(ejemplarId) {
   return articleId;
 }
 
+// ── Enriquecimiento de préstamos ─────────────────────────────────────────
 async function enrichLoanWithBibliographicData(loan) {
   const loanId = getLoanDetailId(loan);
   const loanDetail = loanId !== null && loanId !== undefined

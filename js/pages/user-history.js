@@ -1,7 +1,11 @@
 /**
  * User History Page Script
  *
- * Pantalla dedicada para ver el historial completo del usuario.
+ * Pantalla dedicada a historial completo del usuario.
+ *
+ * Funcionalidad actual:
+ *   - Historial de reservas: paginado y con estados legibles
+ *   - Historial de préstamos: muestra préstamos devueltos con título enriquecido
  */
 
 import { requireAuth } from '../core/authGuard.js';
@@ -13,14 +17,10 @@ import { ApiError } from '../services/api.js';
 import { Modal } from '../components/modal.js';
 import { showLoading, showError, showEmpty } from '../components/ui.js';
 
-// ---------------------------------------------------------------------------
-// Guard — debe ejecutarse primero en páginas privadas
-// ---------------------------------------------------------------------------
+// ── Guard ────────────────────────────────────────────────────────────────
 requireAuth('../index.html');
 
-// ---------------------------------------------------------------------------
-// Referencias de DOM
-// ---------------------------------------------------------------------------
+// ── Referencias de DOM ───────────────────────────────────────────────────
 const reservationsHistoryElement = document.getElementById('reservationHistoryPage');
 const reservationsHistoryPrevBtn = document.getElementById('reservationHistoryPrev');
 const reservationsHistoryNextBtn = document.getElementById('reservationHistoryNext');
@@ -43,9 +43,7 @@ let totalLoanHistoryPages = 1;
 let returnedLoansCache = [];
 let hasLoadedLoanHistory = false;
 
-// ---------------------------------------------------------------------------
-// Eventos de paginación
-// ---------------------------------------------------------------------------
+// ── Eventos de paginación ────────────────────────────────────────────────
 reservationsHistoryPrevBtn?.addEventListener('click', () => {
   if (currentHistoryPage > 1) {
     void loadReservationsHistoryPage(currentHistoryPage - 1);
@@ -73,7 +71,7 @@ loansHistoryNextBtn?.addEventListener('click', () => {
 void loadReservationsHistoryPage(currentHistoryPage);
 void loadLoanHistoryPage(currentLoanHistoryPage);
 
-// Carga una página del historial de reservas con estado de loading/error/empty.
+// Carga una página del historial de reservas con estado loading/error/empty.
 async function loadReservationsHistoryPage(page = 1) {
   if (!reservationsHistoryElement) return;
 
@@ -82,7 +80,10 @@ async function loadReservationsHistoryPage(page = 1) {
   setReservationHistoryPaginationLoading(true);
 
   try {
-    const historyResponse = await reservationsService.getMyHistory({ page: currentHistoryPage, perPage: RESERVATION_HISTORY_PAGE_SIZE });
+    const historyResponse = await reservationsService.getMyHistory({
+      page: currentHistoryPage,
+      perPage: RESERVATION_HISTORY_PAGE_SIZE,
+    });
     const reservations = dedupeReservationsForDisplay(await enrichReservations(historyResponse.data ?? []));
     const sortedReservations = [...reservations].sort((a, b) => getReservationSortTimestamp(b) - getReservationSortTimestamp(a));
     const totalReservations = historyResponse.pagination?.total ?? sortedReservations.length;

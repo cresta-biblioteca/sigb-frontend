@@ -1,21 +1,21 @@
 /**
  * Dashboard Page Script — Panel de Gestión
  *
- * Primera línea siempre: requireAuth(). Si no hay sesión, redirige antes
- * de que se ejecute cualquier otra cosa en esta página.
+ * Panel del usuario para reservas y préstamos.
  *
- * Estado actual de integración:
- *   - Reservas activas: integrado con backend (/lectores/me/reservas?estado=PENDIENTE)
- *   - Cancelación de reserva: integrado (/reservas/{id}/cancelar)
- *   - Historial de reservas (resumen en dashboard): integrado
- *   - Préstamos vigentes: integrado con backend (/lectores/me/prestamos?estado=VIGENTE)
- *   - Historial de préstamos (resumen en dashboard): integrado
+ * Funcionalidad actual:
+ *   - Reservas activas: carga desde /lectores/me/reservas?estado=PENDIENTE
+ *   - Cancelación de reserva: ejecuta /reservas/{id}/cancelar
+ *   - Historial de reservas: muestra un resumen de los últimos movimientos
+ *   - Préstamos vigentes: carga desde /lectores/me/prestamos?estado=VIGENTE
+ *   - Historial de préstamos: muestra los préstamos devueltos más recientes
  *
  * Flujo principal:
- *   1. requireAuth()         → verifica sesión y redirige si no hay token
- *   2. loadActiveReservations() → carga y renderiza reservas activas
- *   3. loadReservationHistory() → carga y renderiza últimas reservas del historial
- *   4. setStatsLoading()     → maneja loading visual de tarjetas de estadísticas
+ *   1. requireAuth()
+ *   2. loadActiveLoans()
+ *   3. loadActiveReservations()
+ *   4. loadLoanHistory()
+ *   5. loadReservationHistory()
  *
  * Contenedores usados en el HTML:
  *   #statActiveLoans         — contador de préstamos vigentes
@@ -33,36 +33,17 @@ import { ApiError }              from '../services/api.js';
 import { Modal }                from '../components/modal.js';
 import { showLoading, showError, showEmpty, setButtonLoading, resetButton } from '../components/ui.js';
 
-// ---------------------------------------------------------------------------
-// Guard — debe ser lo primero que corre en cualquier página protegida
-// ---------------------------------------------------------------------------
+// ── Guard ────────────────────────────────────────────────────────────────
 requireAuth('../index.html');
 
-// ---------------------------------------------------------------------------
-// Estadísticas de cuenta
-//
-// Estado actual:
-// - Reservas activas: se actualiza con datos reales del backend.
-// - Préstamos vigentes: se actualiza con datos reales del backend.
-//
-// Nota: setStatsLoading() controla el estado visual de carga para ambas tarjetas.
-// ---------------------------------------------------------------------------
+// ── Estadísticas de cuenta ───────────────────────────────────────────────
+// setStatsLoading() mantiene sincronizadas las tarjetas de préstamos y reservas.
 
-// ---------------------------------------------------------------------------
-// Préstamos vigentes (#activeLoans)
-//
-// Estado actual:
-// - Integrado con el endpoint de préstamos del lector autenticado.
-// - Se muestra tabla de préstamos vigentes y contador en tarjetas de estadísticas.
-// ---------------------------------------------------------------------------
+// ── Préstamos vigentes (#activeLoans) ────────────────────────────────────
+// Renderiza tabla y contador desde el endpoint del lector autenticado.
 
-// ---------------------------------------------------------------------------
-// Reservas activas (#activeReservations)
-//
-// Este bloque ya consume datos reales del backend.
-// Carga las reservas en estado PENDIENTE, las enriquece con título/autor
-// del artículo asociado y deduplica las llamadas por articleId/articulo_id.
-// ---------------------------------------------------------------------------
+// ── Reservas activas (#activeReservations) ───────────────────────────────
+// Carga reservas pendientes y enriquece título/autor por articleId.
 
 const activeReservationsElement = document.getElementById('activeReservations');
 const activeLoansElement = document.getElementById('activeLoans');
@@ -128,7 +109,10 @@ async function loadActiveReservations() {
   showLoading(activeReservationsElement);
 
   try {
-    const reservationsResponse = await reservationsService.getMyActive({ page: 1, perPage: 20 });
+    const reservationsResponse = await reservationsService.getMyActive({
+      page: 1,
+      perPage: 20,
+    });
     const reservations = reservationsResponse.data;
     const enrichedReservations = await enrichReservations(reservations);
     const activeReservationsTotal = reservationsResponse.pagination?.total ?? enrichedReservations.length;
@@ -165,8 +149,7 @@ async function loadActiveReservations() {
 }
 
 async function handleActiveReservationsClick(event) {
-  // Delegación de eventos: escucha un solo click en la lista y detecta
-  // si el target real fue un botón de cancelar.
+  // Delegación de eventos: detecta clicks sobre botones de cancelar.
   const cancelButton = event.target.closest('[data-cancel-reservation]');
 
   if (!cancelButton || !activeReservationsElement.contains(cancelButton)) {
@@ -222,8 +205,11 @@ async function loadReservationHistory() {
   showLoading(reservationHistoryElement);
 
   try {
-    const historyResponse = await reservationsService.getMyHistory({ page: 1, perPage: 20 });
-    // Enriquecemos con título/autor y luego deduplicamos para evitar ítems repetidos.
+    const historyResponse = await reservationsService.getMyHistory({
+      page: 1,
+      perPage: 20,
+    });
+    // Enriquecemos y deduplicamos para evitar filas repetidas.
     const enrichedHistory = await enrichReservations(historyResponse.data ?? []);
     const uniqueHistory = dedupeReservationHistoryForDisplay(enrichedHistory);
 
@@ -780,22 +766,13 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
-// ---------------------------------------------------------------------------
-// Historial de préstamos (#loanHistory)
-//
-// Se carga con datos reales del backend y muestra préstamos devueltos.
-// ---------------------------------------------------------------------------
+// ── Historial de préstamos (#loanHistory) ────────────────────────────────
+// Muestra los préstamos devueltos más recientes.
 
-// ---------------------------------------------------------------------------
-// Historial de reservas (#reservationHistory)
-//
-// Ya se carga con datos reales del backend y se muestra un resumen de las
-// últimas reservas para acceso rápido desde el dashboard.
-// ---------------------------------------------------------------------------
+// ── Historial de reservas (#reservationHistory) ──────────────────────────
+// Muestra un resumen de las últimas reservas para acceso rápido.
 
-// ---------------------------------------------------------------------------
-// Logout
-// ---------------------------------------------------------------------------
+// ── Logout ───────────────────────────────────────────────────────────────
 const logoutButton = document.getElementById('logoutBtn');
 
 logoutButton?.addEventListener('click', () => {
