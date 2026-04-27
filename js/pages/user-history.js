@@ -8,6 +8,7 @@ import { requireAuth } from '../core/authGuard.js';
 import { store } from '../core/store.js';
 import { authService } from '../services/authService.js';
 import { reservationsService } from '../services/reservationsService.js';
+import { loansService } from '../services/loansService.js';
 import { ApiError } from '../services/api.js';
 import { Modal } from '../components/modal.js';
 import { showLoading, showError, showEmpty } from '../components/ui.js';
@@ -49,7 +50,7 @@ reservationsHistoryNextBtn?.addEventListener('click', () => {
 });
 
 void loadReservationsHistoryPage(currentHistoryPage);
-loadLoansHistoryPlaceholder();
+void loadLoansHistory();
 
 // Carga una página del historial de reservas con estado de loading/error/empty.
 async function loadReservationsHistoryPage(page = 1) {
@@ -304,14 +305,127 @@ function parseApiDate(value) {
   return new Date(normalizedValue);
 }
 
-// Placeholder temporal: préstamos aún no integrados al backend.
-function loadLoansHistoryPlaceholder() {
+async function loadLoansHistory() {
   if (!loansHistoryElement) return;
 
-  showEmpty(
-    loansHistoryElement,
-    'Próximamente vas a ver acá tu historial de préstamos.'
-  );
+  showLoading(loansHistoryElement);
+
+  try {
+    const loansResponse = await loansService.getMyLoansEnriched();
+    const loans = loansResponse.data ?? [];
+
+    const returnedLoans = loans
+      .filter(isReturnedLoanForHistory)
+      .sort((a, b) => getLoanHistoryTimestamp(b) - getLoanHistoryTimestamp(a));
+
+    if (returnedLoans.length === 0) {
+      showEmpty(loansHistoryElement, 'Todavía no tenés préstamos devueltos para mostrar en el historial.');
+      return;
+    }
+
+    loansHistoryElement.innerHTML = `
+      <ul class="history-list">
+        ${returnedLoans.map(renderLoanHistoryItem).join('')}
+      </ul>
+    `;
+  } catch (error) {
+    if (isEmptyLoansError(error)) {
+      showEmpty(loansHistoryElement, 'Todavía no tenés préstamos devueltos para mostrar en el historial.');
+      return;
+    }
+
+    const message = error instanceof ApiError
+      ? 'No se pudo cargar el historial de préstamos.'
+      : 'No se pudo conectar con el servidor. Intentá nuevamente.';
+
+    showError(loansHistoryElement, message);
+  }
+}
+
+function renderLoanHistoryItem(loan) {
+  const title = getLoanTitle(loan);
+  const returnDate = formatApiDate(getLoanReturnDate(loan));
+  const meta = returnDate ? `Devuelto el ${returnDate}` : 'Devuelto';
+
+  return `
+    <li class="history-item">
+      <div class="history-item__info">
+        <p class="history-item__title">${escapeHtml(title)}</p>
+        <p class="history-item__meta">${escapeHtml(meta)}</p>
+      </div>
+      <span class="badge badge--closed">Devuelto</span>
+    </li>
+  `;
+}
+
+function getLoanTitle(loan) {
+  return loan?.title ?? 'Sin título';
+}
+
+function getLoanReturnDate(loan) {
+  return loan?.fecha_devolucion
+    ?? loan?.fechaDevolucion
+    ?? loan?.fecha_fin
+    ?? loan?.fechaFin
+    ?? loan?.updated_at
+    ?? loan?.updatedAt
+    ?? null;
+}
+
+function formatApiDate(rawDate) {
+  if (!rawDate) return '';
+
+  const parsedDate = parseApiDate(rawDate);
+  if (Number.isNaN(parsedDate.getTime())) return String(rawDate);
+
+  return new Intl.DateTimeFormat('es-AR').format(parsedDate);
+}
+
+function getLoanHistoryTimestamp(loan) {
+  const returnDate = getLoanReturnDate(loan);
+  if (!returnDate) return 0;
+
+  const parsedDate = parseApiDate(returnDate);
+  if (Number.isNaN(parsedDate.getTime())) return 0;
+
+  return parsedDate.getTime();
+}
+
+function isReturnedLoanForHistory(loan) {
+  const rawStatus = String(loan?.estado ?? loan?.status ?? '').toUpperCase();
+
+  if (rawStatus.includes('COMPLETADO_EXITO') || rawStatus.includes('COMPLETADO_VENCIDO')) {
+    return true;
+  }
+
+  if (rawStatus.includes('DEVUEL') || rawStatus.includes('FINAL')) {
+    return true;
+  }
+
+  if (rawStatus === 'VIGENTE') {
+    return false;
+  }
+
+  return Boolean(getLoanReturnDate(loan));
+}
+
+function isEmptyLoansError(error) {
+  if (!(error instanceof ApiError)) {
+    return false;
+  }
+
+  if (error.status === 404) {
+    return true;
+  }
+
+  const backendMessage = String(error.data?.message ?? error.message ?? '').toLowerCase();
+
+  return backendMessage.includes('no se encontraron prestamos')
+    || backendMessage.includes('no se encontraron préstamos')
+    || backendMessage.includes('sin prestamos')
+    || backendMessage.includes('sin préstamos')
+    || backendMessage.includes('no tiene prestamos')
+    || backendMessage.includes('no tiene préstamos');
 }
 
 // Sanitiza texto antes de inyectar HTML (previene XSS básico).
