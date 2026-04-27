@@ -59,19 +59,30 @@ const loansService = {
   },
 
   /**
+   * Consulta préstamos del lector autenticado y enriquece datos bibliográficos
+   * (título/autor/código) igual que en préstamos vigentes.
+   *
+   * @param {{ estado?: string }} [options]
+   * @returns {Promise<{ data: Array<object>, pagination: object|null }>}
+   */
+  async getMyLoansEnriched(options = {}) {
+    const response = await this.getMyLoans(options);
+    const enrichedData = await enrichLoansWithBibliographicData(response.data ?? []);
+
+    return {
+      ...response,
+      data: enrichedData,
+    };
+  },
+
+  /**
    * Retorna los prestamos vigentes del lector autenticado.
    *
    * @returns {Promise<{ data: Array<object>, pagination: object|null }>}
    */
   async getMyActive() {
     try {
-      const response = await this.getMyLoans({ estado: 'VIGENTE' });
-      const enrichedData = await enrichLoansWithBibliographicData(response.data ?? []);
-
-      return {
-        ...response,
-        data: enrichedData,
-      };
+      return await this.getMyLoansEnriched({ estado: 'VIGENTE' });
     } catch (error) {
       // Algunos backends no aceptan el filtro estado en query y responden 400.
       // En ese caso, consultamos todo y filtramos vigentes en frontend.

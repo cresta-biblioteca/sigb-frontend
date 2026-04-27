@@ -146,34 +146,9 @@
 
           <!--
             Contenedor #loanHistory.
-            HTML de muestra con datos ficticios para diseño.
-            JS reemplazará con datos reales cuando el endpoint esté disponible.
+            Render dinámico por JS (loading / empty / error / data).
           -->
-          <div id="loanHistory">
-            <ul class="history-list">
-              <li class="history-item">
-                <div class="history-item__info">
-                  <p class="history-item__title">Marketing Estratégico</p>
-                  <p class="history-item__meta">Devuelto el 05/10/2023</p>
-                </div>
-                <span class="badge badge--closed">Devuelto</span>
-              </li>
-              <li class="history-item">
-                <div class="history-item__info">
-                  <p class="history-item__title">Cálculo Diferencial</p>
-                  <p class="history-item__meta">Devuelto el 28/09/2023</p>
-                </div>
-                <span class="badge badge--closed">Devuelto</span>
-              </li>
-              <li class="history-item">
-                <div class="history-item__info">
-                  <p class="history-item__title">Historia Argentina</p>
-                  <p class="history-item__meta">Devuelto el 15/09/2023</p>
-                </div>
-                <span class="badge badge--closed">Devuelto</span>
-              </li>
-            </ul>
-          </div>
+          <div id="loanHistory"></div>
         </section>
 
         <!-- Historial de reservas -->

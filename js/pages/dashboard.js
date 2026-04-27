@@ -9,7 +9,7 @@
  *   - Cancelación de reserva: integrado (/reservas/{id}/cancelar)
  *   - Historial de reservas (resumen en dashboard): integrado
  *   - Préstamos vigentes: integrado con backend (/lectores/me/prestamos?estado=VIGENTE)
- *   - Historial de préstamos: pendiente de integración dedicada
+ *   - Historial de préstamos (resumen en dashboard): integrado
  *
  * Flujo principal:
  *   1. requireAuth()         → verifica sesión y redirige si no hay token
@@ -66,6 +66,7 @@ requireAuth('../index.html');
 
 const activeReservationsElement = document.getElementById('activeReservations');
 const activeLoansElement = document.getElementById('activeLoans');
+const loanHistoryElement = document.getElementById('loanHistory');
 const reservationHistoryElement = document.getElementById('reservationHistory');
 const statActiveLoansElement = document.getElementById('statActiveLoans');
 const statActiveReservationsElement = document.getElementById('statActiveReservations');
@@ -75,6 +76,7 @@ activeReservationsElement?.addEventListener('click', handleActiveReservationsCli
 setStatsLoading(true);
 void loadActiveLoans();
 void loadActiveReservations();
+void loadLoanHistory();
 void loadReservationHistory();
 
 async function loadActiveLoans() {
@@ -240,6 +242,40 @@ async function loadReservationHistory() {
   }
 }
 
+async function loadLoanHistory() {
+  if (!loanHistoryElement) return;
+
+  showLoading(loanHistoryElement);
+
+  try {
+    const loansResponse = await loansService.getMyLoansEnriched();
+    const loans = loansResponse.data ?? [];
+
+    const returnedLoans = loans
+      .filter(isReturnedLoanForHistory)
+      .sort((a, b) => getLoanHistoryTimestamp(b) - getLoanHistoryTimestamp(a))
+      .slice(0, 5);
+
+    if (returnedLoans.length === 0) {
+      showEmpty(loanHistoryElement, 'Todavía no tenés préstamos devueltos en el historial.');
+      return;
+    }
+
+    loanHistoryElement.innerHTML = renderLoanHistory(returnedLoans);
+  } catch (error) {
+    if (isEmptyActiveLoansError(error)) {
+      showEmpty(loanHistoryElement, 'Todavía no tenés préstamos devueltos en el historial.');
+      return;
+    }
+
+    const message = error instanceof ApiError
+      ? 'No se pudo cargar el historial de préstamos.'
+      : 'No se pudo conectar con el servidor. Intentá recargar la página.';
+
+    showError(loanHistoryElement, message);
+  }
+}
+
 function dedupeReservationHistoryForDisplay(reservations) {
   const seen = new Set();
 
@@ -364,6 +400,30 @@ function renderReservationHistoryItem(reservation) {
   `;
 }
 
+function renderLoanHistory(loans) {
+  return `
+    <ul class="history-list">
+      ${loans.map(renderLoanHistoryItem).join('')}
+    </ul>
+  `;
+}
+
+function renderLoanHistoryItem(loan) {
+  const title = getLoanTitle(loan);
+  const returnDate = formatLoanDate(getLoanReturnDate(loan));
+  const meta = returnDate ? `Devuelto el ${returnDate}` : 'Devuelto';
+
+  return `
+    <li class="history-item">
+      <div class="history-item__info">
+        <p class="history-item__title">${escapeHtml(title)}</p>
+        <p class="history-item__meta">${escapeHtml(meta)}</p>
+      </div>
+      <span class="badge badge--closed">Devuelto</span>
+    </li>
+  `;
+}
+
 function renderActiveLoansTable(loans) {
   return `
     <div class="table-wrapper">
@@ -447,6 +507,16 @@ function getLoanDueDate(loan) {
     ?? null;
 }
 
+function getLoanReturnDate(loan) {
+  return loan?.fecha_devolucion
+    ?? loan?.fechaDevolucion
+    ?? loan?.fecha_fin
+    ?? loan?.fechaFin
+    ?? loan?.updated_at
+    ?? loan?.updatedAt
+    ?? null;
+}
+
 function formatLoanDate(rawDate) {
   if (!rawDate) return '';
 
@@ -471,6 +541,34 @@ function getLoanDueBadgeClass(rawDate) {
   if (daysUntilDue <= 3) return 'badge--warning';
 
   return 'badge--success';
+}
+
+function isReturnedLoanForHistory(loan) {
+  const rawStatus = String(loan?.estado ?? loan?.status ?? '').toUpperCase();
+
+  if (rawStatus.includes('COMPLETADO_EXITO') || rawStatus.includes('COMPLETADO_VENCIDO')) {
+    return true;
+  }
+
+  if (rawStatus.includes('DEVUEL') || rawStatus.includes('FINAL')) {
+    return true;
+  }
+
+  if (rawStatus === 'VIGENTE') {
+    return false;
+  }
+
+  return Boolean(getLoanReturnDate(loan));
+}
+
+function getLoanHistoryTimestamp(loan) {
+  const returnDate = getLoanReturnDate(loan);
+  if (!returnDate) return 0;
+
+  const parsedDate = parseBackendDate(returnDate);
+  if (Number.isNaN(parsedDate.getTime())) return 0;
+
+  return parsedDate.getTime();
 }
 
 function isEmptyActiveLoansError(error) {
@@ -685,8 +783,7 @@ function escapeHtml(value) {
 // ---------------------------------------------------------------------------
 // Historial de préstamos (#loanHistory)
 //
-// Pendiente de integración real: el backend de préstamos todavía no expone
-// el endpoint necesario para renderizar este bloque.
+// Se carga con datos reales del backend y muestra préstamos devueltos.
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
