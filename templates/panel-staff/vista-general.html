@@ -46,7 +46,7 @@
             <a href="#" class="sidebar__link">
                 <i class="fas fa-file-alt"></i> Tipos Documentos
             </a>
-            <a href="#" class="sidebar__link">
+            <a href="gestion-circulacion.html" class="sidebar__link">
                 <i class="fas fa-calendar-alt"></i> Reservas y Préstamos
             </a>
 
@@ -57,7 +57,8 @@
         </nav>
 
         <div class="sidebar__footer">
-            <button class="btn btn--outline sidebar__logout" style="border-color: rgba(255,255,255,0.2); color: white;">
+            <button class="btn btn--outline sidebar__logout" id="btnLogout"
+                    style="border-color: rgba(255,255,255,0.2); color: white;">
                 <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
             </button>
         </div>
@@ -85,10 +86,10 @@
                 
                 <div class="admin-header__user">
                     <div class="admin-header__user-info">
-                        <span class="admin-header__user-name">Admin CRESTA</span>
-                        <span class="admin-header__user-role">Librarian Chief</span>
+                        <span class="admin-header__user-name" id="headerUserName">Admin CRESTA</span>
+                        <span class="admin-header__user-role">Staff</span>
                     </div>
-                    <div class="admin-header__avatar">A</div>
+                    <div class="admin-header__avatar" id="headerUserAvatar">A</div>
                 </div>
             </div>
         </header>
@@ -114,7 +115,7 @@
 
             <div class="quick-access-grid" id="quickAccessContainer">
                 <!-- Se alimenta desde JS o backend en un futuro. Hardcodeamos estructura base -->
-                <a href="#" class="quick-card">
+                <a href="carga-articulos.html" class="quick-card">
                     <div class="quick-card__icon"><i class="fas fa-plus-square"></i></div>
                     <div class="quick-card__content">
                         <h3>Carga de Artículos</h3>
@@ -130,7 +131,7 @@
                     </div>
                 </a>
 
-                <a href="#" class="quick-card">
+                <a href="gestion-circulacion.html" class="quick-card">
                     <div class="quick-card__icon"><i class="fas fa-handshake"></i></div>
                     <div class="quick-card__content">
                         <h3>Reservas y Préstamos</h3>
@@ -181,5 +182,6 @@
     </main>
 </div>
 
+<script type="module" src="../../js/pages/vista-general.js"></script>
 </body>
 </html>
