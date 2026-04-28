@@ -54,11 +54,24 @@ const statActiveReservationsElement = document.getElementById('statActiveReserva
 
 activeReservationsElement?.addEventListener('click', handleActiveReservationsClick);
 
+// ── Lazy Loading: Dos fases de carga ──────────────────────────────────
+// Fase 1: Carga crítica (activos, stats) — bloquea renderización
+// Fase 2: Carga diferida (historial) — se defiere para mejor rendimiento inicial
+
 setStatsLoading(true);
-void loadActiveLoans();
-void loadActiveReservations();
-void loadLoanHistory();
-void loadReservationHistory();
+
+// Carga inmediata: activos (lo que ve el usuario primero)
+void Promise.all([
+  loadActiveLoans(),
+  loadActiveReservations(),
+]).finally(() => {
+  // Carga deferida: historial (menos visible, no es crítico en primer render)
+  // setTimeout permite que el navegador renderice activos sin bloqueo
+  setTimeout(() => {
+    void loadLoanHistory();
+    void loadReservationHistory();
+  }, 300); // 300ms de delay es imperceptible pero mejora rendimiento
+});
 
 async function loadActiveLoans() {
   if (!activeLoansElement) return;
@@ -114,7 +127,7 @@ async function loadActiveReservations() {
       perPage: 20,
     });
     const reservations = reservationsResponse.data;
-    const enrichedReservations = await enrichReservations(reservations);
+    const enrichedReservations = await reservationsService.enrichReservationsWithCache(reservations);
     const activeReservationsTotal = reservationsResponse.pagination?.total ?? enrichedReservations.length;
 
     if (statActiveReservationsElement) {
@@ -210,7 +223,7 @@ async function loadReservationHistory() {
       perPage: 20,
     });
     // Enriquecemos y deduplicamos para evitar filas repetidas.
-    const enrichedHistory = await enrichReservations(historyResponse.data ?? []);
+    const enrichedHistory = await reservationsService.enrichReservationsWithCache(historyResponse.data ?? []);
     const uniqueHistory = dedupeReservationHistoryForDisplay(enrichedHistory);
 
     const sortedHistory = [...uniqueHistory]
@@ -296,39 +309,6 @@ function setStatsLoading(isLoading) {
 
     element.classList.remove('stat-card__value--loading');
     element.removeAttribute('aria-busy');
-  });
-}
-
-async function enrichReservations(reservations) {
-  // Resuelve artículos por lote usando cache por articleId para minimizar llamadas repetidas.
-  const uniqueArticleIds = [...new Set(
-    reservations
-      .map((reservation) => getArticleId(reservation))
-      .filter((articleId) => articleId !== null && articleId !== undefined && articleId !== '')
-  )];
-
-  const articleCache = new Map();
-
-  await Promise.all(uniqueArticleIds.map(async (articleId) => {
-    try {
-      articleCache.set(String(articleId), await reservationsService.getArticleById(articleId));
-    } catch {
-      articleCache.set(String(articleId), null);
-    }
-  }));
-
-  return reservations.map((reservation) => {
-    const articleId = getArticleId(reservation);
-    const article = articleCache.get(String(articleId)) ?? null;
-
-    return {
-      ...reservation,
-      article,
-      articleId,
-      title: getArticleTitle(article, reservation),
-      author: getArticleAuthor(article),
-      reservedAt: getReservationDate(reservation),
-    };
   });
 }
 
@@ -685,7 +665,7 @@ function getReservationHistoryStatusInfo(reservation) {
   }
 
   if (rawStatus.includes('EXPIR')) {
-    return { label: 'Expirada', badgeClass: 'badge--overdue' };
+    return { label: 'Vencida', badgeClass: 'badge--overdue' };
   }
 
   if (rawStatus.includes('COMPLET') || rawStatus.includes('FINAL') || rawStatus.includes('DEVUEL')) {
@@ -696,7 +676,7 @@ function getReservationHistoryStatusInfo(reservation) {
   if (expiresAtRaw) {
     const expiresAtDate = parseBackendDate(expiresAtRaw);
     if (!Number.isNaN(expiresAtDate.getTime()) && expiresAtDate.getTime() < Date.now()) {
-      return { label: 'Expirada', badgeClass: 'badge--overdue' };
+      return { label: 'Vencida', badgeClass: 'badge--overdue' };
     }
   }
 

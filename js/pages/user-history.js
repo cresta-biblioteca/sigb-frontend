@@ -68,8 +68,17 @@ loansHistoryNextBtn?.addEventListener('click', () => {
   }
 });
 
-void loadReservationsHistoryPage(currentHistoryPage);
-void loadLoanHistoryPage(currentLoanHistoryPage);
+// ── Lazy Loading: Dos fases de carga ──────────────────────────────────
+// Fase 1: Historial de reservas (más visible, prioritario)
+// Fase 2: Historial de préstamos se defiere para mejor rendimiento inicial
+
+void loadReservationsHistoryPage(currentHistoryPage)
+  .finally(() => {
+    // Carga deferida del historial de préstamos tras completar reservas
+    setTimeout(() => {
+      void loadLoanHistoryPage(currentLoanHistoryPage);
+    }, 250);
+  });
 
 // Carga una página del historial de reservas con estado loading/error/empty.
 async function loadReservationsHistoryPage(page = 1) {
@@ -125,36 +134,16 @@ async function loadReservationsHistoryPage(page = 1) {
 }
 
 async function enrichReservations(reservations) {
-  const uniqueArticleIds = [...new Set(
-    reservations
-      .map((reservation) => getArticleId(reservation))
-      .filter((articleId) => articleId !== null && articleId !== undefined && articleId !== '')
-  )];
+  // Usa caché del servicio para obtener datos bibliográficos.
+  const enrichedBase = await reservationsService.enrichReservationsWithCache(reservations);
 
-  const articleCache = new Map();
-
-  await Promise.all(uniqueArticleIds.map(async (articleId) => {
-    try {
-      articleCache.set(String(articleId), await reservationsService.getArticleById(articleId));
-    } catch {
-      articleCache.set(String(articleId), null);
-    }
+  // Agrega propiedades específicas del contexto de historial.
+  return enrichedBase.map((reservation) => ({
+    ...reservation,
+    historyLabel: getReservationHistoryLabel(reservation),
+    historyDate: getReservationHistoryDate(reservation),
+    historyTimestamp: getReservationHistoryTimestamp(reservation),
   }));
-
-  return reservations.map((reservation) => {
-    const articleId = getArticleId(reservation);
-    const article = articleCache.get(String(articleId)) ?? null;
-
-    return {
-      ...reservation,
-      article,
-      title: getArticleTitle(article, reservation),
-      author: getArticleAuthor(article),
-      historyLabel: getReservationHistoryLabel(reservation),
-      historyDate: getReservationHistoryDate(reservation),
-      historyTimestamp: getReservationHistoryTimestamp(reservation),
-    };
-  });
 }
 
 // Renderiza una fila del historial de reservas.
@@ -248,14 +237,14 @@ function getReservationHistoryLabel(reservation) {
   const rawStatus = String(reservation?.estado ?? reservation?.status ?? '').toUpperCase();
 
   if (rawStatus.includes('CANCEL')) return 'Cancelada';
-  if (rawStatus.includes('EXPIR')) return 'Expirada';
+  if (rawStatus.includes('EXPIR')) return 'Vencida';
   if (rawStatus.includes('COMPLET') || rawStatus.includes('FINAL') || rawStatus.includes('DEVUEL')) return 'Completada';
 
   const endDate = reservation?.fecha_vencimiento ?? reservation?.fechaVencimiento ?? null;
   if (endDate) {
     const parsedEndDate = parseApiDate(endDate);
     if (!Number.isNaN(parsedEndDate.getTime()) && parsedEndDate.getTime() < Date.now()) {
-      return 'Expirada';
+      return 'Vencida';
     }
   }
 
@@ -288,7 +277,7 @@ function getReservationHistoryDate(reservation) {
 function getReservationHistoryBadgeClass(reservation) {
   const label = getReservationHistoryLabel(reservation);
   if (label === 'Cancelada') return 'badge--cancelled';
-  if (label === 'Expirada') return 'badge--overdue';
+  if (label === 'Vencida') return 'badge--overdue';
   return 'badge--closed';
 }
 

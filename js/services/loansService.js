@@ -11,7 +11,7 @@
  */
 
 import { api, ApiError } from './api.js';
-import { enrichLoansWithBibliographicData } from './loansBibliographicResolver.js';
+import { enrichLoansWithBibliographicData } from './bibliographicResolver.js';
 
 function normalizeLoansResponse(response) {
   if (Array.isArray(response)) {

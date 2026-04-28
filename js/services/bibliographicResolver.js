@@ -1,11 +1,12 @@
 /**
- * Loans Bibliographic Resolver — Enriquecimiento bibliográfico de préstamos
+ * Bibliographic Resolver — Enriquecimiento bibliográfico compartido
  *
- * Resuelve y cachea metadatos bibliográficos para préstamos a partir de
- * artículos, libros y ejemplares. Normaliza distintos contratos de API y
- * aplica fallbacks cuando faltan datos.
+ * Resuelve y cachea metadatos bibliográficos para artículos, libros y
+ * ejemplares. Normaliza distintos contratos de API y aplica fallbacks
+ * cuando faltan datos.
  *
  * Funcionalidad actual:
+ *   - resolveBibliographicDataByArticleId(): obtiene título/autor/año
  *   - enrichLoanWithBibliographicData(): agrega metadata a un préstamo
  *   - enrichLoansWithBibliographicData(): aplica enriquecimiento en lote
  *   - Cachés internas: evitan llamadas repetidas por id de recurso
@@ -13,8 +14,11 @@
 import { api, ApiError } from './api.js';
 
 const bibliographicCache = new Map();
+const bibliographicPromiseCache = new Map();
 const loanDetailCache = new Map();
+const loanDetailPromiseCache = new Map();
 const ejemplarArticleCache = new Map();
+const ejemplarArticlePromiseCache = new Map();
 
 // ── Normalización de recursos ────────────────────────────────────────────
 function normalizeResource(response) {
@@ -196,11 +200,25 @@ async function getArticleDetailByArticleId(articleId) {
     return bibliographicCache.get(cacheKey);
   }
 
-  const response = await api.get(`/articulos/${articleId}`, { cache: 'no-store' });
-  const normalized = normalizeArticleBibliographicResource(response);
-  bibliographicCache.set(cacheKey, normalized);
+  if (bibliographicPromiseCache.has(cacheKey)) {
+    return bibliographicPromiseCache.get(cacheKey);
+  }
 
-  return normalized;
+  const request = api.get(`/articulos/${articleId}`, { cache: 'no-store' })
+    .then((response) => {
+      const normalized = normalizeArticleBibliographicResource(response);
+      bibliographicCache.set(cacheKey, normalized);
+      bibliographicPromiseCache.delete(cacheKey);
+      return normalized;
+    })
+    .catch((error) => {
+      bibliographicPromiseCache.delete(cacheKey);
+      throw error;
+    });
+
+  bibliographicPromiseCache.set(cacheKey, request);
+
+  return request;
 }
 
 async function getBookDetailByArticleId(articleId) {
@@ -210,11 +228,66 @@ async function getBookDetailByArticleId(articleId) {
     return bibliographicCache.get(cacheKey);
   }
 
-  const response = await api.get(`/libros/${articleId}`, { cache: 'no-store' });
-  const normalized = normalizeBookBibliographicResource(response);
-  bibliographicCache.set(cacheKey, normalized);
+  if (bibliographicPromiseCache.has(cacheKey)) {
+    return bibliographicPromiseCache.get(cacheKey);
+  }
 
-  return normalized;
+  const request = api.get(`/libros/${articleId}`, { cache: 'no-store' })
+    .then((response) => {
+      const normalized = normalizeBookBibliographicResource(response);
+      bibliographicCache.set(cacheKey, normalized);
+      bibliographicPromiseCache.delete(cacheKey);
+      return normalized;
+    })
+    .catch((error) => {
+      bibliographicPromiseCache.delete(cacheKey);
+      throw error;
+    });
+
+  bibliographicPromiseCache.set(cacheKey, request);
+
+  return request;
+}
+
+async function resolveBibliographicDataByArticleId(articleId) {
+  if (articleId === null || articleId === undefined || articleId === '') {
+    return {
+      title: 'Sin título',
+      author: 'Autor no disponible',
+      year: null,
+      raw: null,
+    };
+  }
+
+  try {
+    const [articleBibliographic, bookBibliographic] = await Promise.all([
+      getArticleDetailByArticleId(articleId).catch((error) => {
+        if (error instanceof ApiError && error.status === 404) return null;
+        throw error;
+      }),
+      getBookDetailByArticleId(articleId).catch((error) => {
+        if (error instanceof ApiError && error.status === 404) return null;
+        throw error;
+      }),
+    ]);
+
+    return {
+      title: articleBibliographic?.title ?? bookBibliographic?.title ?? 'Sin título',
+      author: bookBibliographic?.author ?? 'Autor no disponible',
+      year: articleBibliographic?.year ?? bookBibliographic?.year ?? null,
+      raw: {
+        articulo: articleBibliographic?.raw ?? null,
+        libro: bookBibliographic?.raw ?? null,
+      },
+    };
+  } catch {
+    return {
+      title: 'Sin título',
+      author: 'Autor no disponible',
+      year: null,
+      raw: null,
+    };
+  }
 }
 
 // ── Acceso a préstamos y ejemplares ──────────────────────────────────────
@@ -225,11 +298,25 @@ async function getLoanDetailById(loanId) {
     return loanDetailCache.get(cacheKey);
   }
 
-  const response = await api.get(`/prestamos/${loanId}`, { cache: 'no-store' });
-  const detail = normalizeResource(response);
-  loanDetailCache.set(cacheKey, detail);
+  if (loanDetailPromiseCache.has(cacheKey)) {
+    return loanDetailPromiseCache.get(cacheKey);
+  }
 
-  return detail;
+  const request = api.get(`/prestamos/${loanId}`, { cache: 'no-store' })
+    .then((response) => {
+      const detail = normalizeResource(response);
+      loanDetailCache.set(cacheKey, detail);
+      loanDetailPromiseCache.delete(cacheKey);
+      return detail;
+    })
+    .catch((error) => {
+      loanDetailPromiseCache.delete(cacheKey);
+      throw error;
+    });
+
+  loanDetailPromiseCache.set(cacheKey, request);
+
+  return request;
 }
 
 async function getArticleIdByEjemplarId(ejemplarId) {
@@ -239,17 +326,30 @@ async function getArticleIdByEjemplarId(ejemplarId) {
     return ejemplarArticleCache.get(cacheKey);
   }
 
-  const response = await api.get(`/ejemplares/${ejemplarId}`, { cache: 'no-store' });
-  const ejemplar = normalizeResource(response);
+  if (ejemplarArticlePromiseCache.has(cacheKey)) {
+    return ejemplarArticlePromiseCache.get(cacheKey);
+  }
 
-  const articleId = ejemplar?.articulo_id
-    ?? ejemplar?.articuloId
-    ?? ejemplar?.article_id
-    ?? ejemplar?.articleId
-    ?? null;
+  const request = api.get(`/ejemplares/${ejemplarId}`, { cache: 'no-store' })
+    .then((response) => {
+      const ejemplar = normalizeResource(response);
+      const articleId = ejemplar?.articulo_id
+        ?? ejemplar?.articuloId
+        ?? ejemplar?.article_id
+        ?? ejemplar?.articleId
+        ?? null;
 
-  ejemplarArticleCache.set(cacheKey, articleId);
-  return articleId;
+      ejemplarArticleCache.set(cacheKey, articleId);
+      ejemplarArticlePromiseCache.delete(cacheKey);
+      return articleId;
+    })
+    .catch((error) => {
+      ejemplarArticlePromiseCache.delete(cacheKey);
+      throw error;
+    });
+
+  ejemplarArticlePromiseCache.set(cacheKey, request);
+  return request;
 }
 
 // ── Enriquecimiento de préstamos ─────────────────────────────────────────
@@ -291,55 +391,20 @@ async function enrichLoanWithBibliographicData(loan) {
     };
   }
 
-  try {
-    const [articleBibliographic, bookBibliographic] = await Promise.all([
-      getArticleDetailByArticleId(articleId).catch((error) => {
-        if (error instanceof ApiError && error.status === 404) return null;
-        throw error;
-      }),
-      getBookDetailByArticleId(articleId).catch((error) => {
-        if (error instanceof ApiError && error.status === 404) return null;
-        throw error;
-      }),
-    ]);
+  const bibliographic = await resolveBibliographicDataByArticleId(articleId);
 
-    const bibliographic = {
-      title: articleBibliographic?.title ?? bookBibliographic?.title ?? 'Sin título',
-      author: bookBibliographic?.author ?? 'Autor no disponible',
-      year: articleBibliographic?.year ?? bookBibliographic?.year ?? null,
-      raw: {
-        articulo: articleBibliographic?.raw ?? null,
-        libro: bookBibliographic?.raw ?? null,
-      },
-    };
-
-    return {
-      ...loan,
-      articleId,
-      bibliographic,
-      title: bibliographic.title,
-      author: bibliographic.author,
-      year: bibliographic.year,
-    };
-  } catch {
-    return {
-      ...loan,
-      articleId,
-      bibliographic: {
-        title: 'Sin título',
-        author: 'Autor no disponible',
-        year: null,
-        raw: null,
-      },
-      title: 'Sin título',
-      author: 'Autor no disponible',
-      year: null,
-    };
-  }
+  return {
+    ...loan,
+    articleId,
+    bibliographic,
+    title: bibliographic.title,
+    author: bibliographic.author,
+    year: bibliographic.year,
+  };
 }
 
 async function enrichLoansWithBibliographicData(loans = []) {
   return Promise.all(loans.map(enrichLoanWithBibliographicData));
 }
 
-export { enrichLoansWithBibliographicData };
+export { resolveBibliographicDataByArticleId, enrichLoansWithBibliographicData };

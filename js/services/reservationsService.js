@@ -5,7 +5,22 @@
  * enriquecimiento de artículos/libros asociados a cada reserva.
  */
 
-import { api, ApiError } from './api.js';
+import { api } from './api.js';
+import { resolveBibliographicDataByArticleId } from './bibliographicResolver.js';
+
+// ---------------------------------------------------------------------------
+// Caché de enriquecimiento
+// ---------------------------------------------------------------------------
+// Cachea resultados normalizados de reservas enriquecidas para evitar
+// recalcular transformaciones en cada render.
+const enrichmentCache = new Map();
+
+// Construye una clave única por reserva combinando su id con el article_id.
+function buildEnrichmentCacheKey(reservation) {
+  const reservationId = reservation?.id ?? 'na';
+  const articleId = reservation?.articulo_id ?? reservation?.articuloId ?? 'na';
+  return `${String(reservationId)}|${String(articleId)}`;
+}
 
 // ---------------------------------------------------------------------------
 // Helpers de normalización
@@ -28,12 +43,6 @@ function normalizeReservationsResponse(response) {
     data: [],
     pagination: response?.pagination ?? null,
   };
-}
-
-// Normaliza recursos puntuales que pueden venir anidados en { data }.
-function normalizeResource(response) {
-  if (response?.data && !Array.isArray(response.data)) return response.data;
-  return response;
 }
 
 // Construye query string omitiendo valores vacíos/undefined.
@@ -152,31 +161,80 @@ const reservationsService = {
   },
 
   /**
-   * Obtiene los datos del artículo asociado a una reserva.
-   * Intenta primero /libros/{id} y, si no existe, cae a /articulos/{id}.
+   * Obtiene los datos bibliográficos del recurso asociado a una reserva.
    *
    * @param {string|number} articleId
    * @returns {Promise<object>}
    */
   async getArticleById(articleId) {
-    const endpoints = [`/libros/${articleId}`, `/articulos/${articleId}`];
-    let lastError = null;
+    return resolveBibliographicDataByArticleId(articleId);
+  },
 
-    // Fallback progresivo: si no existe en libros (404), busca en articulos.
-    for (const endpoint of endpoints) {
-      try {
-        const response = await api.get(endpoint);
-        return normalizeResource(response);
-      } catch (error) {
-        lastError = error;
+  /**
+   * Enriquece un lote de reservas con datos bibliográficos y cachea los resultados.
+   * Evita recalcular la transformación en renders sucesivos.
+   *
+   * @param {Array<object>} reservations
+   * @returns {Promise<Array<object>>}
+   */
+  async enrichReservationsWithCache(reservations) {
+    // Identifica qué reservas no están en caché.
+    const toFetch = reservations.filter((reservation) => {
+      const cacheKey = buildEnrichmentCacheKey(reservation);
+      return !enrichmentCache.has(cacheKey);
+    });
 
-        if (!(error instanceof ApiError) || error.status !== 404) {
-          throw error;
+    // Obtiene datos bibliográficos solo para las reservas no cacheadas.
+    if (toFetch.length > 0) {
+      const uniqueArticleIds = [...new Set(
+        toFetch
+          .map((reservation) => reservation?.articulo_id ?? reservation?.articuloId)
+          .filter((articleId) => articleId !== null && articleId !== undefined && articleId !== '')
+      )];
+
+      const articleBibliographicData = new Map();
+
+      await Promise.all(uniqueArticleIds.map(async (articleId) => {
+        try {
+          articleBibliographicData.set(
+            String(articleId),
+            await this.getArticleById(articleId)
+          );
+        } catch {
+          articleBibliographicData.set(String(articleId), null);
         }
-      }
+      }));
+
+      // Cachea los resultados enriquecidos.
+      toFetch.forEach((reservation) => {
+        const cacheKey = buildEnrichmentCacheKey(reservation);
+        const articleId = reservation?.articulo_id ?? reservation?.articuloId;
+        const bibliographicData = articleBibliographicData.get(String(articleId)) ?? null;
+
+        const enriched = {
+          title: bibliographicData?.title ?? 'Sin título',
+          author: bibliographicData?.author ?? 'Autor no disponible',
+          raw: bibliographicData?.raw ?? null,
+        };
+
+        enrichmentCache.set(cacheKey, enriched);
+      });
     }
 
-    throw lastError;
+    // Retorna todas las reservas con datos cacheados.
+    return reservations.map((reservation) => {
+      const cacheKey = buildEnrichmentCacheKey(reservation);
+      const enrichedData = enrichmentCache.get(cacheKey) ?? {
+        title: 'Sin título',
+        author: 'Autor no disponible',
+        raw: null,
+      };
+
+      return {
+        ...reservation,
+        ...enrichedData,
+      };
+    });
   },
 };
 
