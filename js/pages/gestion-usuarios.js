@@ -13,11 +13,14 @@
  *   - Baja (desactivación) de usuario
  */
 
-import { requireAuth }     from '../core/authGuard.js';
-import { usersService }    from '../services/usersService.js';
+import { store }        from '../core/store.js';
+import { usersService } from '../services/usersService.js';
+
+store.init();
 
 // ── Guard: requiere sesión activa ──────────────────────────────────────────
 // TODO: reactivar antes de producción
+// import { requireAuth } from '../core/authGuard.js';
 // requireAuth();
 
 // ── DOM refs ───────────────────────────────────────────────────────────────
@@ -33,6 +36,12 @@ const userCreatedId   = document.getElementById('userCreatedId');
 const userCreatedLectorId = document.getElementById('userCreatedLectorId');
 const btnSubmit     = document.getElementById('btnSubmitRegister');
 const btnReset      = document.getElementById('btnResetForm');
+
+// ── Logout ─────────────────────────────────────────────────────────────────
+document.getElementById('btnLogout')?.addEventListener('click', () => {
+  store.clearSession();
+  window.location.href = 'login.html';
+});
 
 // ── Sidebar toggle (mobile) ────────────────────────────────────────────────
 sidebarToggle?.addEventListener('click', () => {

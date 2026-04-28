@@ -13,7 +13,10 @@
  *   - Tipos adicionales: Revista, CD/DVD, Material Especial, etc.
  */
 
+import { store }            from '../core/store.js';
 import { articulosService } from '../services/articulosService.js';
+
+store.init();
 
 // ── Guard (descomentar antes de producción) ─────────────────────────────────
 // import { requireAuth } from '../core/authGuard.js';
@@ -55,6 +58,12 @@ const marcResults     = document.getElementById('marcResults');
 // ── Estado ───────────────────────────────────────────────────────────────────
 let personaCount = 0;
 let marcSelectedFile = null;
+
+// ── Logout ───────────────────────────────────────────────────────────────────
+document.getElementById('btnLogout')?.addEventListener('click', () => {
+  store.clearSession();
+  window.location.href = 'login.html';
+});
 
 // ── Sidebar toggle (mobile) ──────────────────────────────────────────────────
 sidebarToggle?.addEventListener('click', () => {
