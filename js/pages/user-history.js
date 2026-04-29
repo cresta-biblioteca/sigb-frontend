@@ -1,41 +1,49 @@
 /**
  * User History Page Script
  *
- * Pantalla dedicada para ver el historial completo del usuario.
+ * Pantalla dedicada a historial completo del usuario.
+ *
+ * Funcionalidad actual:
+ *   - Historial de reservas: paginado y con estados legibles
+ *   - Historial de préstamos: muestra préstamos devueltos con título enriquecido
  */
 
 import { requireAuth } from '../core/authGuard.js';
 import { store } from '../core/store.js';
 import { authService } from '../services/authService.js';
 import { reservationsService } from '../services/reservationsService.js';
+import { loansService } from '../services/loansService.js';
 import { ApiError } from '../services/api.js';
 import { Modal } from '../components/modal.js';
 import { showLoading, showError, showEmpty } from '../components/ui.js';
 
-// ---------------------------------------------------------------------------
-// Guard — debe ejecutarse primero en páginas privadas
-// ---------------------------------------------------------------------------
+// ── Guard ────────────────────────────────────────────────────────────────
 requireAuth('../index.html');
 
-// ---------------------------------------------------------------------------
-// Referencias de DOM
-// ---------------------------------------------------------------------------
+// ── Referencias de DOM ───────────────────────────────────────────────────
 const reservationsHistoryElement = document.getElementById('reservationHistoryPage');
 const reservationsHistoryPrevBtn = document.getElementById('reservationHistoryPrev');
 const reservationsHistoryNextBtn = document.getElementById('reservationHistoryNext');
 const reservationsHistoryPageInfoElement = document.getElementById('reservationHistoryPageInfo');
-const reservationsHistoryPaginationElement = document.querySelector('.history-pagination');
+const reservationsHistoryPaginationElement = document.getElementById('reservationHistoryPagination');
 const loansHistoryElement = document.getElementById('loanHistoryPage');
+const loansHistoryPrevBtn = document.getElementById('loanHistoryPrev');
+const loansHistoryNextBtn = document.getElementById('loanHistoryNext');
+const loansHistoryPageInfoElement = document.getElementById('loanHistoryPageInfo');
+const loansHistoryPaginationElement = document.getElementById('loanHistoryPagination');
 const logoutBtn = document.getElementById('logoutBtn');
 
 const RESERVATION_HISTORY_PAGE_SIZE = 30;
+const LOAN_HISTORY_PAGE_SIZE = 30;
 
 let currentHistoryPage = 1;
 let totalHistoryPages = 1;
+let currentLoanHistoryPage = 1;
+let totalLoanHistoryPages = 1;
+let returnedLoansCache = [];
+let hasLoadedLoanHistory = false;
 
-// ---------------------------------------------------------------------------
-// Eventos de paginación
-// ---------------------------------------------------------------------------
+// ── Eventos de paginación ────────────────────────────────────────────────
 reservationsHistoryPrevBtn?.addEventListener('click', () => {
   if (currentHistoryPage > 1) {
     void loadReservationsHistoryPage(currentHistoryPage - 1);
@@ -48,19 +56,43 @@ reservationsHistoryNextBtn?.addEventListener('click', () => {
   }
 });
 
-void loadReservationsHistoryPage(currentHistoryPage);
-loadLoansHistoryPlaceholder();
+loansHistoryPrevBtn?.addEventListener('click', () => {
+  if (currentLoanHistoryPage > 1) {
+    void loadLoanHistoryPage(currentLoanHistoryPage - 1);
+  }
+});
 
-// Carga una página del historial de reservas con estado de loading/error/empty.
+loansHistoryNextBtn?.addEventListener('click', () => {
+  if (currentLoanHistoryPage < totalLoanHistoryPages) {
+    void loadLoanHistoryPage(currentLoanHistoryPage + 1);
+  }
+});
+
+// ── Lazy Loading: Dos fases de carga ──────────────────────────────────
+// Fase 1: Historial de reservas (más visible, prioritario)
+// Fase 2: Historial de préstamos se defiere para mejor rendimiento inicial
+
+void loadReservationsHistoryPage(currentHistoryPage)
+  .finally(() => {
+    // Carga deferida del historial de préstamos tras completar reservas
+    setTimeout(() => {
+      void loadLoanHistoryPage(currentLoanHistoryPage);
+    }, 250);
+  });
+
+// Carga una página del historial de reservas con estado loading/error/empty.
 async function loadReservationsHistoryPage(page = 1) {
   if (!reservationsHistoryElement) return;
 
   currentHistoryPage = Math.max(1, page);
   showLoading(reservationsHistoryElement);
-  setHistoryPaginationLoading(true);
+  setReservationHistoryPaginationLoading(true);
 
   try {
-    const historyResponse = await reservationsService.getMyHistory({ page: currentHistoryPage, perPage: RESERVATION_HISTORY_PAGE_SIZE });
+    const historyResponse = await reservationsService.getMyHistory({
+      page: currentHistoryPage,
+      perPage: RESERVATION_HISTORY_PAGE_SIZE,
+    });
     const reservations = dedupeReservationsForDisplay(await enrichReservations(historyResponse.data ?? []));
     const sortedReservations = [...reservations].sort((a, b) => getReservationSortTimestamp(b) - getReservationSortTimestamp(a));
     const totalReservations = historyResponse.pagination?.total ?? sortedReservations.length;
@@ -77,7 +109,7 @@ async function loadReservationsHistoryPage(page = 1) {
 
     if (sortedReservations.length === 0) {
       showEmpty(reservationsHistoryElement, 'Todavía no tenés reservas para mostrar en el historial.');
-      updateHistoryPaginationInfo();
+      updateReservationHistoryPaginationInfo();
       return;
     }
 
@@ -87,7 +119,7 @@ async function loadReservationsHistoryPage(page = 1) {
       </ul>
     `;
 
-    updateHistoryPaginationInfo();
+    updateReservationHistoryPaginationInfo();
   } catch (error) {
     const message = error instanceof ApiError
       ? 'No se pudo cargar el historial de reservas.'
@@ -95,43 +127,23 @@ async function loadReservationsHistoryPage(page = 1) {
 
     showError(reservationsHistoryElement, message);
     totalHistoryPages = 1;
-    updateHistoryPaginationInfo();
+    updateReservationHistoryPaginationInfo();
   } finally {
-    setHistoryPaginationLoading(false);
+    setReservationHistoryPaginationLoading(false);
   }
 }
 
 async function enrichReservations(reservations) {
-  const uniqueArticleIds = [...new Set(
-    reservations
-      .map((reservation) => getArticleId(reservation))
-      .filter((articleId) => articleId !== null && articleId !== undefined && articleId !== '')
-  )];
+  // Usa caché del servicio para obtener datos bibliográficos.
+  const enrichedBase = await reservationsService.enrichReservationsWithCache(reservations);
 
-  const articleCache = new Map();
-
-  await Promise.all(uniqueArticleIds.map(async (articleId) => {
-    try {
-      articleCache.set(String(articleId), await reservationsService.getArticleById(articleId));
-    } catch {
-      articleCache.set(String(articleId), null);
-    }
+  // Agrega propiedades específicas del contexto de historial.
+  return enrichedBase.map((reservation) => ({
+    ...reservation,
+    historyLabel: getReservationHistoryLabel(reservation),
+    historyDate: getReservationHistoryDate(reservation),
+    historyTimestamp: getReservationHistoryTimestamp(reservation),
   }));
-
-  return reservations.map((reservation) => {
-    const articleId = getArticleId(reservation);
-    const article = articleCache.get(String(articleId)) ?? null;
-
-    return {
-      ...reservation,
-      article,
-      title: getArticleTitle(article, reservation),
-      author: getArticleAuthor(article),
-      historyLabel: getReservationHistoryLabel(reservation),
-      historyDate: getReservationHistoryDate(reservation),
-      historyTimestamp: getReservationHistoryTimestamp(reservation),
-    };
-  });
 }
 
 // Renderiza una fila del historial de reservas.
@@ -148,7 +160,7 @@ function renderReservationsHistoryItem(reservation) {
 }
 
 // Actualiza controles de paginación (botones, texto y visibilidad).
-function updateHistoryPaginationInfo() {
+function updateReservationHistoryPaginationInfo() {
   if (reservationsHistoryPaginationElement) {
     reservationsHistoryPaginationElement.hidden = totalHistoryPages <= 1;
   }
@@ -167,7 +179,7 @@ function updateHistoryPaginationInfo() {
 }
 
 // Bloquea o desbloquea los botones de paginación durante la carga.
-function setHistoryPaginationLoading(isLoading) {
+function setReservationHistoryPaginationLoading(isLoading) {
   if (reservationsHistoryPrevBtn) {
     reservationsHistoryPrevBtn.disabled = isLoading || currentHistoryPage <= 1;
   }
@@ -225,14 +237,14 @@ function getReservationHistoryLabel(reservation) {
   const rawStatus = String(reservation?.estado ?? reservation?.status ?? '').toUpperCase();
 
   if (rawStatus.includes('CANCEL')) return 'Cancelada';
-  if (rawStatus.includes('EXPIR')) return 'Expirada';
+  if (rawStatus.includes('EXPIR')) return 'Vencida';
   if (rawStatus.includes('COMPLET') || rawStatus.includes('FINAL') || rawStatus.includes('DEVUEL')) return 'Completada';
 
   const endDate = reservation?.fecha_vencimiento ?? reservation?.fechaVencimiento ?? null;
   if (endDate) {
     const parsedEndDate = parseApiDate(endDate);
     if (!Number.isNaN(parsedEndDate.getTime()) && parsedEndDate.getTime() < Date.now()) {
-      return 'Expirada';
+      return 'Vencida';
     }
   }
 
@@ -265,7 +277,7 @@ function getReservationHistoryDate(reservation) {
 function getReservationHistoryBadgeClass(reservation) {
   const label = getReservationHistoryLabel(reservation);
   if (label === 'Cancelada') return 'badge--cancelled';
-  if (label === 'Expirada') return 'badge--overdue';
+  if (label === 'Vencida') return 'badge--overdue';
   return 'badge--closed';
 }
 
@@ -304,14 +316,185 @@ function parseApiDate(value) {
   return new Date(normalizedValue);
 }
 
-// Placeholder temporal: préstamos aún no integrados al backend.
-function loadLoansHistoryPlaceholder() {
+async function loadLoanHistoryPage(page = 1) {
   if (!loansHistoryElement) return;
 
-  showEmpty(
-    loansHistoryElement,
-    'Próximamente vas a ver acá tu historial de préstamos.'
-  );
+  currentLoanHistoryPage = Math.max(1, page);
+  showLoading(loansHistoryElement);
+  setLoanHistoryPaginationLoading(true);
+
+  try {
+    if (!hasLoadedLoanHistory) {
+      const loansResponse = await loansService.getMyLoansEnriched();
+      const loans = loansResponse.data ?? [];
+
+      returnedLoansCache = loans
+        .filter(isReturnedLoanForHistory)
+        .sort((a, b) => getLoanHistoryTimestamp(b) - getLoanHistoryTimestamp(a));
+
+      hasLoadedLoanHistory = true;
+    }
+
+    const totalLoans = returnedLoansCache.length;
+    totalLoanHistoryPages = Math.max(1, Math.ceil(totalLoans / LOAN_HISTORY_PAGE_SIZE));
+
+    if (currentLoanHistoryPage > totalLoanHistoryPages) {
+      currentLoanHistoryPage = totalLoanHistoryPages;
+    }
+
+    const returnedLoans = getLoanHistoryPageItems();
+
+    if (returnedLoans.length === 0) {
+      showEmpty(loansHistoryElement, 'Todavía no tenés préstamos devueltos para mostrar en el historial.');
+      updateLoanHistoryPaginationInfo();
+      return;
+    }
+
+    loansHistoryElement.innerHTML = `
+      <ul class="history-list">
+        ${returnedLoans.map(renderLoanHistoryItem).join('')}
+      </ul>
+    `;
+
+    updateLoanHistoryPaginationInfo();
+  } catch (error) {
+    if (isEmptyLoansError(error)) {
+      totalLoanHistoryPages = 1;
+      updateLoanHistoryPaginationInfo();
+      showEmpty(loansHistoryElement, 'Todavía no tenés préstamos devueltos para mostrar en el historial.');
+      return;
+    }
+
+    const message = error instanceof ApiError
+      ? 'No se pudo cargar el historial de préstamos.'
+      : 'No se pudo conectar con el servidor. Intentá nuevamente.';
+
+    totalLoanHistoryPages = 1;
+    updateLoanHistoryPaginationInfo();
+    showError(loansHistoryElement, message);
+  } finally {
+    setLoanHistoryPaginationLoading(false);
+  }
+}
+
+function getLoanHistoryPageItems() {
+  const start = (currentLoanHistoryPage - 1) * LOAN_HISTORY_PAGE_SIZE;
+  const end = start + LOAN_HISTORY_PAGE_SIZE;
+  return returnedLoansCache.slice(start, end);
+}
+
+function updateLoanHistoryPaginationInfo() {
+  if (loansHistoryPaginationElement) {
+    loansHistoryPaginationElement.hidden = totalLoanHistoryPages <= 1;
+  }
+
+  if (loansHistoryPageInfoElement) {
+    loansHistoryPageInfoElement.textContent = `Página ${currentLoanHistoryPage} de ${totalLoanHistoryPages}`;
+  }
+
+  if (loansHistoryPrevBtn) {
+    loansHistoryPrevBtn.disabled = currentLoanHistoryPage <= 1;
+  }
+
+  if (loansHistoryNextBtn) {
+    loansHistoryNextBtn.disabled = currentLoanHistoryPage >= totalLoanHistoryPages;
+  }
+}
+
+function setLoanHistoryPaginationLoading(isLoading) {
+  if (loansHistoryPrevBtn) {
+    loansHistoryPrevBtn.disabled = isLoading || currentLoanHistoryPage <= 1;
+  }
+
+  if (loansHistoryNextBtn) {
+    loansHistoryNextBtn.disabled = isLoading || currentLoanHistoryPage >= totalLoanHistoryPages;
+  }
+}
+
+function renderLoanHistoryItem(loan) {
+  const title = getLoanTitle(loan);
+  const returnDate = formatApiDate(getLoanReturnDate(loan));
+  const meta = returnDate ? `Devuelto el ${returnDate}` : 'Devuelto';
+
+  return `
+    <li class="history-item">
+      <div class="history-item__info">
+        <p class="history-item__title">${escapeHtml(title)}</p>
+        <p class="history-item__meta">${escapeHtml(meta)}</p>
+      </div>
+      <span class="badge badge--closed">Devuelto</span>
+    </li>
+  `;
+}
+
+function getLoanTitle(loan) {
+  return loan?.title ?? 'Sin título';
+}
+
+function getLoanReturnDate(loan) {
+  return loan?.fecha_devolucion
+    ?? loan?.fechaDevolucion
+    ?? loan?.fecha_fin
+    ?? loan?.fechaFin
+    ?? loan?.updated_at
+    ?? loan?.updatedAt
+    ?? null;
+}
+
+function formatApiDate(rawDate) {
+  if (!rawDate) return '';
+
+  const parsedDate = parseApiDate(rawDate);
+  if (Number.isNaN(parsedDate.getTime())) return String(rawDate);
+
+  return new Intl.DateTimeFormat('es-AR').format(parsedDate);
+}
+
+function getLoanHistoryTimestamp(loan) {
+  const returnDate = getLoanReturnDate(loan);
+  if (!returnDate) return 0;
+
+  const parsedDate = parseApiDate(returnDate);
+  if (Number.isNaN(parsedDate.getTime())) return 0;
+
+  return parsedDate.getTime();
+}
+
+function isReturnedLoanForHistory(loan) {
+  const rawStatus = String(loan?.estado ?? loan?.status ?? '').toUpperCase();
+
+  if (rawStatus.includes('COMPLETADO_EXITO') || rawStatus.includes('COMPLETADO_VENCIDO')) {
+    return true;
+  }
+
+  if (rawStatus.includes('DEVUEL') || rawStatus.includes('FINAL')) {
+    return true;
+  }
+
+  if (rawStatus === 'VIGENTE') {
+    return false;
+  }
+
+  return Boolean(getLoanReturnDate(loan));
+}
+
+function isEmptyLoansError(error) {
+  if (!(error instanceof ApiError)) {
+    return false;
+  }
+
+  if (error.status === 404) {
+    return true;
+  }
+
+  const backendMessage = String(error.data?.message ?? error.message ?? '').toLowerCase();
+
+  return backendMessage.includes('no se encontraron prestamos')
+    || backendMessage.includes('no se encontraron préstamos')
+    || backendMessage.includes('sin prestamos')
+    || backendMessage.includes('sin préstamos')
+    || backendMessage.includes('no tiene prestamos')
+    || backendMessage.includes('no tiene préstamos');
 }
 
 // Sanitiza texto antes de inyectar HTML (previene XSS básico).

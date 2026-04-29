@@ -1,23 +1,24 @@
 /**
  * Dashboard Page Script — Panel de Gestión
  *
- * Primera línea siempre: requireAuth(). Si no hay sesión, redirige antes
- * de que se ejecute cualquier otra cosa en esta página.
+ * Panel del usuario para reservas y préstamos.
  *
- * Estado actual de integración:
- *   - Reservas activas: integrado con backend (/lectores/me/reservas?estado=PENDIENTE)
- *   - Cancelación de reserva: integrado (/reservas/{id}/cancelar)
- *   - Historial de reservas (resumen en dashboard): integrado
- *   - Préstamos activos/historial de préstamos: pendiente de endpoint dedicado
+ * Funcionalidad actual:
+ *   - Reservas activas: carga desde /lectores/me/reservas?estado=PENDIENTE
+ *   - Cancelación de reserva: ejecuta /reservas/{id}/cancelar
+ *   - Historial de reservas: muestra un resumen de los últimos movimientos
+ *   - Préstamos vigentes: carga desde /lectores/me/prestamos?estado=VIGENTE
+ *   - Historial de préstamos: muestra los préstamos devueltos más recientes
  *
  * Flujo principal:
- *   1. requireAuth()         → verifica sesión y redirige si no hay token
- *   2. loadActiveReservations() → carga y renderiza reservas activas
- *   3. loadReservationHistory() → carga y renderiza últimas reservas del historial
- *   4. setStatsLoading()     → maneja loading visual de tarjetas de estadísticas
+ *   1. requireAuth()
+ *   2. loadActiveLoans()
+ *   3. loadActiveReservations()
+ *   4. loadLoanHistory()
+ *   5. loadReservationHistory()
  *
  * Contenedores usados en el HTML:
- *   #statActiveLoans         — contador (por ahora fallback en 0)
+ *   #statActiveLoans         — contador de préstamos vigentes
  *   #statActiveReservations  — contador de reservas activas
  *   #activeReservations      — lista de reservas activas
  *   #reservationHistory      — historial resumido de reservas
@@ -27,52 +28,92 @@ import { requireAuth }          from '../core/authGuard.js';
 import { store }                from '../core/store.js';
 import { authService }          from '../services/authService.js';
 import { reservationsService }   from '../services/reservationsService.js';
+import { loansService }          from '../services/loansService.js';
 import { ApiError }              from '../services/api.js';
 import { Modal }                from '../components/modal.js';
 import { showLoading, showError, showEmpty, setButtonLoading, resetButton } from '../components/ui.js';
 
-// ---------------------------------------------------------------------------
-// Guard — debe ser lo primero que corre en cualquier página protegida
-// ---------------------------------------------------------------------------
+// ── Guard ────────────────────────────────────────────────────────────────
 requireAuth('../index.html');
 
-// ---------------------------------------------------------------------------
-// Estadísticas de cuenta
-//
-// Estado actual:
-// - Reservas activas: se actualiza con datos reales del backend.
-// - Préstamos activos: aún sin endpoint dedicado; se mantiene fallback en 0.
-//
-// Nota: setStatsLoading() controla el estado visual de carga para ambas tarjetas.
-// ---------------------------------------------------------------------------
+// ── Estadísticas de cuenta ───────────────────────────────────────────────
+// setStatsLoading() mantiene sincronizadas las tarjetas de préstamos y reservas.
 
-// ---------------------------------------------------------------------------
-// Préstamos vigentes (#activeLoans)
-//
-// Estado actual:
-// - No está integrado en este script porque el backend de préstamos no está disponible.
-// - La tarjeta de estadísticas muestra 0 como valor de respaldo.
-// - El render de la tabla/listado de préstamos queda pendiente para una siguiente etapa.
-// ---------------------------------------------------------------------------
+// ── Préstamos vigentes (#activeLoans) ────────────────────────────────────
+// Renderiza tabla y contador desde el endpoint del lector autenticado.
 
-// ---------------------------------------------------------------------------
-// Reservas activas (#activeReservations)
-//
-// Este bloque ya consume datos reales del backend.
-// Carga las reservas en estado PENDIENTE, las enriquece con título/autor
-// del artículo asociado y deduplica las llamadas por articleId/articulo_id.
-// ---------------------------------------------------------------------------
+// ── Reservas activas (#activeReservations) ───────────────────────────────
+// Carga reservas pendientes y enriquece título/autor por articleId.
 
 const activeReservationsElement = document.getElementById('activeReservations');
+const activeLoansElement = document.getElementById('activeLoans');
+const loanHistoryElement = document.getElementById('loanHistory');
 const reservationHistoryElement = document.getElementById('reservationHistory');
 const statActiveLoansElement = document.getElementById('statActiveLoans');
 const statActiveReservationsElement = document.getElementById('statActiveReservations');
 
 activeReservationsElement?.addEventListener('click', handleActiveReservationsClick);
 
+// ── Lazy Loading: Dos fases de carga ──────────────────────────────────
+// Fase 1: Carga crítica (activos, stats) — bloquea renderización
+// Fase 2: Carga diferida (historial) — se defiere para mejor rendimiento inicial
+
 setStatsLoading(true);
-void loadActiveReservations();
-void loadReservationHistory();
+
+// Carga inmediata: activos (lo que ve el usuario primero)
+void Promise.all([
+  loadActiveLoans(),
+  loadActiveReservations(),
+]).finally(() => {
+  // Carga deferida: historial (menos visible, no es crítico en primer render)
+  // setTimeout permite que el navegador renderice activos sin bloqueo
+  setTimeout(() => {
+    void loadLoanHistory();
+    void loadReservationHistory();
+  }, 300); // 300ms de delay es imperceptible pero mejora rendimiento
+});
+
+async function loadActiveLoans() {
+  if (!activeLoansElement) return;
+
+  showLoading(activeLoansElement);
+
+  try {
+    const loansResponse = await loansService.getMyActive();
+    const loans = loansResponse.data ?? [];
+    const activeLoansTotal = loansResponse.pagination?.total ?? loans.length;
+
+    if (statActiveLoansElement) {
+      statActiveLoansElement.textContent = String(activeLoansTotal);
+    }
+
+    if (loans.length === 0) {
+      showEmpty(activeLoansElement, 'No tenés préstamos vigentes en este momento.');
+      return;
+    }
+
+    activeLoansElement.innerHTML = renderActiveLoansTable(loans);
+  } catch (error) {
+    if (statActiveLoansElement) {
+      statActiveLoansElement.textContent = '0';
+    }
+
+    if (isEmptyActiveLoansError(error)) {
+      showEmpty(activeLoansElement, 'No tenés préstamos vigentes en este momento.');
+      return;
+    }
+
+    const message = error instanceof ApiError
+      ? 'No se pudieron cargar los préstamos vigentes.'
+      : 'No se pudo conectar con el servidor. Intentá recargar la página.';
+
+    showError(activeLoansElement, message);
+  } finally {
+    if (statActiveReservationsElement?.textContent?.trim()) {
+      setStatsLoading(false);
+    }
+  }
+}
 
 async function loadActiveReservations() {
   if (!activeReservationsElement) return;
@@ -81,9 +122,12 @@ async function loadActiveReservations() {
   showLoading(activeReservationsElement);
 
   try {
-    const reservationsResponse = await reservationsService.getMyActive({ page: 1, perPage: 20 });
+    const reservationsResponse = await reservationsService.getMyActive({
+      page: 1,
+      perPage: 20,
+    });
     const reservations = reservationsResponse.data;
-    const enrichedReservations = await enrichReservations(reservations);
+    const enrichedReservations = await reservationsService.enrichReservationsWithCache(reservations);
     const activeReservationsTotal = reservationsResponse.pagination?.total ?? enrichedReservations.length;
 
     if (statActiveReservationsElement) {
@@ -107,7 +151,9 @@ async function loadActiveReservations() {
 
     showError(activeReservationsElement, message);
   } finally {
-    setStatsLoading(false);
+    if (statActiveLoansElement?.textContent?.trim()) {
+      setStatsLoading(false);
+    }
 
     if (statActiveLoansElement && !statActiveLoansElement.textContent?.trim()) {
       statActiveLoansElement.textContent = '0';
@@ -116,8 +162,7 @@ async function loadActiveReservations() {
 }
 
 async function handleActiveReservationsClick(event) {
-  // Delegación de eventos: escucha un solo click en la lista y detecta
-  // si el target real fue un botón de cancelar.
+  // Delegación de eventos: detecta clicks sobre botones de cancelar.
   const cancelButton = event.target.closest('[data-cancel-reservation]');
 
   if (!cancelButton || !activeReservationsElement.contains(cancelButton)) {
@@ -173,9 +218,12 @@ async function loadReservationHistory() {
   showLoading(reservationHistoryElement);
 
   try {
-    const historyResponse = await reservationsService.getMyHistory({ page: 1, perPage: 20 });
-    // Enriquecemos con título/autor y luego deduplicamos para evitar ítems repetidos.
-    const enrichedHistory = await enrichReservations(historyResponse.data ?? []);
+    const historyResponse = await reservationsService.getMyHistory({
+      page: 1,
+      perPage: 20,
+    });
+    // Enriquecemos y deduplicamos para evitar filas repetidas.
+    const enrichedHistory = await reservationsService.enrichReservationsWithCache(historyResponse.data ?? []);
     const uniqueHistory = dedupeReservationHistoryForDisplay(enrichedHistory);
 
     const sortedHistory = [...uniqueHistory]
@@ -190,6 +238,40 @@ async function loadReservationHistory() {
     reservationHistoryElement.innerHTML = renderReservationHistory(sortedHistory);
   } catch {
     showError(reservationHistoryElement, 'No se pudo cargar el historial de reservas.');
+  }
+}
+
+async function loadLoanHistory() {
+  if (!loanHistoryElement) return;
+
+  showLoading(loanHistoryElement);
+
+  try {
+    const loansResponse = await loansService.getMyLoansEnriched();
+    const loans = loansResponse.data ?? [];
+
+    const returnedLoans = loans
+      .filter(isReturnedLoanForHistory)
+      .sort((a, b) => getLoanHistoryTimestamp(b) - getLoanHistoryTimestamp(a))
+      .slice(0, 5);
+
+    if (returnedLoans.length === 0) {
+      showEmpty(loanHistoryElement, 'Todavía no tenés préstamos devueltos en el historial.');
+      return;
+    }
+
+    loanHistoryElement.innerHTML = renderLoanHistory(returnedLoans);
+  } catch (error) {
+    if (isEmptyActiveLoansError(error)) {
+      showEmpty(loanHistoryElement, 'Todavía no tenés préstamos devueltos en el historial.');
+      return;
+    }
+
+    const message = error instanceof ApiError
+      ? 'No se pudo cargar el historial de préstamos.'
+      : 'No se pudo conectar con el servidor. Intentá recargar la página.';
+
+    showError(loanHistoryElement, message);
   }
 }
 
@@ -227,39 +309,6 @@ function setStatsLoading(isLoading) {
 
     element.classList.remove('stat-card__value--loading');
     element.removeAttribute('aria-busy');
-  });
-}
-
-async function enrichReservations(reservations) {
-  // Resuelve artículos por lote usando cache por articleId para minimizar llamadas repetidas.
-  const uniqueArticleIds = [...new Set(
-    reservations
-      .map((reservation) => getArticleId(reservation))
-      .filter((articleId) => articleId !== null && articleId !== undefined && articleId !== '')
-  )];
-
-  const articleCache = new Map();
-
-  await Promise.all(uniqueArticleIds.map(async (articleId) => {
-    try {
-      articleCache.set(String(articleId), await reservationsService.getArticleById(articleId));
-    } catch {
-      articleCache.set(String(articleId), null);
-    }
-  }));
-
-  return reservations.map((reservation) => {
-    const articleId = getArticleId(reservation);
-    const article = articleCache.get(String(articleId)) ?? null;
-
-    return {
-      ...reservation,
-      article,
-      articleId,
-      title: getArticleTitle(article, reservation),
-      author: getArticleAuthor(article),
-      reservedAt: getReservationDate(reservation),
-    };
   });
 }
 
@@ -315,6 +364,196 @@ function renderReservationHistoryItem(reservation) {
       <span class="badge ${escapeHtml(statusInfo.badgeClass)}">${escapeHtml(statusInfo.label)}</span>
     </li>
   `;
+}
+
+function renderLoanHistory(loans) {
+  return `
+    <ul class="history-list">
+      ${loans.map(renderLoanHistoryItem).join('')}
+    </ul>
+  `;
+}
+
+function renderLoanHistoryItem(loan) {
+  const title = getLoanTitle(loan);
+  const returnDate = formatLoanDate(getLoanReturnDate(loan));
+  const meta = returnDate ? `Devuelto el ${returnDate}` : 'Devuelto';
+
+  return `
+    <li class="history-item">
+      <div class="history-item__info">
+        <p class="history-item__title">${escapeHtml(title)}</p>
+        <p class="history-item__meta">${escapeHtml(meta)}</p>
+      </div>
+      <span class="badge badge--closed">Devuelto</span>
+    </li>
+  `;
+}
+
+function renderActiveLoansTable(loans) {
+  return `
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead class="data-table__head">
+          <tr>
+            <th class="data-table__th" scope="col">Título</th>
+            <th class="data-table__th" scope="col">Autor</th>
+            <th class="data-table__th" scope="col">Código</th>
+            <th class="data-table__th" scope="col">Prestado el</th>
+            <th class="data-table__th" scope="col">Vence el</th>
+            <th class="data-table__th data-table__th--center" scope="col">Acción</th>
+          </tr>
+        </thead>
+        <tbody class="data-table__body">
+          ${loans.map(renderActiveLoanRow).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderActiveLoanRow(loan) {
+  const title = getLoanTitle(loan);
+  const author = getLoanAuthor(loan) || 'Autor no disponible';
+  const code = getLoanCode(loan) || '-';
+  const startDate = formatLoanDate(getLoanStartDate(loan)) || '-';
+  const dueDateRaw = getLoanDueDate(loan);
+  const dueDate = formatLoanDate(dueDateRaw) || '-';
+  const dueBadgeClass = getLoanDueBadgeClass(dueDateRaw);
+
+  return `
+    <tr class="data-table__row">
+      <td class="data-table__td data-table__td--title">${escapeHtml(title)}</td>
+      <td class="data-table__td">${escapeHtml(author)}</td>
+      <td class="data-table__td data-table__td--code">${escapeHtml(code)}</td>
+      <td class="data-table__td">${escapeHtml(startDate)}</td>
+      <td class="data-table__td">
+        <span class="badge ${escapeHtml(dueBadgeClass)}">${escapeHtml(dueDate)}</span>
+      </td>
+      <td class="data-table__td data-table__td--center">
+        <button class="btn btn--primary btn--xs" type="button" disabled title="Renovación disponible próximamente">Renovar</button>
+      </td>
+    </tr>
+  `;
+}
+
+function getLoanTitle(loan) {
+  return loan?.title ?? 'Sin título';
+}
+
+function getLoanAuthor(loan) {
+  return loan?.author ?? 'Autor no disponible';
+}
+
+function getLoanCode(loan) {
+  return loan?.codigo
+    ?? loan?.codigo_ejemplar
+    ?? loan?.codigoEjemplar
+    ?? loan?.inventario
+    ?? loan?.articulo?.codigo
+    ?? loan?.libro?.codigo
+    ?? '';
+}
+
+function getLoanStartDate(loan) {
+  return loan?.fecha_prestamo
+    ?? loan?.fechaPrestamo
+    ?? loan?.fecha_inicio
+    ?? loan?.fechaInicio
+    ?? loan?.created_at
+    ?? loan?.createdAt
+    ?? null;
+}
+
+function getLoanDueDate(loan) {
+  return loan?.fecha_vencimiento
+    ?? loan?.fechaVencimiento
+    ?? loan?.due_date
+    ?? loan?.dueDate
+    ?? null;
+}
+
+function getLoanReturnDate(loan) {
+  return loan?.fecha_devolucion
+    ?? loan?.fechaDevolucion
+    ?? loan?.fecha_fin
+    ?? loan?.fechaFin
+    ?? loan?.updated_at
+    ?? loan?.updatedAt
+    ?? null;
+}
+
+function formatLoanDate(rawDate) {
+  if (!rawDate) return '';
+
+  const parsedDate = parseBackendDate(rawDate);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return String(rawDate);
+  }
+
+  return new Intl.DateTimeFormat('es-AR').format(parsedDate);
+}
+
+function getLoanDueBadgeClass(rawDate) {
+  if (!rawDate) return 'badge--closed';
+
+  const dueDate = parseBackendDate(rawDate);
+  if (Number.isNaN(dueDate.getTime())) return 'badge--closed';
+
+  const millisecondsInDay = 1000 * 60 * 60 * 24;
+  const daysUntilDue = Math.ceil((dueDate.getTime() - Date.now()) / millisecondsInDay);
+
+  if (daysUntilDue < 0) return 'badge--overdue';
+  if (daysUntilDue <= 3) return 'badge--warning';
+
+  return 'badge--success';
+}
+
+function isReturnedLoanForHistory(loan) {
+  const rawStatus = String(loan?.estado ?? loan?.status ?? '').toUpperCase();
+
+  if (rawStatus.includes('COMPLETADO_EXITO') || rawStatus.includes('COMPLETADO_VENCIDO')) {
+    return true;
+  }
+
+  if (rawStatus.includes('DEVUEL') || rawStatus.includes('FINAL')) {
+    return true;
+  }
+
+  if (rawStatus === 'VIGENTE') {
+    return false;
+  }
+
+  return Boolean(getLoanReturnDate(loan));
+}
+
+function getLoanHistoryTimestamp(loan) {
+  const returnDate = getLoanReturnDate(loan);
+  if (!returnDate) return 0;
+
+  const parsedDate = parseBackendDate(returnDate);
+  if (Number.isNaN(parsedDate.getTime())) return 0;
+
+  return parsedDate.getTime();
+}
+
+function isEmptyActiveLoansError(error) {
+  if (!(error instanceof ApiError)) {
+    return false;
+  }
+
+  if (error.status === 404) {
+    return true;
+  }
+
+  const backendMessage = String(error.data?.message ?? error.message ?? '').toLowerCase();
+
+  return backendMessage.includes('no se encontraron prestamos')
+    || backendMessage.includes('no se encontraron préstamos')
+    || backendMessage.includes('sin prestamos')
+    || backendMessage.includes('sin préstamos')
+    || backendMessage.includes('no tiene prestamos')
+    || backendMessage.includes('no tiene préstamos');
 }
 
 function getArticleId(reservation) {
@@ -426,7 +665,7 @@ function getReservationHistoryStatusInfo(reservation) {
   }
 
   if (rawStatus.includes('EXPIR')) {
-    return { label: 'Expirada', badgeClass: 'badge--overdue' };
+    return { label: 'Vencida', badgeClass: 'badge--overdue' };
   }
 
   if (rawStatus.includes('COMPLET') || rawStatus.includes('FINAL') || rawStatus.includes('DEVUEL')) {
@@ -437,7 +676,7 @@ function getReservationHistoryStatusInfo(reservation) {
   if (expiresAtRaw) {
     const expiresAtDate = parseBackendDate(expiresAtRaw);
     if (!Number.isNaN(expiresAtDate.getTime()) && expiresAtDate.getTime() < Date.now()) {
-      return { label: 'Expirada', badgeClass: 'badge--overdue' };
+      return { label: 'Vencida', badgeClass: 'badge--overdue' };
     }
   }
 
@@ -507,23 +746,13 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
-// ---------------------------------------------------------------------------
-// Historial de préstamos (#loanHistory)
-//
-// Pendiente de integración real: el backend de préstamos todavía no expone
-// el endpoint necesario para renderizar este bloque.
-// ---------------------------------------------------------------------------
+// ── Historial de préstamos (#loanHistory) ────────────────────────────────
+// Muestra los préstamos devueltos más recientes.
 
-// ---------------------------------------------------------------------------
-// Historial de reservas (#reservationHistory)
-//
-// Ya se carga con datos reales del backend y se muestra un resumen de las
-// últimas reservas para acceso rápido desde el dashboard.
-// ---------------------------------------------------------------------------
+// ── Historial de reservas (#reservationHistory) ──────────────────────────
+// Muestra un resumen de las últimas reservas para acceso rápido.
 
-// ---------------------------------------------------------------------------
-// Logout
-// ---------------------------------------------------------------------------
+// ── Logout ───────────────────────────────────────────────────────────────
 const logoutButton = document.getElementById('logoutBtn');
 
 logoutButton?.addEventListener('click', () => {

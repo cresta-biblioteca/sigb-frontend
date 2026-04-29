@@ -79,7 +79,7 @@
 
           <div id="reservationHistoryPage"></div>
 
-          <div class="history-pagination" aria-label="Paginación del historial de reservas">
+          <div class="history-pagination" id="reservationHistoryPagination" aria-label="Paginación del historial de reservas">
             <button class="btn btn--outline btn--xs history-pagination__button" type="button" id="reservationHistoryPrev" disabled>
               Anterior
             </button>
@@ -102,6 +102,16 @@
           </div>
 
           <div id="loanHistoryPage"></div>
+
+          <div class="history-pagination" id="loanHistoryPagination" aria-label="Paginación del historial de préstamos">
+            <button class="btn btn--outline btn--xs history-pagination__button" type="button" id="loanHistoryPrev" disabled>
+              Anterior
+            </button>
+            <p class="history-pagination__info" id="loanHistoryPageInfo">Página 1 de 1</p>
+            <button class="btn btn--outline btn--xs history-pagination__button" type="button" id="loanHistoryNext" disabled>
+              Siguiente
+            </button>
+          </div>
         </section>
       </div>
     </div>
