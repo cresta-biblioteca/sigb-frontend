@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="../css/layout.css">
   <link rel="stylesheet" href="../css/components.css">
   <link rel="stylesheet" href="../css/pages/catalog.css">
-  <link rel="stylesheet" href="../css/pages/addBook.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 <body>
 
@@ -18,17 +18,7 @@
   <header class="navbar" id="navbar">
     <div class="navbar__container">
       <a href="../index.html" class="navbar__brand">
-        <div class="navbar__logo">
-          <svg class="navbar__logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="40" height="40" rx="8" fill="white"/>
-            <path d="M10 30V12C10 10.9 10.9 10 12 10H28C29.1 10 30 10.9 30 12V30L20 25L10 30Z" fill="#0F2B5B"/>
-            <path d="M14 16H26M14 20H22" stroke="white" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="navbar__brand-text">
-          <span class="navbar__brand-name">BIBLIOTECA CRESTA</span>
-          <span class="navbar__brand-subtitle">CENTRO REGIONAL DE ESTUDIOS SUPERIORES</span>
-        </div>
+        <img src="../assets/logo_header.png" alt="Biblioteca CRESTA" class="navbar__brand-image">
       </a>
 
       <button class="navbar__toggle" id="navbarToggle" aria-label="Abrir menú de navegación" aria-expanded="false">
@@ -42,26 +32,14 @@
           <li class="navbar__item">
             <a href="../index.html" class="navbar__link">Inicio</a>
           </li>
-          <li class="navbar__item navbar__item--dropdown">
-            <button class="navbar__link navbar__link--dropdown" aria-expanded="false" aria-haspopup="true">
-              Servicios
-              <svg class="navbar__dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            <ul class="navbar__dropdown">
-              <li><a href="catalog.html" class="navbar__link navbar__link--active">Catálogo</a></li>
-              <li><a href="dashboard.html" class="navbar__link">Mi Área</a></li>
-              <li><a href="loans.html" class="navbar__link">Mis Préstamos</a></li>
-            </ul>
-          </li>
           <li class="navbar__item">
-            <a href="readers.html" class="navbar__link">Lectores</a>
+            <a href="catalog.html" class="navbar__link navbar__link--active">Catálogo</a>
           </li>
-          <li class="navbar__item navbar__item--auth">
-            <a href="login.html" class="btn btn--outline">Iniciar Sesión</a>
+          <li class="navbar__item navbar__item--private">
+            <a href="mi-perfil.html" class="navbar__link">Mi Perfil</a>
           </li>
         </ul>
+        <button class="navbar__link navbar__item--private" id="logoutBtn" type="button">Cerrar sesión</button>
       </nav>
     </div>
   </header>
@@ -209,9 +187,6 @@
         <div class="catalog-results-info">
           <h2 id="resultsCount" class="catalog-results-count">Mostrando resultados</h2>
           <div class="catalog-view-controls">
-            <button id="addBookBtn" class="btn btn--primary" aria-label="Abrir panel de administracion para agregar libro">
-              + Alta de Libro (Admin)
-            </button>
             <button class="catalog-view-btn catalog-view-btn--active" data-view="grid" aria-label="Vista de cuadrícula" aria-pressed="true">
               <i class="lucide" data-lucide="grid"></i>
             </button>
@@ -240,108 +215,48 @@
 
   </main>
 
-  <!-- ========== MODAL PANEL ADMINISTRACION: ALTA DE LIBRO ========== -->
-  <div id="addBookModal" class="modal modal--book-add" style="display: none;">
-    <div class="modal__overlay"></div>
-    <div class="modal__content">
-      <div class="modal__header">
-        <h2 class="modal__title">Panel de Administracion - Alta de Libro</h2>
-        <button class="modal__close" aria-label="Cerrar modal" id="closeModalBtn">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 6L6 18M6 6l12 12"></path>
-          </svg>
-        </button>
-      </div>
-      
-      <form id="addBookForm" class="add-book-form">
-        <p class="add-book-form__admin-note">Este formulario pertenece al panel de administracion del catalogo.</p>
-
-        <!-- Información de Títulos -->
-        <fieldset class="form-fieldset">
-          <legend class="form-fieldset__legend">Títulos</legend>
-          
-          <div class="form-group">
-            <label for="bookTitle" class="form-label">Título Principal <span class="form-required">*</span></label>
-            <input type="text" id="bookTitle" name="title" class="form-input" required placeholder="Título del libro">
-          </div>
-
-          <div class="form-group">
-            <label for="bookInformativeTitle" class="form-label">Título Informativo</label>
-            <input type="text" id="bookInformativeTitle" name="informativeTitle" class="form-input" placeholder="Subtítulo o título adicional">
-          </div>
-
-          <div class="form-group">
-            <label for="bookOtherTitles" class="form-label">Otros Títulos</label>
-            <textarea id="bookOtherTitles" name="otherTitles" class="form-textarea" rows="2" placeholder="Títulos alternativos (uno por línea)"></textarea>
-          </div>
-        </fieldset>
-
-        <!-- Información de Autores -->
-        <fieldset class="form-fieldset">
-          <legend class="form-fieldset__legend">Autoría</legend>
-          
-          <div class="form-group">
-            <label for="bookAuthor" class="form-label">Autor Principal <span class="form-required">*</span></label>
-            <input type="text" id="bookAuthor" name="author" class="form-input" required placeholder="Nombre del autor principal">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Autores Opcionales</label>
-            <div id="optionalAuthorsContainer" class="authors-list">
-              <div class="author-item">
-                <input type="text" class="form-input optional-author-input" placeholder="Nombre del autor (opcional)">
-                <button type="button" class="btn btn--small btn--outline remove-author" aria-label="Eliminar autor">
-                  Eliminar
-                </button>
-              </div>
-            </div>
-            <button type="button" class="btn btn--small btn--outline" id="addAuthorBtn" style="margin-top: 8px;">
-              + Agregar Autor
-            </button>
-          </div>
-
-          <div class="form-group">
-            <label for="bookCollaborators" class="form-label">Colaboradores</label>
-            <textarea id="bookCollaborators" name="collaborators" class="form-textarea" rows="2" placeholder="Colaboradores del libro (uno por línea)"></textarea>
-          </div>
-        </fieldset>
-
-        <!-- Clasificación -->
-        <fieldset class="form-fieldset">
-          <legend class="form-fieldset__legend">Clasificación</legend>
-          
-          <div class="form-group">
-            <label for="bookCDU" class="form-label">CDU (Clasificación Decimal Universal) <span class="form-required">*</span></label>
-            <select id="bookCDU" name="cdu" class="form-input" required>
-              <option value="">Selecciona una clasificación CDU</option>
-            </select>
-          </div>
-        </fieldset>
-
-        <!-- MARC21 Preview -->
-        <fieldset class="form-fieldset">
-          <legend class="form-fieldset__legend">Formato MARC21</legend>
-          
-          <div class="marc21-preview">
-            <p class="marc21-info">La traducción a MARC21 se actualizará automáticamente mientras completas el formulario:</p>
-            <pre id="marc21Output" class="marc21-output"><code>Completa el formulario para ver la traducción a MARC21</code></pre>
-            <button type="button" class="btn btn--small btn--outline" id="copyMarcBtn" title="Copiar MARC21">
-              Copiar MARC21
-            </button>
-          </div>
-        </fieldset>
-
-        <!-- Botones de Acción -->
-        <div class="form-actions">
-          <button type="button" class="btn btn--outline" id="cancelAddBookBtn">Cancelar</button>
-          <button type="submit" class="btn btn--primary">Guardar Alta (Admin)</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
   <!-- ========== FOOTER ========== -->
-  <footer class="footer" id="footer"></footer>
+  <footer class="footer" id="contacto">
+    <div class="footer__container">
+      <div class="footer__grid">
+
+        <div class="footer__col">
+          <div class="footer__brand">
+            <img src="../assets/logo_footer.png" alt="CRESTA Biblioteca" class="footer__brand-image">
+          </div>
+          <address class="footer__address footer__contact">
+            <p>Maipú 270 - (7500) Tres Arroyos</p>
+            <p class="footer__phone"><strong>Consultas frecuentes:</strong> (02983) 430093</p>
+            <p><strong>Email:</strong> <a href="mailto:valeria.rodriguez@cresta.edu.ar" class="footer__link">valeria.rodriguez@cresta.edu.ar</a></p>
+          </address>
+          <div class="footer__social" aria-label="Redes sociales">
+            <a href="https://www.facebook.com/crestaoficial/" class="footer__social-link" aria-label="Facebook" title="Facebook" target="_blank" rel="noopener noreferrer">
+              <i class="fab fa-facebook-f" aria-hidden="true"></i>
+            </a>
+            <a href="https://www.instagram.com/crestaoficial/" class="footer__social-link" aria-label="Instagram" title="Instagram" target="_blank" rel="noopener noreferrer">
+              <i class="fab fa-instagram" aria-hidden="true"></i>
+            </a>
+            <a href="https://wa.me/2983380689" class="footer__social-link" aria-label="WhatsApp" title="WhatsApp" target="_blank" rel="noopener noreferrer">
+              <i class="fab fa-whatsapp" aria-hidden="true"></i>
+            </a>
+          </div>
+        </div>
+
+        <div class="footer__col">
+          <h3 class="footer__heading">Links de interés</h3>
+          <ul class="footer__links footer__links--interest">
+            <li><a href="https://www.tresarroyos.gov.ar/" class="footer__link" target="_blank" rel="noopener noreferrer">Municipalidad de Tres Arroyos</a></li>
+            <li><a href="https://campus.cresta.edu.ar/" class="footer__link" target="_blank" rel="noopener noreferrer">Campus virtual</a></li>
+            <li><a href="https://sga.cresta.edu.ar/" class="footer__link" target="_blank" rel="noopener noreferrer">Sistema de gestión académica</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p>© 2024 CRESTA - Centro Regional de Estudios Superiores de Tres Arroyos. Todos los derechos reservados.</p>
+    </div>
+  </footer>
 
   <!-- ========== SCRIPTS ========== -->
   <!-- Componentes base -->
@@ -356,19 +271,15 @@
 
   <!-- Capa de Estado (Model) -->
   <script src="../js/state/catalogState.js"></script>
-  <script src="../js/state/addBookState.js"></script>
 
   <!-- Capa de Presentación (View) -->
   <script src="../js/ui/catalogRenderer.js"></script>
-  <script src="../js/ui/addBookRenderer.js"></script>
 
   <!-- Capa de Control (Controller) -->
   <script src="../js/controllers/catalogController.js"></script>
-  <script src="../js/controllers/addBookController.js"></script>
 
   <!-- Punto de entrada (Inicialización) -->
   <script src="../js/pages/catalog.js"></script>
-  <script src="../js/pages/addBook.js"></script>
 
 </body>
 </html>

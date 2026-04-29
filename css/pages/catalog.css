@@ -321,9 +321,9 @@
 .catalog-view-controls {
   display: flex;
   gap: var(--spacing-sm);
-  background-color: var(--color-gray-100);
-  padding: var(--spacing-xs);
-  border-radius: var(--radius-md);
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
 }
 
 .catalog-view-btn {
