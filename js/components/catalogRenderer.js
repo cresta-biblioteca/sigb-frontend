@@ -15,15 +15,16 @@ class CatalogRenderer {
   constructor() {
     // Cachear referencias del DOM
     this.booksGrid = document.getElementById('booksGrid');
-    this.categoryFilter = document.getElementById('categoryFilter');
     this.resultsCount = document.getElementById('resultsCount');
     this.viewControlBtns = document.querySelectorAll('.catalog-view-btn');
 
     // Elementos de búsqueda simple
-    this.simpleSearchInput = document.getElementById('simpleSearchInput');
-    this.sortFilter = document.getElementById('sortFilter');
+    this.simpleTituloInput = document.getElementById('simpleTituloInput');
+    this.simpleIsbnInput = document.getElementById('simpleIsbnInput');
+    this.simplePersonaInput = document.getElementById('simplePersonaInput');
+    this.sortByFilter = document.getElementById('sortByFilter');
+    this.sortDirFilter = document.getElementById('sortDirFilter');
     this.clearFiltersBtn = document.getElementById('clearFilters');
-    this.availabilityCheckboxes = document.querySelectorAll('.catalog-filter-checkbox input');
     this.searchForm = document.getElementById('searchForm');
 
     // Elementos de búsqueda avanzada
@@ -33,18 +34,16 @@ class CatalogRenderer {
     this.closeAdvancedBtn = document.getElementById('closeAdvancedBtn');
     this.applyAdvancedBtn = document.getElementById('applyAdvancedBtn');
     this.searchModeBadge = document.getElementById('searchModeBadge');
-    this.advTitulo = document.getElementById('advTitulo');
-    this.advAutor = document.getElementById('advAutor');
-    this.advISBN = document.getElementById('advISBN');
+    this.advIssn = document.getElementById('advIssn');
     this.advEditorial = document.getElementById('advEditorial');
-    this.advAnioDesde = document.getElementById('advAnioDesde');
-    this.advAnioHasta = document.getElementById('advAnioHasta');
     this.advIdioma = document.getElementById('advIdioma');
-    this.advTipoDocumento = document.getElementById('advTipoDocumento');
-    this.advMateria = document.getElementById('advMateria');
-    this.advCDU = document.getElementById('advCDU');
-    this.advEstante = document.getElementById('advEstante');
-    this.advDisponibilidad = document.getElementById('advDisponibilidad');
+    this.advAnioPublicacion = document.getElementById('advAnioPublicacion');
+    this.advTipo = document.getElementById('advTipo');
+    this.advCdu = document.getElementById('advCdu');
+    this.advLugarPublicacion = document.getElementById('advLugarPublicacion');
+    this.advTituloInformativo = document.getElementById('advTituloInformativo');
+    this.advPersona = document.getElementById('advPersona');
+    this.advTemas = document.getElementById('advTemas');
 
     // Callbacks registrados
     this.onSimpleSearchCallback = null;
@@ -61,8 +60,8 @@ class CatalogRenderer {
   }
 
   /**
-   * Registra callback para búsqueda simple (submit del formulario)
-   * @param {Function} callback - Función({search, category, sort})
+    * Registra callback para búsqueda simple (submit del formulario)
+    * @param {Function} callback - Función({titulo, isbn, persona, sortBy, sortDir})
    */
   onSimpleSearch(callback) {
     this.onSimpleSearchCallback = callback;
@@ -76,7 +75,7 @@ class CatalogRenderer {
 
   /**
    * Registra callback para búsqueda avanzada (submit del formulario avanzado)
-   * @param {Function} callback - Función(advancedFilters)
+    * @param {Function} callback - Función(advancedFilters)
    */
   onAdvancedSearch(callback) {
     this.onAdvancedSearchCallback = callback;
@@ -94,9 +93,11 @@ class CatalogRenderer {
    */
   getSimpleFilters() {
     return {
-      search: this.simpleSearchInput ? this.simpleSearchInput.value.trim() : '',
-      category: this.categoryFilter ? this.categoryFilter.value : '',
-      sort: this.sortFilter ? this.sortFilter.value : 'relevance'
+      titulo: this.simpleTituloInput ? this.simpleTituloInput.value.trim() : '',
+      isbn: this.simpleIsbnInput ? this.simpleIsbnInput.value.trim() : '',
+      persona: this.simplePersonaInput ? this.simplePersonaInput.value.trim() : '',
+      sortBy: this.sortByFilter ? this.sortByFilter.value : 'titulo',
+      sortDir: this.sortDirFilter ? this.sortDirFilter.value : 'asc'
     };
   }
 
@@ -106,19 +107,16 @@ class CatalogRenderer {
    */
   getAdvancedFilters() {
     return {
-      titulo: this.advTitulo ? this.advTitulo.value.trim() : '',
-      autor: this.advAutor ? this.advAutor.value.trim() : '',
-      isbn: this.advISBN ? this.advISBN.value.trim() : '',
+      issn: this.advIssn ? this.advIssn.value.trim() : '',
       editorial: this.advEditorial ? this.advEditorial.value.trim() : '',
-      anioDesde: this.advAnioDesde ? this.advAnioDesde.value : '',
-      anioHasta: this.advAnioHasta ? this.advAnioHasta.value : '',
       idioma: this.advIdioma ? this.advIdioma.value : '',
-      tipoDocumento: this.advTipoDocumento ? this.advTipoDocumento.value : '',
-      materia: this.advMateria ? this.advMateria.value.trim() : '',
-      cdu: this.advCDU ? this.advCDU.value.trim() : '',
-      estante: this.advEstante ? this.advEstante.value.trim() : '',
-      disponibilidad: this.advDisponibilidad ? this.advDisponibilidad.value : '',
-      categoria: this.categoryFilter ? this.categoryFilter.value : ''
+      anioPublicacion: this.advAnioPublicacion ? this.advAnioPublicacion.value : '',
+      tipo: this.advTipo ? this.advTipo.value.trim() : '',
+      cdu: this.advCdu ? this.advCdu.value.trim() : '',
+      lugarDePublicacion: this.advLugarPublicacion ? this.advLugarPublicacion.value.trim() : '',
+      tituloInformativo: this.advTituloInformativo ? this.advTituloInformativo.value.trim() : '',
+      persona: this.advPersona ? this.advPersona.value.trim() : '',
+      temas: this.advTemas ? this.advTemas.value.trim() : ''
     };
   }
 
@@ -166,8 +164,8 @@ class CatalogRenderer {
     if (this.searchModeBadge) {
       this.searchModeBadge.textContent = 'Modo: busqueda avanzada';
     }
-    if (this.advTitulo) {
-      this.advTitulo.focus();
+    if (this.advIssn) {
+      this.advIssn.focus();
     }
   }
 
@@ -195,24 +193,16 @@ class CatalogRenderer {
    */
   onCategoryChange(callback) {
     this.onCategoryChangeCallback = callback;
-    if (this.categoryFilter) {
-      this.categoryFilter.addEventListener('change', (e) => {
-        callback(e.target.value);
-      });
-    }
+    return callback;
   }
 
   /**
    * Registra callback para cambio de ordenamiento
-   * @param {Function} callback - Función(sortType)
+   * @param {Function} callback - Función(sortBy)
    */
   onSortChange(callback) {
     this.onSortChangeCallback = callback;
-    if (this.sortFilter) {
-      this.sortFilter.addEventListener('change', (e) => {
-        callback(e.target.value);
-      });
-    }
+    return callback;
   }
 
   /**
@@ -221,14 +211,7 @@ class CatalogRenderer {
    */
   onAvailabilityChange(callback) {
     this.onAvailabilityChangeCallback = callback;
-    this.availabilityCheckboxes.forEach(checkbox => {
-      checkbox.addEventListener('change', () => {
-        const availability = Array.from(this.availabilityCheckboxes)
-          .filter(cb => cb.checked)
-          .map(cb => cb.value);
-        callback(availability);
-      });
-    });
+    return callback;
   }
 
   /**
@@ -319,23 +302,22 @@ class CatalogRenderer {
    * Limpia los inputs de los filtros
    */
   clearFilterInputs() {
-    if (this.simpleSearchInput) this.simpleSearchInput.value = '';
-    if (this.categoryFilter) this.categoryFilter.value = '';
-    if (this.sortFilter) this.sortFilter.value = 'relevance';
-    this.availabilityCheckboxes.forEach(cb => cb.checked = false);
+    if (this.simpleTituloInput) this.simpleTituloInput.value = '';
+    if (this.simpleIsbnInput) this.simpleIsbnInput.value = '';
+    if (this.simplePersonaInput) this.simplePersonaInput.value = '';
+    if (this.sortByFilter) this.sortByFilter.value = 'titulo';
+    if (this.sortDirFilter) this.sortDirFilter.value = 'asc';
     // Limpiar campos avanzados
-    if (this.advTitulo) this.advTitulo.value = '';
-    if (this.advAutor) this.advAutor.value = '';
-    if (this.advISBN) this.advISBN.value = '';
+    if (this.advIssn) this.advIssn.value = '';
     if (this.advEditorial) this.advEditorial.value = '';
-    if (this.advAnioDesde) this.advAnioDesde.value = '';
-    if (this.advAnioHasta) this.advAnioHasta.value = '';
     if (this.advIdioma) this.advIdioma.value = '';
-    if (this.advTipoDocumento) this.advTipoDocumento.value = '';
-    if (this.advMateria) this.advMateria.value = '';
-    if (this.advCDU) this.advCDU.value = '';
-    if (this.advEstante) this.advEstante.value = '';
-    if (this.advDisponibilidad) this.advDisponibilidad.value = '';
+    if (this.advAnioPublicacion) this.advAnioPublicacion.value = '';
+    if (this.advTipo) this.advTipo.value = '';
+    if (this.advCdu) this.advCdu.value = '';
+    if (this.advLugarPublicacion) this.advLugarPublicacion.value = '';
+    if (this.advTituloInformativo) this.advTituloInformativo.value = '';
+    if (this.advPersona) this.advPersona.value = '';
+    if (this.advTemas) this.advTemas.value = '';
   }
 
   /**
@@ -476,28 +458,7 @@ class CatalogRenderer {
    * @param {Array} categorias - Array de categorías
    */
   renderCategorias(categorias) {
-    if (!this.categoryFilter) return;
-
-    // Limpiar opciones excepto la primera
-    const defaultOption = this.categoryFilter.querySelector('option[value=""]');
-    this.categoryFilter.innerHTML = '';
-    if (defaultOption) {
-      this.categoryFilter.appendChild(defaultOption);
-    } else {
-      const option = document.createElement('option');
-      option.value = '';
-      option.textContent = 'Todas las categorías';
-      this.categoryFilter.appendChild(option);
-    }
-
-    // Agregar nuevas opciones
-    categorias.forEach(categoria => {
-      const option = document.createElement('option');
-      option.value = categoria.id;
-      option.textContent = categoria.nombre;
-      option.dataset.cduPrefijo = categoria.cdu_prefijo || '';
-      this.categoryFilter.appendChild(option);
-    });
+    return categorias;
   }
 
   /**

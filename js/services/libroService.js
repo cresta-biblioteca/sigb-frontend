@@ -2,8 +2,7 @@
  * Servicio de Libros - Comunicacion HTTP
  * Maneja todas las peticiones al backend (/api/libros, /api/categorias)
  *
- * Si necesitas volver a mock data en memoria, comenta los bloques FETCH REAL
- * y descomenta los bloques MOCK en cada metodo.
+ * Servicio orientado a API real.
  */
 
 class LibroService {
@@ -14,7 +13,6 @@ class LibroService {
 
   /**
    * Carga libros aplicando filtros y paginacion.
-   * Actualmente usa LIBROS_MOCK en memoria.
    * @param {URLSearchParams} params
    * @returns {Promise<{libros: Array, total: number}|{cancelled: true}>}
    */
@@ -53,25 +51,6 @@ class LibroService {
       throw error;
     }
 
-    // --- MOCK --- TEST SIN BACKEND
-    // return this._loadLibrosMock(params);
-  }
-
-  /** @private */
-  _loadLibrosMock(params) {
-    const allLibros = window.LIBROS_MOCK ? [...window.LIBROS_MOCK] : [];
-
-    let filtered = this.applyFilters(allLibros, params);
-    filtered = this.applySort(filtered, params);
-
-    const total = filtered.length;
-    const page = Math.max(1, Number(params?.get('page')) || 1);
-    const perPage = Math.max(1, Number(params?.get('per_page')) || 12);
-    const start = (page - 1) * perPage;
-    const libros = filtered.slice(start, start + perPage);
-
-    console.log(`✅ [Mock] Libros: ${libros.length} (Total: ${total})`);
-    return Promise.resolve({ libros, total });
   }
 
   /**
@@ -83,60 +62,58 @@ class LibroService {
   applyFilters(libros, params) {
     if (!params) return libros;
 
-    const search       = (params.get('search')        || '').toLowerCase().trim();
-    const category     =  params.get('category')       || '';
-    const availability =  params.get('availability')   || '';
-    const titulo       = (params.get('titulo')         || '').toLowerCase();
-    const autor        = (params.get('autor')          || '').toLowerCase();
-    const isbn         = (params.get('isbn')           || '').toLowerCase();
-    const editorial    = (params.get('editorial')      || '').toLowerCase();
-    const anioDesde    = params.get('anio_desde') ? Number(params.get('anio_desde')) : null;
-    const anioHasta    = params.get('anio_hasta') ? Number(params.get('anio_hasta')) : null;
-    const idioma       =  params.get('idioma')         || '';
-    const tipoDoc      =  params.get('tipo_documento') || '';
-    const materia      = (params.get('materia')        || '').toLowerCase();
-    const cduFilter    = (params.get('cdu')            || '').toLowerCase();
-    const estante      = (params.get('estante')        || '').toLowerCase();
-    const disponibilidad =  params.get('disponibilidad') || '';
-    const categoriaAdv =  params.get('categoria')      || '';
+    const titulo = (params.get('titulo') || '').toLowerCase().trim();
+    const isbn = (params.get('isbn') || '').toLowerCase().trim();
+    const issn = (params.get('issn') || '').toLowerCase().trim();
+    const editorial = (params.get('editorial') || '').toLowerCase().trim();
+    const idioma = (params.get('idioma') || '').toLowerCase().trim();
+    const anioPublicacion = params.get('anio_publicacion') ? Number(params.get('anio_publicacion')) : null;
+    const tipo = (params.get('tipo') || '').toLowerCase().trim();
+    const cdu = (params.get('cdu') || '').toLowerCase().trim();
+    const lugarDePublicacion = (params.get('lugar_de_publicacion') || '').toLowerCase().trim();
+    const persona = (params.get('persona') || '').toLowerCase().trim();
+    const tituloInformativo = (params.get('titulo_informativo') || '').toLowerCase().trim();
+    const temaIds = (params.get('tema_ids') || '').split(',').map(value => value.trim()).filter(Boolean);
+    const temas = (params.get('temas') || '').toLowerCase().trim();
 
     return libros.filter(libro => {
-      // Busqueda simple (texto libre en varios campos)
-      if (search) {
-        const haystack = [
-          libro.titulo, libro.autor, ...(libro.autores || []),
-          libro.isbn, libro.editorial, libro.cdu, libro.materia,
-          libro.descripcion, libro.description
-        ].map(v => String(v || '').toLowerCase()).join(' ');
-        if (!haystack.includes(search)) return false;
-      }
-
-      // Categoria (filtro simple)
-      if (category && libro.categoria?.id !== category) return false;
-
-      // Disponibilidad (checkboxes, coma-separados)
-      if (availability) {
-        const values = availability.split(',');
-        if (!values.includes(this.normalizeDisponibilidad(libro.disponibilidad))) return false;
-      }
-
-      // Filtros avanzados
       if (titulo && !String(libro.titulo || '').toLowerCase().includes(titulo)) return false;
-      if (autor) {
-        const todos = [libro.autor, ...(libro.autores || [])].map(a => String(a || '').toLowerCase()).join(' ');
-        if (!todos.includes(autor)) return false;
-      }
-      if (isbn && !String(libro.isbn || '').toLowerCase().includes(isbn)) return false;
+      if (isbn && String(libro.isbn || '').toLowerCase() !== isbn) return false;
+      if (issn && String(libro.issn || '').toLowerCase() !== issn) return false;
       if (editorial && !String(libro.editorial || '').toLowerCase().includes(editorial)) return false;
-      if (anioDesde !== null && (libro.anio || libro.año || 0) < anioDesde) return false;
-      if (anioHasta !== null && (libro.anio || libro.año || 9999) > anioHasta) return false;
-      if (idioma && libro.idioma !== idioma) return false;
-      if (tipoDoc && libro.tipo_documento !== tipoDoc) return false;
-      if (materia && !String(libro.materia || '').toLowerCase().includes(materia)) return false;
-      if (cduFilter && !String(libro.cdu || '').toLowerCase().includes(cduFilter)) return false;
-      if (estante && !String(libro.estante_carrera || '').toLowerCase().includes(estante)) return false;
-      if (disponibilidad && this.normalizeDisponibilidad(libro.disponibilidad) !== disponibilidad) return false;
-      if (categoriaAdv && libro.categoria?.id !== categoriaAdv) return false;
+      if (idioma && String(libro.idioma || '').toLowerCase() !== idioma) return false;
+      if (anioPublicacion !== null && Number(libro.anio_publicacion || libro.anio || libro.año || 0) !== anioPublicacion) return false;
+      if (tipo && String(libro.tipo || libro.tipo_documento || '').toLowerCase() !== tipo) return false;
+      if (cdu && !String(libro.cdu || '').toLowerCase().includes(cdu)) return false;
+      if (lugarDePublicacion && !String(libro.lugar_de_publicacion || libro.lugarDePublicacion || '').toLowerCase().includes(lugarDePublicacion)) return false;
+      if (persona) {
+        const personas = [
+          libro.persona,
+          libro.autor,
+          libro.editor,
+          ...(Array.isArray(libro.personas) ? libro.personas.map(p => `${p.nombre || ''} ${p.apellido || ''} ${p.rol || ''}`) : []),
+          ...(Array.isArray(libro.autores) ? libro.autores : []),
+          ...(Array.isArray(libro.editores) ? libro.editores : [])
+        ].map(value => String(value || '').toLowerCase()).join(' ');
+        if (!personas.includes(persona)) return false;
+      }
+      if (tituloInformativo && !String(libro.titulo_informativo || libro.tituloInformativo || '').toLowerCase().includes(tituloInformativo)) return false;
+
+      if (temaIds.length > 0) {
+        const libroTemaIds = Array.isArray(libro.tema_ids)
+          ? libro.tema_ids.map(value => String(value).trim())
+          : Array.isArray(libro.temas)
+            ? libro.temas.map(tema => String(tema?.id ?? tema).trim())
+            : [];
+        if (!temaIds.some(id => libroTemaIds.includes(id))) return false;
+      }
+
+      if (temas) {
+        const libroTemas = Array.isArray(libro.temas)
+          ? libro.temas.map(tema => String(tema?.titulo || tema?.nombre || tema || '').toLowerCase()).join(' ')
+          : String(libro.temas || '').toLowerCase();
+        if (!libroTemas.includes(temas)) return false;
+      }
 
       return true;
     });
@@ -149,22 +126,66 @@ class LibroService {
    * @returns {Array}
    */
   applySort(libros, params) {
-    const sort = params?.get('sort') || 'relevance';
+    const sortBy = params?.get('sort_by') || 'titulo';
+    const sortDir = params?.get('sort_dir') || 'asc';
     const sorted = [...libros];
-    switch (sort) {
-      case 'newest':
-        sorted.sort((a, b) => (b.anio || b.año || 0) - (a.anio || a.año || 0));
-        break;
-      case 'rating':
-        sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-        break;
-      case 'title':
-        sorted.sort((a, b) => (a.titulo || '').localeCompare(b.titulo || '', 'es'));
-        break;
-      case 'relevance':
-      default:
-        break;
-    }
+    const direction = sortDir === 'desc' ? -1 : 1;
+    const normalize = (value) => String(value ?? '').toLowerCase();
+
+    sorted.sort((a, b) => {
+      let valueA;
+      let valueB;
+
+      switch (sortBy) {
+        case 'isbn':
+          valueA = normalize(a.isbn);
+          valueB = normalize(b.isbn);
+          break;
+        case 'issn':
+          valueA = normalize(a.issn);
+          valueB = normalize(b.issn);
+          break;
+        case 'editorial':
+          valueA = normalize(a.editorial);
+          valueB = normalize(b.editorial);
+          break;
+        case 'anio_publicacion':
+          valueA = Number(a.anio_publicacion || a.anio || a.año || 0);
+          valueB = Number(b.anio_publicacion || b.anio || b.año || 0);
+          return (valueA - valueB) * direction;
+        case 'idioma':
+          valueA = normalize(a.idioma);
+          valueB = normalize(b.idioma);
+          break;
+        case 'tipo':
+          valueA = normalize(a.tipo || a.tipo_documento);
+          valueB = normalize(b.tipo || b.tipo_documento);
+          break;
+        case 'cdu':
+          valueA = normalize(a.cdu);
+          valueB = normalize(b.cdu);
+          break;
+        case 'lugar_de_publicacion':
+          valueA = normalize(a.lugar_de_publicacion || a.lugarDePublicacion);
+          valueB = normalize(b.lugar_de_publicacion || b.lugarDePublicacion);
+          break;
+        case 'persona':
+          valueA = normalize(a.persona || a.autor || (Array.isArray(a.autores) ? a.autores.join(' ') : ''));
+          valueB = normalize(b.persona || b.autor || (Array.isArray(b.autores) ? b.autores.join(' ') : ''));
+          break;
+        case 'titulo_informativo':
+          valueA = normalize(a.titulo_informativo || a.tituloInformativo);
+          valueB = normalize(b.titulo_informativo || b.tituloInformativo);
+          break;
+        case 'titulo':
+        default:
+          valueA = normalize(a.titulo);
+          valueB = normalize(b.titulo);
+          break;
+      }
+
+      return valueA.localeCompare ? valueA.localeCompare(valueB, 'es') * direction : 0;
+    });
     return sorted;
   }
 
@@ -197,11 +218,6 @@ class LibroService {
       throw error;
     }
 
-    // --- MOCK ---
-    // const libro = (window.LIBROS_MOCK_POR_ID || {})[String(id)]
-    //   || (window.LIBROS_MOCK || []).find(l => String(l.id) === String(id));
-    // if (!libro) throw new Error(`Libro con id ${id} no encontrado`);
-    // return Promise.resolve(libro);
   }
 
   /**
@@ -209,7 +225,6 @@ class LibroService {
    * @returns {Promise<Array>}
    */
   async loadCategorias() {
-    // --- FETCH REAL ---
     try {
       const response = await fetch('/api/categorias');
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);

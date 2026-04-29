@@ -56,32 +56,56 @@
             <div class="catalog-simple-panel" id="simpleSearchPanel">
               <div class="catalog-search-head">
                 <h2 class="catalog-search-title">Buscar en el catalogo</h2>
-                <p class="catalog-search-subtitle">Combina busqueda rapida con filtros avanzados para encontrar resultados precisos.</p>
+                <p class="catalog-search-subtitle">Buscá por título, ISBN, persona y refiná con filtros bibliográficos avanzados.</p>
               </div>
               <div class="catalog-simple-grid">
                 <div class="catalog-filter-group">
-                  <label class="catalog-filter-label" for="simpleSearchInput">Busqueda simple</label>
+                  <label class="catalog-filter-label" for="simpleTituloInput">Título</label>
                   <input
                     type="text"
-                    id="simpleSearchInput"
+                    id="simpleTituloInput"
                     class="catalog-filter-input"
-                    placeholder="Titulo, autor, ISBN..."
+                    placeholder="Título parcial"
                     autocomplete="off"
                   >
                 </div>
                 <div class="catalog-filter-group">
-                  <label class="catalog-filter-label" for="categoryFilter">Categoria</label>
-                  <select id="categoryFilter" class="catalog-filter-select" aria-label="Filtrar por categoria">
-                    <option value="">Todas las categorias</option>
+                  <label class="catalog-filter-label" for="simpleIsbnInput">ISBN</label>
+                  <input
+                    type="text"
+                    id="simpleIsbnInput"
+                    class="catalog-filter-input"
+                    placeholder="ISBN exacto"
+                    autocomplete="off"
+                  >
+                </div>
+                <div class="catalog-filter-group">
+                  <label class="catalog-filter-label" for="simplePersonaInput">Persona</label>
+                  <input
+                    type="text"
+                    id="simplePersonaInput"
+                    class="catalog-filter-input"
+                    placeholder="Autor, editor o colaborador"
+                    autocomplete="off"
+                  >
+                </div>
+                <div class="catalog-filter-group">
+                  <label class="catalog-filter-label" for="sortByFilter">Ordenar por</label>
+                  <select id="sortByFilter" class="catalog-filter-select" aria-label="Campo de ordenamiento">
+                    <option value="titulo">Título</option>
+                    <option value="editorial">Editorial</option>
+                    <option value="anio_publicacion">Año de publicación</option>
+                    <option value="idioma">Idioma</option>
+                    <option value="tipo">Tipo</option>
+                    <option value="cdu">CDU</option>
+                    <option value="lugar_de_publicacion">Lugar de publicación</option>
                   </select>
                 </div>
                 <div class="catalog-filter-group">
-                  <label class="catalog-filter-label" for="sortFilter">Ordenar por</label>
-                  <select id="sortFilter" class="catalog-filter-select" aria-label="Ordenar resultados">
-                    <option value="relevance">Relevancia</option>
-                    <option value="newest">Mas recientes</option>
-                    <option value="rating">Mejor calificacion</option>
-                    <option value="title">Titulo A-Z</option>
+                  <label class="catalog-filter-label" for="sortDirFilter">Dirección</label>
+                  <select id="sortDirFilter" class="catalog-filter-select" aria-label="Dirección de ordenamiento">
+                    <option value="asc">Ascendente</option>
+                    <option value="desc">Descendente</option>
                   </select>
                 </div>
               </div>
@@ -99,72 +123,48 @@
               <div id="advancedSearchForm" class="catalog-advanced-form">
                 <div class="catalog-advanced-head">
                   <h3 id="advancedSearchTitle" class="catalog-advanced-title">Busqueda avanzada</h3>
-                  <p class="catalog-advanced-subtitle">Filtra por metadatos bibliograficos y disponibilidad.</p>
+                  <p class="catalog-advanced-subtitle">Filtra por metadatos bibliograficos y localizacion del libro.</p>
                 </div>
                 <div class="catalog-advanced-grid">
                   <div class="catalog-filter-group">
-                    <label class="catalog-filter-label" for="advTitulo">Titulo</label>
-                    <input type="text" id="advTitulo" class="catalog-filter-input" placeholder="Titulo del libro">
-                  </div>
-                  <div class="catalog-filter-group">
-                    <label class="catalog-filter-label" for="advAutor">Autor</label>
-                    <input type="text" id="advAutor" class="catalog-filter-input" placeholder="Nombre del autor">
-                  </div>
-                  <div class="catalog-filter-group">
-                    <label class="catalog-filter-label" for="advISBN">ISBN</label>
-                    <input type="text" id="advISBN" class="catalog-filter-input" placeholder="ISBN">
+                    <label class="catalog-filter-label" for="advIssn">ISSN</label>
+                    <input type="text" id="advIssn" class="catalog-filter-input" placeholder="ISSN exacto">
                   </div>
                   <div class="catalog-filter-group">
                     <label class="catalog-filter-label" for="advEditorial">Editorial</label>
-                    <input type="text" id="advEditorial" class="catalog-filter-input" placeholder="Editorial">
-                  </div>
-                  <div class="catalog-filter-group">
-                    <label class="catalog-filter-label" for="advAnioDesde">Ano desde</label>
-                    <input type="number" id="advAnioDesde" class="catalog-filter-input" placeholder="2000" min="1800" max="2100">
-                  </div>
-                  <div class="catalog-filter-group">
-                    <label class="catalog-filter-label" for="advAnioHasta">Ano hasta</label>
-                    <input type="number" id="advAnioHasta" class="catalog-filter-input" placeholder="2024" min="1800" max="2100">
+                    <input type="text" id="advEditorial" class="catalog-filter-input" placeholder="Editorial parcial">
                   </div>
                   <div class="catalog-filter-group">
                     <label class="catalog-filter-label" for="advIdioma">Idioma</label>
-                    <select id="advIdioma" class="catalog-filter-select">
-                      <option value="">Cualquier idioma</option>
-                      <option value="es">Espanol</option>
-                      <option value="en">Ingles</option>
-                      <option value="pt">Portugues</option>
-                    </select>
+                    <input type="text" id="advIdioma" class="catalog-filter-input" placeholder="es, en, pt...">
                   </div>
                   <div class="catalog-filter-group">
-                    <label class="catalog-filter-label" for="advTipoDocumento">Tipo de material</label>
-                    <select id="advTipoDocumento" class="catalog-filter-select">
-                      <option value="">Cualquier tipo</option>
-                      <option value="libro">Libro</option>
-                      <option value="revista">Revista</option>
-                      <option value="tesis">Tesis</option>
-                      <option value="digital">Digital</option>
-                    </select>
+                    <label class="catalog-filter-label" for="advAnioPublicacion">Año de publicación</label>
+                    <input type="number" id="advAnioPublicacion" class="catalog-filter-input" placeholder="2024" min="1800" max="2100">
                   </div>
                   <div class="catalog-filter-group">
-                    <label class="catalog-filter-label" for="advMateria">Materia</label>
-                    <input type="text" id="advMateria" class="catalog-filter-input" placeholder="Materia">
+                    <label class="catalog-filter-label" for="advTipo">Tipo</label>
+                    <input type="text" id="advTipo" class="catalog-filter-input" placeholder="Tipo de artículo">
                   </div>
                   <div class="catalog-filter-group">
-                    <label class="catalog-filter-label" for="advCDU">CDU</label>
-                    <input type="text" id="advCDU" class="catalog-filter-input" placeholder="CDU">
+                    <label class="catalog-filter-label" for="advCdu">CDU</label>
+                    <input type="text" id="advCdu" class="catalog-filter-input" placeholder="Clasificación Decimal Universal">
                   </div>
                   <div class="catalog-filter-group">
-                    <label class="catalog-filter-label" for="advEstante">Estante / Carrera</label>
-                    <input type="text" id="advEstante" class="catalog-filter-input" placeholder="Estante o carrera">
+                    <label class="catalog-filter-label" for="advLugarPublicacion">Lugar de publicación</label>
+                    <input type="text" id="advLugarPublicacion" class="catalog-filter-input" placeholder="Lugar de publicación">
                   </div>
                   <div class="catalog-filter-group">
-                    <label class="catalog-filter-label" for="advDisponibilidad">Disponibilidad</label>
-                    <select id="advDisponibilidad" class="catalog-filter-select">
-                      <option value="">Cualquier estado</option>
-                      <option value="available">Disponible</option>
-                      <option value="unavailable">No disponible</option>
-                      <option value="digital">Digital</option>
-                    </select>
+                    <label class="catalog-filter-label" for="advTituloInformativo">Título informativo</label>
+                    <input type="text" id="advTituloInformativo" class="catalog-filter-input" placeholder="Subtítulo o título informativo">
+                  </div>
+                  <div class="catalog-filter-group">
+                    <label class="catalog-filter-label" for="advPersona">Persona</label>
+                    <input type="text" id="advPersona" class="catalog-filter-input" placeholder="Autor, editor o colaborador">
+                  </div>
+                  <div class="catalog-filter-group">
+                    <label class="catalog-filter-label" for="advTemas">Temas</label>
+                    <input type="text" id="advTemas" class="catalog-filter-input" placeholder="IDs o nombres de temas separados por coma">
                   </div>
                 </div>
                 <div class="catalog-advanced-actions">
@@ -263,20 +263,12 @@
   <script src="../js/components/navbar.js"></script>
   <script src="../js/components/footer.js"></script>
 
-  <!-- Mock data (comentar para usar API real) -->
-  <script src="../js/data/librosMock.js"></script>
-
   <!-- Capa de Servicios (Comunicación HTTP) -->
   <script src="../js/services/libroService.js"></script>
 
-  <!-- Capa de Estado (Model) -->
-  <script src="../js/state/catalogState.js"></script>
 
   <!-- Capa de Presentación (View) -->
-  <script src="../js/ui/catalogRenderer.js"></script>
-
-  <!-- Capa de Control (Controller) -->
-  <script src="../js/controllers/catalogController.js"></script>
+  <script src="../js/components/catalogRenderer.js"></script>
 
   <!-- Punto de entrada (Inicialización) -->
   <script src="../js/pages/catalog.js"></script>
