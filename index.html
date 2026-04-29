@@ -130,14 +130,14 @@
 
           <form class="login-form" id="loginForm">
             <div class="login-form__group">
-              <label for="loginId" class="login-form__label">Tarjeta de Identificación:</label>
-              <input type="text" class="login-form__input" id="loginId" required>
+              <label for="loginDni" class="login-form__label">DNI:</label>
+              <input type="text" class="login-form__input" id="loginDni" inputmode="numeric" autocomplete="username" required>
             </div>
             <div class="login-form__group">
               <label for="loginPassword" class="login-form__label">Contraseña:</label>
-              <input type="password" class="login-form__input" id="loginPassword" required>
+              <input type="password" class="login-form__input" id="loginPassword" autocomplete="current-password" required>
             </div>
-            <button type="submit" class="login-form__submit">
+            <button type="submit" id="loginSubmitBtn" class="login-form__submit">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
                 <polyline points="10 17 15 12 10 7"></polyline>
@@ -270,9 +270,17 @@
     </div>
   </footer>
 
-  <script src="js/components/navbar.js"></script>
-  <script src="js/components/footer.js"></script>
-  <script src="js/components/modal.js"></script>
-  <script src="js/main.js"></script>
+  <!--
+    Módulos ES — cada script tiene su propio scope.
+    Los módulos son diferidos por defecto (equivalente a defer),
+    por lo que el DOM ya está construido cuando se ejecutan.
+
+    Orden:
+      1. navbar.js y footer.js: componentes de layout, sin dependencias
+      2. home.js: lógica de la página; importa modal, store, services internamente
+  -->
+  <script type="module" src="js/components/navbar.js"></script>
+  <script type="module" src="js/components/footer.js"></script>
+  <script type="module" src="js/pages/home.js"></script>
 </body>
 </html>

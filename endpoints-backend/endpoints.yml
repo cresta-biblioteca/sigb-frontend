@@ -1,0 +1,4874 @@
+{
+  "openapi": "3.0.0",
+  "info":
+    {
+      "title": "SIGB API",
+      "description": "API REST del Sistema de Gestión Bibliotecaria (SIGB)",
+      "version": "1.0.0",
+    },
+  "servers": [{ "url": "/api/v1", "description": "Servidor de desarrollo" }],
+  "paths":
+    {
+      "/auth/register":
+        {
+          "post":
+            {
+              "tags": ["Auth"],
+              "summary": "Registrar usuario",
+              "description": "Crea un nuevo usuario y su perfil de lector en el sistema",
+              "operationId": "7223dba0012f6bca451ffcece59ee54f",
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "$ref": "#/components/schemas/UserRegisterRequest",
+                            },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "201":
+                    {
+                      "description": "Usuario creado exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/UserRegisterResponse",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada no válidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "409":
+                    {
+                      "description": "El usuario ya existe",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "422":
+                    {
+                      "description": "Error de validación de negocio",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "field": { "type": "string" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/auth/change-password":
+        {
+          "post":
+            {
+              "tags": ["Auth"],
+              "summary": "Cambiar contraseña",
+              "description": "Actualiza la contraseña del usuario autenticado. Requiere token JWT.",
+              "operationId": "98dd9478f733623fe954d7063f5ac859",
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "$ref": "#/components/schemas/ChangePasswordRequest",
+                            },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Contraseña actualizada correctamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada no válidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401":
+                    {
+                      "description": "No autenticado o contraseña actual incorrecta",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/auth/login":
+        {
+          "post":
+            {
+              "tags": ["Auth"],
+              "summary": "Iniciar sesión",
+              "description": "Autentica un usuario con DNI y contraseña, retorna un token JWT",
+              "operationId": "ce2d3e7f3368922a175515e491a113f0",
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            { "$ref": "#/components/schemas/UserLoginRequest" },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Login exitoso",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/UserLoginResponse",
+                                },
+                            },
+                        },
+                    },
+                  "401":
+                    {
+                      "description": "Credenciales inválidas",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/articulos":
+        {
+          "get":
+            {
+              "tags": ["Articulos"],
+              "summary": "Listar artículos",
+              "description": "Listado de todos los artículos registrados en el sistema",
+              "operationId": "8d7b362558c92c77c17ac696ce446f85",
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Listado obtenido exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "type": "array",
+                                  "items":
+                                    {
+                                      "$ref": "#/components/schemas/ArticuloResponse",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                  "401": { "description": "No autenticado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/articulos/{id}":
+        {
+          "get":
+            {
+              "tags": ["Articulos"],
+              "summary": "Obtener artículo por ID",
+              "description": "Obtener la información de un artículo por su ID",
+              "operationId": "efb2593d09bf91283c8e980cff4c52f9",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "ID del artículo",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Artículo obtenido exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/ArticuloResponse",
+                                },
+                            },
+                        },
+                    },
+                  "400": { "description": "ID inválido" },
+                  "401": { "description": "No autenticado" },
+                  "404": { "description": "Artículo no encontrado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+          "delete":
+            {
+              "tags": ["Articulos"],
+              "summary": "Eliminar artículo",
+              "description": "Elimina un artículo por su ID",
+              "operationId": "ef72e7c9103b983de1998e7ac2a248ce",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "ID del artículo",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "responses":
+                {
+                  "204": { "description": "Artículo eliminado exitosamente" },
+                  "400": { "description": "ID inválido" },
+                  "401": { "description": "No autenticado" },
+                  "404": { "description": "Artículo no encontrado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+          "patch":
+            {
+              "tags": ["Articulos"],
+              "summary": "Actualizar artículo",
+              "description": "Actualiza parcialmente los campos de un artículo. Solo se actualizan los campos enviados.",
+              "operationId": "c9f0a8f22f0ce14845bc2f7e87c47a1c",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "ID del artículo",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "properties":
+                                {
+                                  "titulo":
+                                    {
+                                      "type": "string",
+                                      "example": "Algorithms",
+                                      "nullable": true,
+                                    },
+                                  "anio_publicacion":
+                                    {
+                                      "type": "integer",
+                                      "example": 2011,
+                                      "nullable": true,
+                                    },
+                                  "tipo_documento_id":
+                                    {
+                                      "type": "integer",
+                                      "example": 1,
+                                      "nullable": true,
+                                    },
+                                  "idioma":
+                                    {
+                                      "type": "string",
+                                      "example": "en",
+                                      "nullable": true,
+                                    },
+                                  "descripcion":
+                                    { "type": "string", "nullable": true },
+                                },
+                              "type": "object",
+                            },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Artículo actualizado exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/ArticuloResponse",
+                                },
+                            },
+                        },
+                    },
+                  "400": { "description": "Datos de entrada inválidos" },
+                  "401": { "description": "No autenticado" },
+                  "404": { "description": "Artículo no encontrado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/articulos/{idArticulo}/temas/{idTema}":
+        {
+          "post":
+            {
+              "tags": ["Articulos"],
+              "summary": "Agregar tema a artículo",
+              "description": "Asocia un tema existente a un artículo existente",
+              "operationId": "b922e94ec96dbd437faa92aea8428222",
+              "parameters":
+                [
+                  {
+                    "name": "idArticulo",
+                    "in": "path",
+                    "description": "ID del artículo",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                  {
+                    "name": "idTema",
+                    "in": "path",
+                    "description": "ID del tema",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "responses":
+                {
+                  "201":
+                    {
+                      "description": "Tema agregado al artículo",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada no válidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401":
+                    {
+                      "description": "No autenticado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Artículo o tema no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "409":
+                    {
+                      "description": "Tema ya asociado al artículo",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+          "delete":
+            {
+              "tags": ["Articulos"],
+              "summary": "Eliminar tema de artículo",
+              "description": "Desasocia un tema de un artículo",
+              "operationId": "f8b3b2db762d8539d544c7b08e2b85e3",
+              "parameters":
+                [
+                  {
+                    "name": "idArticulo",
+                    "in": "path",
+                    "description": "ID del artículo",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                  {
+                    "name": "idTema",
+                    "in": "path",
+                    "description": "ID del tema",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Tema eliminado del artículo",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada no válidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401":
+                    {
+                      "description": "No autenticado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Artículo o tema no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "409":
+                    {
+                      "description": "El tema no estaba asociado al artículo",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/articulos/{idArticulo}/temas":
+        {
+          "get":
+            {
+              "tags": ["Articulos"],
+              "summary": "Listar temas de artículo",
+              "description": "Obtiene los títulos de los temas asociados a un artículo",
+              "operationId": "f64d5a0236f398e8c117b071f66e6dce",
+              "parameters":
+                [
+                  {
+                    "name": "idArticulo",
+                    "in": "path",
+                    "description": "ID del artículo",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Listado de títulos de temas",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "type": "array",
+                                  "items": { "type": "string" },
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada no válidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401":
+                    {
+                      "description": "No autenticado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Artículo no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/temas":
+        {
+          "get":
+            {
+              "tags": ["Temas"],
+              "summary": "Lista de temas",
+              "description": "Listado de todos los temas registrados",
+              "operationId": "06bb3b6b5c28e701575911abf5fbcc20",
+              "parameters":
+                [
+                  {
+                    "name": "titulo",
+                    "in": "query",
+                    "description": "Busqueda por titulo",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                  {
+                    "name": "order",
+                    "in": "query",
+                    "description": "Ordenamiento(ASC/DESC)",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Listado obtenido",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "type": "array",
+                                  "items":
+                                    {
+                                      "$ref": "#/components/schemas/TemaResponse",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+          "post":
+            {
+              "tags": ["Temas"],
+              "summary": "Crear tema",
+              "description": "Crear un nuevo tema",
+              "operationId": "6f7b0684a56b9c9408916aeb5ed2b41d",
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            { "$ref": "#/components/schemas/TemaRequest" },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "201":
+                    {
+                      "description": "Tema creado exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                { "$ref": "#/components/schemas/TemaResponse" },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "409":
+                    {
+                      "description": "El tema ya existe",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "422":
+                    {
+                      "description": "Error de validacion de negocio",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "field": { "type": "string" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/temas/{id}":
+        {
+          "get":
+            {
+              "tags": ["Temas"],
+              "summary": "Obtener un tema",
+              "description": "Mostrar la informacion de un tema especifico",
+              "operationId": "1f01b7416d9357a6b7520d574801d2d4",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "id del tema a buscar",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Tema obtenido exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                { "$ref": "#/components/schemas/TemaResponse" },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Tema no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+          "put":
+            {
+              "tags": ["Temas"],
+              "summary": "Actualizar tema",
+              "description": "Actualizar la informacion de un tema existente",
+              "operationId": "7aab683789cdbf5c63e4fc2062dcf0a6",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "id del tema a actualizar",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            { "$ref": "#/components/schemas/TemaRequest" },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Tema actualizado exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                { "$ref": "#/components/schemas/TemaResponse" },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Tema no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "409":
+                    {
+                      "description": "El tema ya existe",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "422":
+                    {
+                      "description": "Error de validacion de negocio",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "field": { "type": "string" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+          "delete":
+            {
+              "tags": ["Temas"],
+              "summary": "Eliminar tema",
+              "description": "Eliminar un tema existente",
+              "operationId": "e27d41ba7f2346c03466103ac60cb1f1",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "id del tema a eliminar",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "responses":
+                {
+                  "204": { "description": "Tema eliminado exitosamente" },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Tema no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/documentos":
+        {
+          "get":
+            {
+              "tags": ["Tipos de Documento"],
+              "summary": "Lista de tipos de documento",
+              "description": "Listado de todos los tipos de documento registrados",
+              "operationId": "73b06086e0c605e01692fe8fdf156736",
+              "parameters":
+                [
+                  {
+                    "name": "codigo",
+                    "in": "query",
+                    "description": "Busqueda por codigo",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                  {
+                    "name": "descripcion",
+                    "in": "query",
+                    "description": "Busqueda por descripcion",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                  {
+                    "name": "detalle",
+                    "in": "query",
+                    "description": "Busqueda por detalle",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                  {
+                    "name": "renovable",
+                    "in": "query",
+                    "description": "Filtrar por renovable",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                  {
+                    "name": "order",
+                    "in": "query",
+                    "description": "Ordenamiento(ASC/DESC)",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Listado obtenido",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "type": "array",
+                                  "items":
+                                    {
+                                      "$ref": "#/components/schemas/TipoDocumentoResponse",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+          "post":
+            {
+              "tags": ["Tipos de Documento"],
+              "summary": "Crear tipo de documento",
+              "description": "Crear un nuevo tipo de documento",
+              "operationId": "4f34d8941e77db0b75eb3c932b367efc",
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "$ref": "#/components/schemas/CreateTipoDocumentoRequest",
+                            },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "201":
+                    {
+                      "description": "Tipo de documento creado exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/TipoDocumentoResponse",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "409":
+                    {
+                      "description": "El tipo de documento ya existe",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "422":
+                    {
+                      "description": "Error de validacion de negocio",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "field": { "type": "string" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/documentos/{id}":
+        {
+          "get":
+            {
+              "tags": ["Tipos de Documento"],
+              "summary": "Obtener un tipo de documento",
+              "description": "Mostrar la informacion de un tipo de documento especifico",
+              "operationId": "7b5b4e4cf5be9b384e68d0a06032d9f7",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "id del tipo de documento a buscar",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Tipo de documento obtenido exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/TipoDocumentoResponse",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Tipo de documento no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+          "put":
+            {
+              "tags": ["Tipos de Documento"],
+              "summary": "Actualizar tipo de documento",
+              "description": "Actualizar la informacion de un tipo de documento existente",
+              "operationId": "3069dae618cba2a715d0bed98b1fd317",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "id del tipo de documento a actualizar",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "$ref": "#/components/schemas/UpdateTipoDocumentoRequest",
+                            },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Tipo de documento actualizado exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/TipoDocumentoResponse",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Tipo de documento no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "409":
+                    {
+                      "description": "El tipo de documento ya existe",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "422":
+                    {
+                      "description": "Error de validacion de negocio",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "field": { "type": "string" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+          "delete":
+            {
+              "tags": ["Tipos de Documento"],
+              "summary": "Eliminar tipo de documento",
+              "description": "Eliminar un tipo de documento existente",
+              "operationId": "c934096ac0397de3c7be8cf48608a875",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "id del tipo de documento a eliminar",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "responses":
+                {
+                  "204":
+                    {
+                      "description": "Tipo de documento eliminado exitosamente",
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Tipo de documento no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/ejemplares":
+        {
+          "get":
+            {
+              "tags": ["Ejemplares"],
+              "summary": "Listar ejemplares",
+              "description": "Listado de ejemplares con filtros opcionales. Si se provee `codigo_barras` retorna el ejemplar exacto. Si se provee `articulo_id` retorna los ejemplares de ese artículo (con `habilitado=true` solo los habilitados). Si se provee `habilitado` filtra por estado.",
+              "operationId": "a4813084225ff189cfe5026523df68a0",
+              "parameters":
+                [
+                  {
+                    "name": "codigo_barras",
+                    "in": "query",
+                    "description": "Código de barras exacto",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                  {
+                    "name": "articulo_id",
+                    "in": "query",
+                    "description": "ID del artículo",
+                    "required": false,
+                    "schema": { "type": "integer" },
+                  },
+                  {
+                    "name": "habilitado",
+                    "in": "query",
+                    "description": "Filtrar por estado habilitado",
+                    "required": false,
+                    "schema": { "type": "boolean" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Listado obtenido",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "data":
+                                        {
+                                          "type": "array",
+                                          "items":
+                                            {
+                                              "$ref": "#/components/schemas/EjemplarResponse",
+                                            },
+                                        },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400": { "description": "Parámetros inválidos" },
+                  "401": { "description": "No autenticado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+          "post":
+            {
+              "tags": ["Ejemplares"],
+              "summary": "Crear ejemplar",
+              "description": "Crear un nuevo ejemplar asociado a un artículo",
+              "operationId": "acd83f93884fc4b4611c14ba9be4afeb",
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            { "$ref": "#/components/schemas/EjemplarRequest" },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "201":
+                    {
+                      "description": "Ejemplar creado exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "data":
+                                        {
+                                          "$ref": "#/components/schemas/EjemplarResponse",
+                                        },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada inválidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401": { "description": "No autenticado" },
+                  "409": { "description": "El código de barras ya existe" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/ejemplares/{id}":
+        {
+          "get":
+            {
+              "tags": ["Ejemplares"],
+              "summary": "Obtener ejemplar por ID",
+              "description": "Obtener la información de un ejemplar por su ID",
+              "operationId": "f1a6810aaa5d0171c9213ef15022af53",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "ID del ejemplar",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Ejemplar obtenido exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "data":
+                                        {
+                                          "$ref": "#/components/schemas/EjemplarResponse",
+                                        },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401": { "description": "No autenticado" },
+                  "404": { "description": "Ejemplar no encontrado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+          "put":
+            {
+              "tags": ["Ejemplares"],
+              "summary": "Actualizar ejemplar",
+              "description": "Reemplaza completamente los datos de un ejemplar existente",
+              "operationId": "0fec0e457933da009351889a21a27067",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "ID del ejemplar",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            { "$ref": "#/components/schemas/EjemplarRequest" },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Ejemplar actualizado exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "data":
+                                        {
+                                          "$ref": "#/components/schemas/EjemplarResponse",
+                                        },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400": { "description": "Datos de entrada inválidos" },
+                  "401": { "description": "No autenticado" },
+                  "404": { "description": "Ejemplar no encontrado" },
+                  "409":
+                    { "description": "El código de barras ya está en uso" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+          "delete":
+            {
+              "tags": ["Ejemplares"],
+              "summary": "Eliminar ejemplar",
+              "description": "Elimina un ejemplar por su ID",
+              "operationId": "afd7e80e2d2f4d204b63e9a263b18f45",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "ID del ejemplar",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Ejemplar eliminado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401": { "description": "No autenticado" },
+                  "404": { "description": "Ejemplar no encontrado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/articulos/{articuloId}/ejemplares":
+        {
+          "get":
+            {
+              "tags": ["Ejemplares"],
+              "summary": "Ejemplares de un artículo",
+              "description": "Obtener todos los ejemplares de un artículo",
+              "operationId": "7e187b147c787d89e606d164ffb59f7a",
+              "parameters":
+                [
+                  {
+                    "name": "articuloId",
+                    "in": "path",
+                    "description": "ID del artículo",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Listado obtenido",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "data":
+                                        {
+                                          "type": "array",
+                                          "items":
+                                            {
+                                              "$ref": "#/components/schemas/EjemplarResponse",
+                                            },
+                                        },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401": { "description": "No autenticado" },
+                  "404": { "description": "Artículo no encontrado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/articulos/{articuloId}/ejemplares/habilitados":
+        {
+          "get":
+            {
+              "tags": ["Ejemplares"],
+              "summary": "Ejemplares habilitados de un artículo",
+              "description": "Obtener solo los ejemplares habilitados de un artículo",
+              "operationId": "af44a3240d09c1bcc590f10de8db1086",
+              "parameters":
+                [
+                  {
+                    "name": "articuloId",
+                    "in": "path",
+                    "description": "ID del artículo",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Listado obtenido",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "data":
+                                        {
+                                          "type": "array",
+                                          "items":
+                                            {
+                                              "$ref": "#/components/schemas/EjemplarResponse",
+                                            },
+                                        },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401": { "description": "No autenticado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/ejemplares/{id}/habilitar":
+        {
+          "patch":
+            {
+              "tags": ["Ejemplares"],
+              "summary": "Habilitar ejemplar",
+              "description": "Habilita un ejemplar deshabilitado",
+              "operationId": "150217667dda8ee156d5c3eaac51fa0d",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "ID del ejemplar",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Ejemplar habilitado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "data":
+                                        {
+                                          "$ref": "#/components/schemas/EjemplarResponse",
+                                        },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401": { "description": "No autenticado" },
+                  "404": { "description": "Ejemplar no encontrado" },
+                  "422": { "description": "El ejemplar ya está habilitado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/ejemplares/{id}/deshabilitar":
+        {
+          "patch":
+            {
+              "tags": ["Ejemplares"],
+              "summary": "Deshabilitar ejemplar",
+              "description": "Deshabilita un ejemplar habilitado",
+              "operationId": "f76bf122bd82a054d9bd91db93424433",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "ID del ejemplar",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Ejemplar deshabilitado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "data":
+                                        {
+                                          "$ref": "#/components/schemas/EjemplarResponse",
+                                        },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401": { "description": "No autenticado" },
+                  "404": { "description": "Ejemplar no encontrado" },
+                  "422": { "description": "El ejemplar ya está deshabilitado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/libros/{id}":
+        {
+          "get":
+            {
+              "tags": ["Libros"],
+              "summary": "Obtener libro por ID",
+              "description": "Obtener la información completa de un libro por su ID",
+              "operationId": "317481ea9aa26688d617cc7dcd621640",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "ID del libro",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Libro obtenido exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "data":
+                                        {
+                                          "$ref": "#/components/schemas/LibroResponse",
+                                        },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400": { "description": "ID inválido" },
+                  "401": { "description": "No autenticado" },
+                  "404": { "description": "Libro no encontrado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+          "delete":
+            {
+              "tags": ["Libros"],
+              "summary": "Eliminar libro",
+              "description": "Elimina un libro y su artículo asociado",
+              "operationId": "1719ca122c8fba02fccd8dfd7489d5b9",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "ID del libro a eliminar",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Libro eliminado exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400": { "description": "ID inválido" },
+                  "401": { "description": "No autenticado" },
+                  "404": { "description": "Libro no encontrado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+          "patch":
+            {
+              "tags": ["Libros"],
+              "summary": "Actualizar libro",
+              "description": "Actualiza parcialmente los campos del libro. Solo se actualizan los campos enviados.",
+              "operationId": "39800e63b4aa7be0dc8fffcb121a3282",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "ID del libro a actualizar",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                ],
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "$ref": "#/components/schemas/PatchLibroRequest",
+                            },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Libro actualizado exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "data":
+                                        {
+                                          "$ref": "#/components/schemas/LibroResponse",
+                                        },
+                                      "message": { "type": "string" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400": { "description": "Datos de entrada inválidos" },
+                  "401": { "description": "No autenticado" },
+                  "404": { "description": "Libro no encontrado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/libros":
+        {
+          "get":
+            {
+              "tags": ["Libros"],
+              "summary": "Buscar libros",
+              "description": "Listado paginado de libros con filtros y ordenamiento",
+              "operationId": "c578acb3bd47c5c9898204ef7ee3077c",
+              "parameters":
+                [
+                  {
+                    "name": "page",
+                    "in": "query",
+                    "description": "Número de página",
+                    "required": false,
+                    "schema": { "type": "integer", "default": 1 },
+                  },
+                  {
+                    "name": "per_page",
+                    "in": "query",
+                    "description": "Resultados por página",
+                    "required": false,
+                    "schema": { "type": "integer", "default": 10 },
+                  },
+                  {
+                    "name": "sort_by",
+                    "in": "query",
+                    "description": "Campo de ordenamiento",
+                    "required": false,
+                    "schema": { "type": "string", "default": "titulo" },
+                  },
+                  {
+                    "name": "sort_dir",
+                    "in": "query",
+                    "description": "Dirección del ordenamiento (asc/desc)",
+                    "required": false,
+                    "schema": { "type": "string", "default": "asc" },
+                  },
+                  {
+                    "name": "titulo",
+                    "in": "query",
+                    "description": "Filtrar por título",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                  {
+                    "name": "isbn",
+                    "in": "query",
+                    "description": "Filtrar por ISBN",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                  {
+                    "name": "editorial",
+                    "in": "query",
+                    "description": "Filtrar por editorial",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                  {
+                    "name": "idioma",
+                    "in": "query",
+                    "description": "Filtrar por idioma",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Listado obtenido exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "data":
+                                        {
+                                          "type": "array",
+                                          "items":
+                                            {
+                                              "$ref": "#/components/schemas/LibroResponse",
+                                            },
+                                        },
+                                      "pagination":
+                                        {
+                                          "properties":
+                                            {
+                                              "total": { "type": "integer" },
+                                              "per_page": { "type": "integer" },
+                                              "current_page":
+                                                { "type": "integer" },
+                                              "last_page":
+                                                { "type": "integer" },
+                                            },
+                                          "type": "object",
+                                        },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400": { "description": "Parámetros de búsqueda inválidos" },
+                  "401": { "description": "No autenticado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+          "post":
+            {
+              "tags": ["Libros"],
+              "summary": "Crear libro",
+              "description": "Crea un libro completo con su artículo y personas en una sola transacción",
+              "operationId": "22896489cdc7728f3f19d56614dd82c0",
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "required": ["articulo", "libro"],
+                              "properties":
+                                {
+                                  "articulo":
+                                    {
+                                      "required":
+                                        [
+                                          "titulo",
+                                          "anio_publicacion",
+                                          "tipo_documento_id",
+                                        ],
+                                      "properties":
+                                        {
+                                          "titulo":
+                                            {
+                                              "type": "string",
+                                              "example": "Algorithms",
+                                            },
+                                          "anio_publicacion":
+                                            {
+                                              "type": "integer",
+                                              "example": 2011,
+                                            },
+                                          "tipo_documento_id":
+                                            { "type": "integer", "example": 1 },
+                                          "idioma":
+                                            {
+                                              "type": "string",
+                                              "example": "en",
+                                            },
+                                          "descripcion":
+                                            {
+                                              "type": "string",
+                                              "nullable": true,
+                                            },
+                                        },
+                                      "type": "object",
+                                    },
+                                  "libro":
+                                    {
+                                      "properties":
+                                        {
+                                          "isbn":
+                                            {
+                                              "type": "string",
+                                              "example": "9780321573513",
+                                              "nullable": true,
+                                            },
+                                          "issn":
+                                            {
+                                              "type": "string",
+                                              "nullable": true,
+                                            },
+                                          "paginas":
+                                            {
+                                              "type": "integer",
+                                              "example": 955,
+                                              "nullable": true,
+                                            },
+                                          "editorial":
+                                            {
+                                              "type": "string",
+                                              "example": "Addison-Wesley",
+                                              "nullable": true,
+                                            },
+                                          "lugar_de_publicacion":
+                                            {
+                                              "type": "string",
+                                              "nullable": true,
+                                            },
+                                          "edicion":
+                                            {
+                                              "type": "string",
+                                              "nullable": true,
+                                            },
+                                          "cdu":
+                                            {
+                                              "type": "integer",
+                                              "nullable": true,
+                                            },
+                                          "titulo_informativo":
+                                            {
+                                              "type": "string",
+                                              "nullable": true,
+                                            },
+                                          "dimensiones":
+                                            {
+                                              "type": "string",
+                                              "nullable": true,
+                                            },
+                                          "ilustraciones":
+                                            {
+                                              "type": "string",
+                                              "nullable": true,
+                                            },
+                                          "serie":
+                                            {
+                                              "type": "string",
+                                              "nullable": true,
+                                            },
+                                          "numero_serie":
+                                            {
+                                              "type": "string",
+                                              "nullable": true,
+                                            },
+                                          "notas":
+                                            {
+                                              "type": "string",
+                                              "nullable": true,
+                                            },
+                                          "pais_publicacion":
+                                            {
+                                              "type": "string",
+                                              "nullable": true,
+                                            },
+                                          "personas":
+                                            {
+                                              "type": "array",
+                                              "items":
+                                                {
+                                                  "required":
+                                                    [
+                                                      "nombre",
+                                                      "apellido",
+                                                      "rol",
+                                                      "orden",
+                                                    ],
+                                                  "properties":
+                                                    {
+                                                      "nombre":
+                                                        {
+                                                          "type": "string",
+                                                          "example": "Robert",
+                                                        },
+                                                      "apellido":
+                                                        {
+                                                          "type": "string",
+                                                          "example": "Sedgewick",
+                                                        },
+                                                      "rol":
+                                                        {
+                                                          "type": "string",
+                                                          "example": "autor",
+                                                        },
+                                                      "orden":
+                                                        {
+                                                          "type": "integer",
+                                                          "example": 0,
+                                                        },
+                                                    },
+                                                  "type": "object",
+                                                },
+                                            },
+                                        },
+                                      "type": "object",
+                                    },
+                                },
+                              "type": "object",
+                            },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "201":
+                    {
+                      "description": "Libro creado exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "data":
+                                        {
+                                          "$ref": "#/components/schemas/LibroResponse",
+                                        },
+                                      "message": { "type": "string" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada inválidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401": { "description": "No autenticado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/libros/{id}/marc21":
+        {
+          "get":
+            {
+              "tags": ["Libros"],
+              "summary": "Exportar libro en MARC21",
+              "description": "Exporta un libro en formato MARC21. Por defecto retorna XML; con `format=iso` retorna ISO 2709.",
+              "operationId": "83b8970da5e8460e35aa65cb2a0fae7e",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "ID del libro",
+                    "required": true,
+                    "schema": { "type": "integer", "minimum": 1 },
+                  },
+                  {
+                    "name": "format",
+                    "in": "query",
+                    "description": "Formato de exportación",
+                    "required": false,
+                    "schema":
+                      {
+                        "type": "string",
+                        "default": "xml",
+                        "enum": ["xml", "iso"],
+                      },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Archivo MARC21 descargado",
+                      "content":
+                        { "application/xml": {}, "application/marc": {} },
+                    },
+                  "400": { "description": "ID inválido" },
+                  "401": { "description": "No autenticado" },
+                  "404": { "description": "Libro no encontrado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/libros/marc21":
+        {
+          "get":
+            {
+              "tags": ["Libros"],
+              "summary": "Exportar libros en MARC21 (bulk)",
+              "description": "Exporta todos los libros (o los que coincidan con los filtros) en formato MARC21. Por defecto XML; con `format=iso` retorna ISO 2709. Acepta los mismos filtros que el listado de libros.",
+              "operationId": "c7a8e21867c3aba8cc008ff67a851747",
+              "parameters":
+                [
+                  {
+                    "name": "format",
+                    "in": "query",
+                    "description": "Formato de exportación",
+                    "required": false,
+                    "schema":
+                      {
+                        "type": "string",
+                        "default": "xml",
+                        "enum": ["xml", "iso"],
+                      },
+                  },
+                  {
+                    "name": "titulo",
+                    "in": "query",
+                    "description": "Filtrar por título",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                  {
+                    "name": "isbn",
+                    "in": "query",
+                    "description": "Filtrar por ISBN",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                  {
+                    "name": "editorial",
+                    "in": "query",
+                    "description": "Filtrar por editorial",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Archivo MARC21 descargado",
+                      "content":
+                        { "application/xml": {}, "application/marc": {} },
+                    },
+                  "400": { "description": "Parámetros inválidos" },
+                  "401": { "description": "No autenticado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+      "/reservas":
+        {
+          "get":
+            {
+              "tags": ["Reservas"],
+              "summary": "Listar todas las reservas (admin)",
+              "description": "Retorna todas las reservas con filtros opcionales. Solo accesible por administradores.",
+              "operationId": "7571c04083e87df0de782a982d396d10",
+              "parameters":
+                [
+                  {
+                    "name": "estado",
+                    "in": "query",
+                    "required": false,
+                    "schema":
+                      {
+                        "type": "string",
+                        "enum":
+                          ["PENDIENTE", "COMPLETADA", "CANCELADA", "VENCIDA"],
+                      },
+                  },
+                  {
+                    "name": "lector_id",
+                    "in": "query",
+                    "required": false,
+                    "schema": { "type": "integer", "example": 1 },
+                  },
+                  {
+                    "name": "articulo_id",
+                    "in": "query",
+                    "required": false,
+                    "schema": { "type": "integer", "example": 5 },
+                  },
+                  {
+                    "name": "ejemplar_id",
+                    "in": "query",
+                    "required": false,
+                    "schema": { "type": "integer", "example": 3 },
+                  },
+                  {
+                    "name": "fecha_desde",
+                    "in": "query",
+                    "required": false,
+                    "schema":
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-01-01",
+                      },
+                  },
+                  {
+                    "name": "fecha_hasta",
+                    "in": "query",
+                    "required": false,
+                    "schema":
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-12-31",
+                      },
+                  },
+                  {
+                    "name": "page",
+                    "in": "query",
+                    "required": false,
+                    "schema": { "type": "integer", "example": 1, "default": 1 },
+                  },
+                  {
+                    "name": "per_page",
+                    "in": "query",
+                    "required": false,
+                    "schema":
+                      {
+                        "type": "integer",
+                        "example": 10,
+                        "default": 10,
+                        "maximum": 100,
+                      },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Listado paginado de reservas",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "data":
+                                        {
+                                          "type": "array",
+                                          "items":
+                                            {
+                                              "$ref": "#/components/schemas/ReservaResponse",
+                                            },
+                                        },
+                                      "pagination":
+                                        {
+                                          "properties":
+                                            {
+                                              "page": { "type": "integer" },
+                                              "per_page": { "type": "integer" },
+                                              "total": { "type": "integer" },
+                                              "total_pages":
+                                                { "type": "integer" },
+                                            },
+                                          "type": "object",
+                                        },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Parametros de filtro invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+          "post":
+            {
+              "tags": ["Reservas"],
+              "summary": "Crear reserva",
+              "description": "Crear una nueva reserva para un articulo. Si hay ejemplares disponibles se asigna uno de inmediato con fecha de vencimiento; si no, queda en cola de espera.",
+              "operationId": "a5d99dbfb8a60c0153a85de68d8e8043",
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "$ref": "#/components/schemas/CreateReservaRequest",
+                            },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "201":
+                    {
+                      "description": "Reserva creada exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/ReservaResponse",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Articulo no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "422":
+                    {
+                      "description": "El lector ya tiene una reserva pendiente o un prestamo activo para este articulo",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/lectores/me/prestamos":
+        {
+          "get":
+            {
+              "tags": ["Prestamos"],
+              "summary": "Mis préstamos",
+              "description": "Obtiene los préstamos del lector autenticado. El lector se resuelve desde el JWT.",
+              "operationId": "getMisPrestamos",
+              "security": [{ "bearerAuth": [] }],
+              "parameters":
+                [
+                  {
+                    "name": "estado",
+                    "in": "query",
+                    "required": false,
+                    "description": "Filtra por estado del préstamo.",
+                    "schema":
+                      {
+                        "type": "string",
+                        "enum":
+                          [
+                            "VIGENTE",
+                            "COMPLETADO_EXITO",
+                            "COMPLETADO_VENCIDO",
+                            "INCONVENIENTE",
+                          ],
+                      },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Listado de préstamos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "type": "array",
+                                  "items":
+                                    {
+                                      "$ref": "#/components/schemas/PrestamoResponse",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                  "400": { "description": "Parámetros inválidos" },
+                  "401": { "description": "No autenticado" },
+                  "403": { "description": "Sin permisos" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/lectores/me/reservas":
+        {
+          "get":
+            {
+              "tags": ["Reservas"],
+              "summary": "Listar mis reservas",
+              "description": "Retorna las reservas del usuario autenticado. El ID del lector se obtiene del token JWT.",
+              "operationId": "91fbe371a7fea9be827315fe582cb909",
+              "parameters":
+                [
+                  {
+                    "name": "estado",
+                    "in": "query",
+                    "required": false,
+                    "schema":
+                      {
+                        "type": "string",
+                        "enum":
+                          ["PENDIENTE", "COMPLETADA", "CANCELADA", "VENCIDA"],
+                      },
+                  },
+                  {
+                    "name": "page",
+                    "in": "query",
+                    "required": false,
+                    "schema": { "type": "integer", "example": 1, "default": 1 },
+                  },
+                  {
+                    "name": "per_page",
+                    "in": "query",
+                    "required": false,
+                    "schema":
+                      {
+                        "type": "integer",
+                        "example": 10,
+                        "default": 10,
+                        "maximum": 100,
+                      },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Listado paginado de reservas del usuario autenticado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "data":
+                                        {
+                                          "type": "array",
+                                          "items":
+                                            {
+                                              "$ref": "#/components/schemas/ReservaResponse",
+                                            },
+                                        },
+                                      "pagination":
+                                        {
+                                          "properties":
+                                            {
+                                              "page": { "type": "integer" },
+                                              "per_page": { "type": "integer" },
+                                              "total": { "type": "integer" },
+                                              "total_pages":
+                                                { "type": "integer" },
+                                            },
+                                          "type": "object",
+                                        },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Parametro de filtro invalido",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/reservas/{id}":
+        {
+          "get":
+            {
+              "tags": ["Reservas"],
+              "summary": "Obtener reserva por ID",
+              "operationId": "75bd5a52390ee49891bd02c0f509c804",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "integer", "example": 1 },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Reserva encontrada",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/ReservaResponse",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "ID invalido",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Reserva no encontrada",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/reservas/{id}/cancelar":
+        {
+          "patch":
+            {
+              "tags": ["Reservas"],
+              "summary": "Cancelar una reserva pendiente",
+              "operationId": "84a4eb625d4eb362caafcbf3fd733278",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "integer", "example": 1 },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Reserva cancelada exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "ID invalido",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Reserva no encontrada",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "422":
+                    {
+                      "description": "La reserva no puede ser cancelada (no esta pendiente o ya vencio)",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/tipos-prestamos":
+        {
+          "get":
+            {
+              "tags": ["Tipos de Prestamo"],
+              "summary": "Lista de tipos de prestamo",
+              "description": "Listado de todos los tipos de prestamo registrados",
+              "operationId": "438fa40a1f6f8103b52b4e1f9e05d3f2",
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Listado obtenido",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "type": "array",
+                                  "items":
+                                    {
+                                      "$ref": "#/components/schemas/TipoPrestamoResponse",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+          "post":
+            {
+              "tags": ["Tipos de Prestamo"],
+              "summary": "Crear tipo de prestamo",
+              "description": "Crear un nuevo tipo de prestamo",
+              "operationId": "ab646360c5639b186a73d8ae7787ad2e",
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "$ref": "#/components/schemas/CreateTipoPrestamoRequest",
+                            },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "201":
+                    {
+                      "description": "Tipo de prestamo creado exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/TipoPrestamoResponse",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "409":
+                    {
+                      "description": "El tipo de prestamo ya existe",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "422":
+                    {
+                      "description": "Error de validacion de negocio",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/tipos-prestamos/{id}":
+        {
+          "get":
+            {
+              "tags": ["Tipos de Prestamo"],
+              "summary": "Obtener un tipo de prestamo",
+              "description": "Mostrar la informacion de un tipo de prestamo especifico",
+              "operationId": "0f8de74a9f4f30f86d5055fc1271843b",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "id del tipo de prestamo a buscar",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Tipo de prestamo obtenido exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/TipoPrestamoResponse",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Tipo de prestamo no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+          "patch":
+            {
+              "tags": ["Tipos de Prestamo"],
+              "summary": "Actualizar tipo de prestamo",
+              "description": "Actualizar la informacion de un tipo de prestamo existente",
+              "operationId": "8c26fc02b981e94cc98f511b26ac2228",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "id del tipo de prestamo a actualizar",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "$ref": "#/components/schemas/UpdateTipoPrestamoRequest",
+                            },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Tipo de prestamo actualizado exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/TipoPrestamoResponse",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Tipo de prestamo no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "409":
+                    {
+                      "description": "El tipo de prestamo ya existe",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "422":
+                    {
+                      "description": "Error de validacion de negocio",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/tipos-prestamos/{id}/deshabilitar":
+        {
+          "patch":
+            {
+              "tags": ["Tipos de Prestamo"],
+              "summary": "Deshabilitar tipo de prestamo",
+              "description": "Deshabilitar un tipo de prestamo existente",
+              "operationId": "1cd5030a3b042283a9c5469d3aa6d907",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "id del tipo de prestamo a deshabilitar",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "responses":
+                {
+                  "204":
+                    {
+                      "description": "Tipo de prestamo deshabilitado exitosamente",
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Tipo de prestamo no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "422":
+                    {
+                      "description": "Tipo de prestamo ya deshabilitado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/tipos-prestamos/{id}/habilitar":
+        {
+          "patch":
+            {
+              "tags": ["Tipos de Prestamo"],
+              "summary": "Habilitar tipo de prestamo",
+              "description": "Habilitar un tipo de prestamo que se encuentra deshabilitado",
+              "operationId": "58c6c9c20ded7d5ed0106e593e9904fb",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "id del tipo de prestamo a habilitar",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "responses":
+                {
+                  "204":
+                    {
+                      "description": "Tipo de prestamo habilitado exitosamente",
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Tipo de prestamo no encontrado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "422":
+                    {
+                      "description": "El tipo de prestamo ya se encuentra habilitado",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/carreras":
+        {
+          "get":
+            {
+              "tags": ["Carreras"],
+              "summary": "Lista de carreras",
+              "description": "Listado de todas las carreras registradas",
+              "operationId": "77eeb2622a1d9ad949c0430f39be34ae",
+              "parameters":
+                [
+                  {
+                    "name": "cod",
+                    "in": "query",
+                    "description": "Busqueda por codigo",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                  {
+                    "name": "nombre",
+                    "in": "query",
+                    "description": "Busqueda por nombre",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                  {
+                    "name": "order",
+                    "in": "query",
+                    "description": "Ordenamiento(ASC/DESC)",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Listado obtenido",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "type": "array",
+                                  "items":
+                                    {
+                                      "$ref": "#/components/schemas/CarreraResponse",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+          "post":
+            {
+              "tags": ["Carreras"],
+              "summary": "Crear carrera",
+              "description": "Crear una nueva carrera",
+              "operationId": "95fc063b204c368c1b5aca2ddd5116b9",
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "$ref": "#/components/schemas/CreateCarreraRequest",
+                            },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "201":
+                    {
+                      "description": "Carrera creada exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/CarreraResponse",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "409":
+                    {
+                      "description": "La carrera ya existe",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "422":
+                    {
+                      "description": "Error de validacion de negocio",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/carreras/{id}":
+        {
+          "get":
+            {
+              "tags": ["Carreras"],
+              "summary": "Obtener una carrera",
+              "description": "Mostrar la informacion de una carrera especifica",
+              "operationId": "c7ee36b874bd0a564f10ac556665a3fd",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "id de la carrera a buscar",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Carrera obtenida exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/CarreraResponse",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Carrera no encontrada",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+          "delete":
+            {
+              "tags": ["Carreras"],
+              "summary": "Eliminar carrera",
+              "description": "Eliminar una carrera existente",
+              "operationId": "031bd64f103a9495fe8daf7839b31ba1",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "id de la carrera a eliminar",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "responses":
+                {
+                  "204": { "description": "Carrera eliminada exitosamente" },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Carrera no encontrada",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+          "patch":
+            {
+              "tags": ["Carreras"],
+              "summary": "Actualizar carrera",
+              "description": "Actualizar la informacion de una carrera existente",
+              "operationId": "7753e9720dffb659e7161019cea26d77",
+              "parameters":
+                [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "description": "id de la carrera a actualizar",
+                    "required": true,
+                    "schema": { "type": "integer" },
+                  },
+                ],
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "$ref": "#/components/schemas/UpdateCarreraRequest",
+                            },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Carrera actualizada exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "$ref": "#/components/schemas/CarreraResponse",
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Datos de entrada invalidos",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "message": { "type": "string" },
+                                      "errors": { "type": "object" },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Carrera no encontrada",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "409":
+                    {
+                      "description": "La carrera ya existe",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "422":
+                    {
+                      "description": "Error de validacion de negocio",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    { "message": { "type": "string" } },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "500": { "description": "Error interno del servidor" },
+                },
+            },
+        },
+      "/lectores/mi-perfil":
+        {
+          "get":
+            {
+              "tags": ["Lectores"],
+              "summary": "Mi perfil",
+              "description": "Devuelve la información del perfil del lector autenticado",
+              "operationId": "52a8dffa72fb5f33580fb2b3fb5da9eb",
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Perfil obtenido exitosamente",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "properties":
+                                    {
+                                      "data":
+                                        {
+                                          "$ref": "#/components/schemas/LectorPerfilResponse",
+                                        },
+                                    },
+                                  "type": "object",
+                                },
+                            },
+                        },
+                    },
+                  "401": { "description": "No autenticado" },
+                  "404": { "description": "Lector no encontrado" },
+                  "500": { "description": "Error interno del servidor" },
+                },
+              "security": [{ "bearerAuth": [] }],
+            },
+        },
+    },
+  "components":
+    {
+      "schemas":
+        {
+          "ChangePasswordRequest":
+            {
+              "required": ["current_password", "new_password"],
+              "properties":
+                {
+                  "current_password":
+                    { "type": "string", "format": "password" },
+                  "new_password":
+                    {
+                      "description": "Mínimo 8 caracteres, una mayúscula, una minúscula y un número",
+                      "type": "string",
+                      "format": "password",
+                    },
+                },
+              "type": "object",
+            },
+          "UserLoginRequest":
+            {
+              "required": ["dni", "password"],
+              "properties":
+                {
+                  "dni":
+                    {
+                      "description": "DNI del usuario (7-8 dígitos)",
+                      "type": "string",
+                      "example": "12345678",
+                    },
+                  "password":
+                    {
+                      "type": "string",
+                      "format": "password",
+                      "example": "Password123",
+                    },
+                },
+              "type": "object",
+            },
+          "UserRegisterRequest":
+            {
+              "required":
+                [
+                  "dni",
+                  "password",
+                  "nombre",
+                  "apellido",
+                  "fecha_nacimiento",
+                  "telefono",
+                  "email",
+                ],
+              "properties":
+                {
+                  "dni":
+                    {
+                      "description": "DNI del usuario (7-8 dígitos)",
+                      "type": "string",
+                      "example": "12345678",
+                    },
+                  "password":
+                    {
+                      "description": "Mínimo 8 caracteres, una mayúscula, una minúscula y un número",
+                      "type": "string",
+                      "format": "password",
+                    },
+                  "nombre": { "type": "string", "example": "Juan" },
+                  "apellido": { "type": "string", "example": "Pérez" },
+                  "legajo":
+                    { "type": "string", "example": "L12345", "nullable": true },
+                  "genero":
+                    { "type": "string", "example": "M", "nullable": true },
+                  "fecha_nacimiento":
+                    {
+                      "type": "string",
+                      "format": "date",
+                      "example": "2000-01-31",
+                    },
+                  "telefono": { "type": "string", "example": "2615001234" },
+                  "email":
+                    {
+                      "type": "string",
+                      "format": "email",
+                      "example": "juan.perez@example.com",
+                    },
+                  "cresta_id": { "type": "string", "nullable": true },
+                },
+              "type": "object",
+            },
+          "UserLoginResponse":
+            {
+              "required": ["token"],
+              "properties":
+                {
+                  "token":
+                    {
+                      "description": "Token JWT de autenticación",
+                      "type": "string",
+                    },
+                },
+              "type": "object",
+            },
+          "UserRegisterResponse":
+            {
+              "required": ["userId", "lectorId", "fullName"],
+              "properties":
+                {
+                  "userId": { "type": "integer", "example": 1 },
+                  "lectorId": { "type": "integer", "example": 1 },
+                  "fullName": { "type": "string", "example": "Juan Pérez" },
+                },
+              "type": "object",
+            },
+          "CreateTipoDocumentoRequest":
+            {
+              "required": ["codigo", "descripcion"],
+              "properties":
+                {
+                  "codigo":
+                    {
+                      "description": "Codigo del documento(3 carac. max)",
+                      "type": "string",
+                      "example": "LIB",
+                    },
+                  "descripcion":
+                    {
+                      "description": "Descripcion",
+                      "type": "string",
+                      "example": "Libro",
+                    },
+                  "renovable":
+                    {
+                      "description": "Es renovable",
+                      "type": "boolean",
+                      "example": "true",
+                    },
+                  "detalle":
+                    {
+                      "description": "Detalle",
+                      "type": "string",
+                      "example": "Material bibliografico",
+                      "nullable": true,
+                    },
+                },
+              "type": "object",
+            },
+          "TemaRequest":
+            {
+              "required": ["titulo"],
+              "properties":
+                {
+                  "titulo":
+                    {
+                      "description": "Nombre del tema",
+                      "type": "string",
+                      "example": "Abejas",
+                    },
+                },
+              "type": "object",
+            },
+          "UpdateTipoDocumentoRequest":
+            {
+              "properties":
+                {
+                  "codigo":
+                    {
+                      "description": "Codigo del documento(3 carac. max)",
+                      "type": "string",
+                      "example": "ABC",
+                      "nullable": true,
+                    },
+                  "descripcion":
+                    {
+                      "description": "Descripcion",
+                      "type": "string",
+                      "example": "Abecedario",
+                      "nullable": true,
+                    },
+                  "renovable":
+                    {
+                      "description": "Es renovable",
+                      "type": "boolean",
+                      "example": "false",
+                      "nullable": true,
+                    },
+                  "detalle":
+                    {
+                      "description": "Detalle",
+                      "type": "string",
+                      "example": "Abecedario completo",
+                      "nullable": true,
+                    },
+                },
+              "type": "object",
+            },
+          "ArticuloResponse":
+            {
+              "properties":
+                {
+                  "id": { "type": "integer", "example": 1 },
+                  "titulo": { "type": "string", "example": "Algorithms" },
+                  "anioPublicacion":
+                    {
+                      "description": "Año de publicación",
+                      "type": "integer",
+                      "example": 2011,
+                    },
+                  "tipoDocumentoId":
+                    {
+                      "description": "ID del tipo de documento",
+                      "type": "integer",
+                      "example": 1,
+                    },
+                  "idioma":
+                    {
+                      "description": "Código de idioma ISO 639-1",
+                      "type": "string",
+                      "example": "es",
+                    },
+                  "descripcion":
+                    {
+                      "type": "string",
+                      "example": "Introducción completa a algoritmos",
+                      "nullable": true,
+                    },
+                  "tipoDocumento": { "type": "object", "nullable": true },
+                  "temas": { "type": "array", "items": { "type": "object" } },
+                },
+              "type": "object",
+            },
+          "TemaResponse":
+            {
+              "required": ["id", "titulo"],
+              "properties":
+                {
+                  "id": { "type": "integer", "example": 1 },
+                  "titulo": { "type": "string", "example": "Enfermedades" },
+                },
+              "type": "object",
+            },
+          "TipoDocumentoResponse":
+            {
+              "required":
+                ["id", "codigo", "descripcion", "renovable", "detalle"],
+              "properties":
+                {
+                  "id": { "type": "integer", "example": 1 },
+                  "codigo": { "type": "string", "example": "EA" },
+                  "descripcion":
+                    { "type": "string", "example": "Equipos Audiovisuales" },
+                  "renovable": { "type": "boolean", "example": true },
+                  "detalle":
+                    {
+                      "type": "string",
+                      "example": "Equipos Audiovisuales",
+                      "nullable": true,
+                    },
+                },
+              "type": "object",
+            },
+          "EjemplarRequest":
+            {
+              "required": ["articulo_id", "codigo_barras"],
+              "properties":
+                {
+                  "articuloId":
+                    {
+                      "description": "ID del artículo al que pertenece el ejemplar",
+                      "type": "integer",
+                      "example": 1,
+                    },
+                  "codigoBarras":
+                    {
+                      "description": "Código de barras del ejemplar (solo dígitos, máximo 13)",
+                      "type": "string",
+                      "example": "9780321573513",
+                    },
+                  "habilitado":
+                    {
+                      "description": "Indica si el ejemplar está habilitado",
+                      "type": "boolean",
+                      "example": true,
+                    },
+                  "signaturaTopografica":
+                    {
+                      "description": "Signatura topográfica del ejemplar",
+                      "type": "string",
+                      "example": "001 SED",
+                      "nullable": true,
+                    },
+                },
+              "type": "object",
+            },
+          "EjemplarResponse":
+            {
+              "properties":
+                {
+                  "id": { "type": "integer", "example": 1 },
+                  "codigoBarras":
+                    {
+                      "description": "Código de barras",
+                      "type": "string",
+                      "example": "9780321573513",
+                    },
+                  "habilitado":
+                    {
+                      "description": "Estado del ejemplar",
+                      "type": "boolean",
+                      "example": true,
+                    },
+                  "articuloId":
+                    {
+                      "description": "ID del artículo asociado",
+                      "type": "integer",
+                      "example": 1,
+                    },
+                  "signaturaTopografica":
+                    {
+                      "description": "Signatura topográfica",
+                      "type": "string",
+                      "example": "001 SED",
+                      "nullable": true,
+                    },
+                },
+              "type": "object",
+            },
+          "CreateLibroRequest": { "required": ["articulo", "libro"] },
+          "PatchLibroRequest":
+            {
+              "properties":
+                {
+                  "isbn":
+                    {
+                      "type": "string",
+                      "example": "9780321573513",
+                      "nullable": true,
+                    },
+                  "issn": { "type": "string", "nullable": true },
+                  "paginas":
+                    { "type": "integer", "example": 955, "nullable": true },
+                  "tituloInformativo": { "type": "string", "nullable": true },
+                  "cdu": { "type": "integer", "nullable": true },
+                  "editorial":
+                    {
+                      "type": "string",
+                      "example": "Addison-Wesley",
+                      "nullable": true,
+                    },
+                  "lugarDePublicacion": { "type": "string", "nullable": true },
+                  "edicion": { "type": "string", "nullable": true },
+                  "dimensiones": { "type": "string", "nullable": true },
+                  "ilustraciones": { "type": "string", "nullable": true },
+                  "serie": { "type": "string", "nullable": true },
+                  "numeroSerie": { "type": "string", "nullable": true },
+                  "notas": { "type": "string", "nullable": true },
+                  "paisPublicacion": { "type": "string", "nullable": true },
+                  "personas":
+                    {
+                      "description": "array{nombre: string, apellido: string, rol: string}>|null",
+                      "type": "array",
+                      "items":
+                        {
+                          "properties":
+                            {
+                              "nombre": { "type": "string" },
+                              "apellido": { "type": "string" },
+                              "rol": { "type": "string", "example": "autor" },
+                              "orden": { "type": "integer", "example": 0 },
+                            },
+                          "type": "object",
+                        },
+                      "nullable": true,
+                    },
+                },
+              "type": "object",
+            },
+          "LibroResponse":
+            {
+              "properties":
+                {
+                  "id": { "type": "integer", "example": 1 },
+                  "isbn":
+                    {
+                      "type": "string",
+                      "example": "9780321573513",
+                      "nullable": true,
+                    },
+                  "issn":
+                    { "type": "string", "example": null, "nullable": true },
+                  "paginas":
+                    { "type": "integer", "example": 955, "nullable": true },
+                  "tituloInformativo":
+                    {
+                      "description": "Título informativo complementario",
+                      "type": "string",
+                      "nullable": true,
+                    },
+                  "cdu":
+                    {
+                      "description": "Clasificación Decimal Universal",
+                      "type": "integer",
+                      "example": 519,
+                      "nullable": true,
+                    },
+                  "editorial":
+                    {
+                      "type": "string",
+                      "example": "Addison-Wesley",
+                      "nullable": true,
+                    },
+                  "lugarDePublicacion":
+                    { "type": "string", "example": "Boston", "nullable": true },
+                  "edicion":
+                    {
+                      "type": "string",
+                      "example": "4ta edición",
+                      "nullable": true,
+                    },
+                  "dimensiones": { "type": "string", "nullable": true },
+                  "ilustraciones": { "type": "string", "nullable": true },
+                  "serie": { "type": "string", "nullable": true },
+                  "numeroSerie": { "type": "string", "nullable": true },
+                  "notas": { "type": "string", "nullable": true },
+                  "paisPublicacion":
+                    {
+                      "type": "string",
+                      "example": "Estados Unidos",
+                      "nullable": true,
+                    },
+                  "personas":
+                    {
+                      "description": "array{nombre: string, apellido: string, rol: string, orden: int}>",
+                      "type": "array",
+                      "items":
+                        {
+                          "properties":
+                            {
+                              "nombre": { "type": "string" },
+                              "apellido": { "type": "string" },
+                              "rol": { "type": "string" },
+                              "orden": { "type": "integer" },
+                            },
+                          "type": "object",
+                        },
+                    },
+                  "titulo":
+                    {
+                      "type": "string",
+                      "example": "Algorithms",
+                      "nullable": true,
+                    },
+                  "anioPublicacion":
+                    { "type": "integer", "example": 2011, "nullable": true },
+                  "tipoDocumentoId":
+                    { "type": "integer", "example": 1, "nullable": true },
+                  "idioma":
+                    { "type": "string", "example": "en", "nullable": true },
+                  "descripcion": { "type": "string", "nullable": true },
+                  "temas":
+                    {
+                      "description": "array{id: int, titulo: string}>",
+                      "type": "array",
+                      "items": { "type": "object" },
+                    },
+                },
+              "type": "object",
+            },
+          "CreateReservaRequest":
+            {
+              "required": ["lectorId", "articuloId"],
+              "properties":
+                {
+                  "lectorId":
+                    {
+                      "description": "ID del lector que realiza la reserva",
+                      "type": "integer",
+                      "example": 1,
+                    },
+                  "articuloId":
+                    {
+                      "description": "ID del articulo a reservar",
+                      "type": "integer",
+                      "example": 5,
+                    },
+                },
+              "type": "object",
+            },
+          "CreateTipoPrestamoRequest":
+            {
+              "required":
+                [
+                  "codigo",
+                  "descripcion",
+                  "max_cantidad_prestamos",
+                  "duracion",
+                  "renovaciones",
+                  "dias_renovacion",
+                  "cant_dias_renovar",
+                ],
+              "properties":
+                {
+                  "codigo":
+                    {
+                      "description": "Codigo del tipo de prestamo",
+                      "type": "string",
+                      "example": "P1",
+                    },
+                  "descripcion":
+                    {
+                      "description": "Descripcion del tipo de prestamo",
+                      "type": "string",
+                      "example": "Prestamo 15 dias",
+                    },
+                  "maxCantidadPrestamos":
+                    {
+                      "description": "Cantidad de prestamos maximos",
+                      "type": "integer",
+                      "example": 30,
+                    },
+                  "duracionPrestamo":
+                    {
+                      "description": "Duracion del prestamo",
+                      "type": "integer",
+                      "example": 15,
+                    },
+                  "renovaciones":
+                    {
+                      "description": "Cantidad de renovaciones que se pueden realizar sobre ese prestamo",
+                      "type": "integer",
+                      "example": 4,
+                    },
+                  "diasRenovacion":
+                    {
+                      "description": "Dias que dura la renovacion",
+                      "type": "integer",
+                      "example": 15,
+                    },
+                  "cantDiasRenovar":
+                    {
+                      "description": "Cantidad de dias para renovar un prestamo",
+                      "type": "integer",
+                      "example": 0,
+                    },
+                },
+              "type": "object",
+            },
+          "UpdateTipoPrestamoRequest":
+            {
+              "properties":
+                {
+                  "codigo":
+                    {
+                      "description": "Codigo del tipo de prestamo",
+                      "type": "string",
+                      "example": "P7",
+                      "nullable": true,
+                    },
+                  "descripcion":
+                    {
+                      "description": "Descripcion del tipo de prestamo",
+                      "type": "string",
+                      "example": "Prestamo 7 dias",
+                      "nullable": true,
+                    },
+                  "maxCantidadPrestamos":
+                    {
+                      "description": "Cantidad de prestamos maximos",
+                      "type": "integer",
+                      "example": 30,
+                      "nullable": true,
+                    },
+                  "duracionPrestamo":
+                    {
+                      "description": "Duracion del prestamo",
+                      "type": "integer",
+                      "example": 7,
+                      "nullable": true,
+                    },
+                  "renovaciones":
+                    {
+                      "description": "Cantidad de renovaciones que se pueden realizar sobre ese prestamo",
+                      "type": "integer",
+                      "example": 4,
+                      "nullable": true,
+                    },
+                  "diasRenovacion":
+                    {
+                      "description": "Dias que dura la renovacion",
+                      "type": "integer",
+                      "example": 7,
+                      "nullable": true,
+                    },
+                  "cantDiasRenovar":
+                    {
+                      "description": "Cantidad de dias para renovar un prestamo",
+                      "type": "integer",
+                      "example": 0,
+                      "nullable": true,
+                    },
+                },
+              "type": "object",
+            },
+          "ReservaResponse":
+            {
+              "required": ["id", "lector_id", "articulo_id", "fecha_inicio"],
+              "properties":
+                {
+                  "id": { "type": "integer", "example": 1 },
+                  "lectorId": { "type": "integer", "example": 3 },
+                  "articuloId": { "type": "integer", "example": 5 },
+                  "fechaInicio":
+                    {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-04-06 10:00:00",
+                    },
+                  "fechaVencimiento":
+                    {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-04-09 10:00:00",
+                      "nullable": true,
+                    },
+                },
+              "type": "object",
+            },
+          "TipoPrestamoResponse":
+            {
+              "required":
+                [
+                  "id",
+                  "codigo",
+                  "descripcion",
+                  "max_cant_prestamos",
+                  "duracion",
+                  "renovaciones",
+                  "dias_renovacion",
+                  "cant_dias_renovar",
+                  "habilitado",
+                ],
+              "properties":
+                {
+                  "id": { "type": "integer", "example": 1 },
+                  "codigo": { "type": "string", "example": "PD" },
+                  "descripcion":
+                    { "type": "string", "example": "Prestamo 1 dia" },
+                  "max_cant_prestamos": { "type": "integer", "example": 30 },
+                  "duracion": { "type": "integer", "example": 1 },
+                  "renovaciones": { "type": "integer", "example": 0 },
+                  "dias_renovacion": { "type": "integer", "example": 3 },
+                  "cant_dias_renovar": { "type": "integer", "example": 1 },
+                  "habilitado": { "type": "boolean", "example": true },
+                },
+              "type": "object",
+            },
+          "CreateCarreraRequest":
+            {
+              "required": ["cod", "nombre"],
+              "properties":
+                {
+                  "cod":
+                    {
+                      "description": "Codigo de la carrera",
+                      "type": "string",
+                      "example": "AN",
+                    },
+                  "nombre":
+                    {
+                      "description": "Nombre de la carrera",
+                      "type": "string",
+                      "example": "Analista Programador",
+                    },
+                },
+              "type": "object",
+            },
+          "UpdateCarreraRequest":
+            {
+              "properties":
+                {
+                  "cod":
+                    {
+                      "description": "Codigo de la carrera",
+                      "type": "string",
+                      "example": "AG",
+                      "nullable": true,
+                    },
+                  "nombre":
+                    {
+                      "description": "Nombre de la carrera",
+                      "type": "string",
+                      "example": "Agronomia",
+                      "nullable": true,
+                    },
+                },
+              "type": "object",
+            },
+          "CarreraResponse":
+            {
+              "required": ["id", "codigo", "nombre"],
+              "properties":
+                {
+                  "id": { "type": "integer", "example": 1 },
+                  "cod": { "type": "string", "example": "CO" },
+                  "nombre": { "type": "string", "example": "Contador Público" },
+                },
+              "type": "object",
+            },
+          "LectorPerfilResponse":
+            {
+              "required":
+                ["nombre", "apellido", "tarjeta", "dni", "telefono", "email"],
+              "properties":
+                {
+                  "nombre": { "type": "string", "example": "Juan" },
+                  "apellido": { "type": "string", "example": "Pérez" },
+                  "tarjeta": { "type": "string", "example": "123456" },
+                  "dni": { "type": "string", "example": "12345678" },
+                  "legajo":
+                    { "type": "string", "example": "K1234", "nullable": true },
+                  "telefono": { "type": "string", "example": "2616123456" },
+                  "email": { "type": "string", "example": "juan@example.com" },
+                },
+              "type": "object",
+            },
+        },
+      "securitySchemes":
+        {
+          "bearerAuth":
+            {
+              "type": "http",
+              "description": "Token JWT obtenido en el endpoint de login",
+              "bearerFormat": "JWT",
+              "scheme": "bearer",
+            },
+        },
+    },
+  "tags":
+    [
+      { "name": "Auth", "description": "Auth" },
+      { "name": "Articulos", "description": "Articulos" },
+      { "name": "Temas", "description": "Temas" },
+      { "name": "Tipos de Documento", "description": "Tipos de Documento" },
+      { "name": "Ejemplares", "description": "Ejemplares" },
+      { "name": "Libros", "description": "Libros" },
+      { "name": "Reservas", "description": "Reservas" },
+      { "name": "Tipos de Prestamo", "description": "Tipos de Prestamo" },
+      { "name": "Carreras", "description": "Carreras" },
+      { "name": "Lectores", "description": "Lectores" },
+    ],
+}

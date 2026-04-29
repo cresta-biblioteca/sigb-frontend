@@ -1,6 +1,9 @@
 /**
  * Modal Component
  * Reusable modal dialog utility
+ *
+ * Exportado como módulo ES. Importar en el page script que lo necesite:
+ *   import { Modal } from '../components/modal.js';
  */
 const Modal = (function () {
   'use strict';
@@ -76,3 +79,5 @@ const Modal = (function () {
 
   return { create, close };
 })();
+
+export { Modal };

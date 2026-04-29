@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Gestión — Biblioteca CRESTA</title>
+  <title>Historial — Biblioteca CRESTA</title>
   <meta name="robots" content="noindex">
-  <!-- paths relativos a /templates/ → ../css/ -->
   <link rel="stylesheet" href="../css/reset.css">
   <link rel="stylesheet" href="../css/variables.css">
   <link rel="stylesheet" href="../css/layout.css">
@@ -15,7 +14,6 @@
 </head>
 <body>
 
-  <!-- ========== NAVBAR ========== -->
   <header class="navbar" id="navbar">
     <div class="navbar__container">
       <a href="../index.html" class="navbar__brand">
@@ -40,16 +38,13 @@
             <a href="mi-perfil.html" class="navbar__link">Mi Perfil</a>
           </li>
         </ul>
-          <button class="navbar__link" id="logoutBtn" type="button">Cerrar sesión</button>
+        <button class="navbar__link" id="logoutBtn" type="button">Cerrar sesión</button>
       </nav>
     </div>
   </header>
 
-  <!-- ========== MI CUENTA ========== -->
-  <main class="main dashboard">
+  <main class="main dashboard user-history">
     <div class="container">
-
-      <!-- ---- Encabezado de la página ---- -->
       <section class="dashboard__header">
         <div>
           <h1 class="dashboard__title">
@@ -57,104 +52,23 @@
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
-            Panel de Gestión
+            Historial
           </h1>
-          <p class="dashboard__subtitle">Consultá tus préstamos y reservas de la biblioteca.</p>
-        </div>
-      </section>
-
-      <!-- ---- Barra de estadísticas ---- -->
-      <!--
-        Los valores son llenados por JS cuando los endpoints estén disponibles.
-        Por ahora muestran "0" como estado inicial para conteos vacíos.
-      -->
-      <div class="stats-bar" role="list" aria-label="Resumen de cuenta">
-        <div class="stat-card stat-card--loans" role="listitem">
-          <p class="stat-card__label">Préstamos activos</p>
-          <p class="stat-card__value" id="statActiveLoans">0</p>
-        </div>
-        <div class="stat-card stat-card--reservations" role="listitem">
-          <p class="stat-card__label">Reservas activas</p>
-          <p class="stat-card__value" id="statActiveReservations">0</p>
-        </div>
-      </div>
-
-      <!-- ---- Préstamos vigentes ---- -->
-      <section class="dashboard__section" aria-labelledby="activeLoansTitle">
-        <div class="section-header">
-          <h2 class="section-header__title" id="activeLoansTitle">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-            </svg>
-            Préstamos vigentes
-          </h2>
+          <p class="dashboard__subtitle">Consultá tu historial de reservas y préstamos desde un mismo lugar.</p>
         </div>
 
-        <!--
-          Contenedor #activeLoans.
-          Render dinámico por JS (loading / empty / error / data).
-        -->
-        <div id="activeLoans"></div>
-      </section>
-
-      <!-- ---- Reservas activas ---- -->
-      <section class="dashboard__section" aria-labelledby="activeReservationsTitle">
-        <div class="section-header">
-          <h2 class="section-header__title" id="activeReservationsTitle">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            Reservas activas
-          </h2>
-        </div>
-
-        <!--
-          Contenedor #activeReservations.
-          Render dinámico por JS.
-        -->
-        <div id="activeReservations"></div>
-      </section>
-
-      <!-- ---- Historial (grilla de 2 columnas) ---- -->
-      <div class="section-header section-header--history">
-        <h2 class="section-header__title" id="historySectionTitle">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
+        <a href="dashboard.html" class="btn btn--outline btn--lg user-history__back">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6"/>
           </svg>
-          Historial
-        </h2>
-      </div>
+          Regresar
+        </a>
+      </section>
 
       <div class="history-grid">
-
-        <!-- Historial de préstamos -->
-        <section class="dashboard__section" aria-labelledby="loanHistoryTitle">
+        <section class="dashboard__section" aria-labelledby="reservationHistoryPageTitle">
           <div class="section-header">
-            <h2 class="section-header__title" id="loanHistoryTitle">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="1 4 1 10 7 10"/>
-                <path d="M3.51 15a9 9 0 1 0 .49-3.61"/>
-              </svg>
-              Historial de préstamos
-            </h2>
-          </div>
-
-          <!--
-            Contenedor #loanHistory.
-            Render dinámico por JS (loading / empty / error / data).
-          -->
-          <div id="loanHistory"></div>
-        </section>
-
-        <!-- Historial de reservas -->
-        <section class="dashboard__section" aria-labelledby="reservationHistoryTitle">
-          <div class="section-header">
-            <h2 class="section-header__title" id="reservationHistoryTitle">
+            <h2 class="section-header__title" id="reservationHistoryPageTitle">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                 <polyline points="22 4 12 14.01 9 11.01"/>
@@ -163,23 +77,46 @@
             </h2>
           </div>
 
-          <!--
-            Contenedor #reservationHistory.
-            Render dinámico por JS.
-          -->
-          <div id="reservationHistory"></div>
+          <div id="reservationHistoryPage"></div>
+
+          <div class="history-pagination" id="reservationHistoryPagination" aria-label="Paginación del historial de reservas">
+            <button class="btn btn--outline btn--xs history-pagination__button" type="button" id="reservationHistoryPrev" disabled>
+              Anterior
+            </button>
+            <p class="history-pagination__info" id="reservationHistoryPageInfo">Página 1 de 1</p>
+            <button class="btn btn--outline btn--xs history-pagination__button" type="button" id="reservationHistoryNext" disabled>
+              Siguiente
+            </button>
+          </div>
         </section>
 
-      </div><!-- /history-grid -->
+        <section class="dashboard__section" aria-labelledby="loanHistoryPageTitle">
+          <div class="section-header">
+            <h2 class="section-header__title" id="loanHistoryPageTitle">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="1 4 1 10 7 10"/>
+                <path d="M3.51 15a9 9 0 1 0 .49-3.61"/>
+              </svg>
+              Historial de préstamos
+            </h2>
+          </div>
 
-      <div class="history-grid__footer">
-        <a href="user-history.html" class="btn btn--outline btn--lg user-history__back">Ver historial completo</a>
+          <div id="loanHistoryPage"></div>
+
+          <div class="history-pagination" id="loanHistoryPagination" aria-label="Paginación del historial de préstamos">
+            <button class="btn btn--outline btn--xs history-pagination__button" type="button" id="loanHistoryPrev" disabled>
+              Anterior
+            </button>
+            <p class="history-pagination__info" id="loanHistoryPageInfo">Página 1 de 1</p>
+            <button class="btn btn--outline btn--xs history-pagination__button" type="button" id="loanHistoryNext" disabled>
+              Siguiente
+            </button>
+          </div>
+        </section>
       </div>
-
     </div>
   </main>
 
-  <!-- ========== FOOTER ========== -->
   <footer class="footer" id="contacto">
     <div class="footer__container">
       <div class="footer__grid">
@@ -224,7 +161,7 @@
 
   <script type="module" src="../js/components/navbar.js"></script>
   <script type="module" src="../js/components/footer.js"></script>
-  <script type="module" src="../js/pages/dashboard.js"></script>
+  <script type="module" src="../js/pages/user-history.js"></script>
 
 </body>
 </html>
