@@ -103,7 +103,8 @@ padding: var(--spacing-lg) 0 var(--spacing-3xl);
 
 /* ========== META ROWS ========== */
 .book-detail__meta-table {
-  border-top: 1px solid var(--color-gray-200);
+  display: grid;
+  gap: var(--spacing-sm);
   margin-bottom: var(--spacing-md);
 }
 
@@ -124,6 +125,7 @@ padding: var(--spacing-lg) 0 var(--spacing-3xl);
 .book-detail__meta-value {
   font-size: var(--font-size-sm);
   color: var(--color-gray-800);
+  line-height: var(--line-height-relaxed);
 }
 
 /* ========== SECTION TITLE ========== */
@@ -134,6 +136,15 @@ padding: var(--spacing-lg) 0 var(--spacing-3xl);
   margin: var(--spacing-md) 0 var(--spacing-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+.book-detail__meta-table .book-detail__section-title:first-child {
+  margin-top: 0;
+}
+
+.book-detail__meta-table .book-detail__section-title:not(:first-child) {
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-gray-100);
 }
 
 /* ========== DESCRIPTION ========== */
@@ -149,13 +160,14 @@ padding: var(--spacing-lg) 0 var(--spacing-3xl);
   flex-wrap: wrap;
   gap: var(--spacing-xs);
   margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-xs);
 }
 
 .book-detail__chip {
-  background: var(--color-gray-100);
-  border: 1px solid var(--color-gray-300);
+  background: linear-gradient(180deg, var(--color-gray-100), #ffffff);
+  border: 1px solid var(--color-gray-200);
   border-radius: var(--radius-full);
-  padding: 2px var(--spacing-sm);
+  padding: 4px var(--spacing-sm);
   font-size: var(--font-size-xs);
   color: var(--color-gray-700);
 }
@@ -171,18 +183,6 @@ padding: var(--spacing-lg) 0 var(--spacing-3xl);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-gray-200);
   padding: var(--spacing-md);
-}
-
-.book-detail__cover-wrapper {
-  text-align: center;
-  margin-bottom: var(--spacing-md);
-}
-
-.book-detail__cover {
-  width: 100%;
-  max-width: 150px;
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-md);
 }
 
 .book-detail__sidebar-actions {
@@ -425,7 +425,12 @@ padding: var(--spacing-lg) 0 var(--spacing-3xl);
 
 @media (max-width: 768px) {
   .book-detail__meta-row {
-    grid-template-columns: 140px 1fr;
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .book-detail__meta-label {
+    padding-right: 0;
   }
 
   .book-detail__edit-grid {

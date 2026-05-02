@@ -376,25 +376,24 @@ class CatalogRenderer {
   createBookCard(libro) {
     const article = document.createElement('article');
     article.className = 'catalog-book-card';
-    article.setAttribute('data-libro-id', libro.id || '');
+    const libroId = this.getBookId(libro);
+    const title = this.getBookTitle(libro);
+    const authorInfo = this.getBookAuthors(libro);
+    const description = this.getBookDescription(libro);
+    const availability = this.getAvailabilityInfo(this.getBookAvailability(libro));
+    const year = this.getBookYear(libro);
 
-    const availability = this.getAvailabilityInfo(libro.disponibilidad);
-
-    // Construir lista de autores
-    let authorInfo = '';
-    if (libro.autor) {
-      authorInfo = libro.autor;
-    } else if (Array.isArray(libro.autores) && libro.autores.length > 0) {
-      authorInfo = libro.autores.join(', ');
-    }
+    article.setAttribute('data-libro-id', libroId || '');
 
     // Construir información adicional
     const infoItems = [];
-    if (libro.cdu) {
-      infoItems.push(`<span class="catalog-book-info-item"><strong>CDU:</strong> ${this.escapeHtml(libro.cdu)}</span>`);
+    const cdu = this.getBookField(libro, 'cdu');
+    const tituloInformativo = this.getBookField(libro, 'titulo_informativo', 'tituloInformativo');
+    if (cdu) {
+      infoItems.push(`<span class="catalog-book-info-item"><strong>CDU:</strong> ${this.escapeHtml(cdu)}</span>`);
     }
-    if (libro.titulo_informativo) {
-      infoItems.push(`<span class="catalog-book-info-item"><strong>Info:</strong> ${this.escapeHtml(libro.titulo_informativo)}</span>`);
+    if (tituloInformativo) {
+      infoItems.push(`<span class="catalog-book-info-item"><strong>Info:</strong> ${this.escapeHtml(tituloInformativo)}</span>`);
     }
     if (Array.isArray(libro.colaboradores) && libro.colaboradores.length > 0) {
       infoItems.push(`<span class="catalog-book-info-item"><strong>Colaboradores:</strong> ${this.escapeHtml(libro.colaboradores.join(', '))}</span>`);
@@ -407,36 +406,30 @@ class CatalogRenderer {
     const additionalInfo = infoItems.length > 0 ? `<div class="catalog-book-additional-info">${infoItems.join('')}</div>` : '';
 
     article.innerHTML = `
-      <div class="catalog-book-card__image-wrapper">
-        <img src="${this.escapeHtml(libro.portada || '../assets/book-cover-default.jpg')}" 
-             alt="${this.escapeHtml(libro.titulo)}" 
-             class="catalog-book-card__image"
-             onerror="this.src='../assets/book-cover-default.jpg'">
+      <div class="catalog-book-card__content">
         <span class="catalog-book-card__availability--${availability.class}">
           ${availability.text}
         </span>
-      </div>
-      <div class="catalog-book-card__content">
-        <h3 class="catalog-book-card__title">${this.escapeHtml(libro.titulo)}</h3>
+        <h3 class="catalog-book-card__title">${this.escapeHtml(title)}</h3>
         ${authorInfo ? `<p class="catalog-book-card__author">${this.escapeHtml(authorInfo)}</p>` : ''}
-        ${libro.description ? `<p class="catalog-book-card__description">${this.escapeHtml(libro.description)}</p>` : ''}
+        ${description ? `<p class="catalog-book-card__description">${this.escapeHtml(description)}</p>` : ''}
         
         ${additionalInfo}
 
         <div class="catalog-book-card__meta">
           <div class="catalog-book-card__rating">
-            ${libro.rating ? `
-              <span class="catalog-book-card__stars">${this.renderStars(libro.rating)}</span>
-              <span class="catalog-book-card__rating-value">(${libro.rating.toFixed(1)})</span>
+            ${this.getBookRating(libro) ? `
+              <span class="catalog-book-card__stars">${this.renderStars(this.getBookRating(libro))}</span>
+              <span class="catalog-book-card__rating-value">(${this.getBookRating(libro).toFixed(1)})</span>
             ` : '<span class="catalog-book-card__rating-value">Sin calificación</span>'}
           </div>
-          <span class="catalog-book-card__year">${libro.año || 'S/A'}</span>
+          <span class="catalog-book-card__year">${year || 'S/A'}</span>
         </div>
         <div class="catalog-book-card__actions">
-          <a href="book-detail.html?id=${libro.id || ''}" class="btn btn--primary">Ver Detalle</a>
+          <a href="book-detail.html?id=${encodeURIComponent(libroId || '')}" class="btn btn--primary catalog-book-detail-link">Ver Detalle</a>
           <button class="btn btn--outline catalog-favorite-btn" 
                   aria-label="Agregar a favoritos"
-                  data-libro-id="${libro.id || ''}"
+                  data-libro-id="${libroId || ''}"
                   title="Agregar a favoritos">
             <i class="lucide" data-lucide="heart"></i>
           </button>
@@ -447,10 +440,107 @@ class CatalogRenderer {
     // Aplicar estado de favorito si está guardado
     const favoriteBtn = article.querySelector('.catalog-favorite-btn');
     if (favoriteBtn) {
-      this.updateFavoriteButtonState(libro.id, favoriteBtn);
+      this.updateFavoriteButtonState(libroId, favoriteBtn);
+    }
+
+    const detailLink = article.querySelector('.catalog-book-detail-link');
+    if (detailLink) {
+      detailLink.addEventListener('click', () => {
+        this.saveSelectedBookForDetail(libro);
+      });
     }
 
     return article;
+  }
+
+  getBookField(libro, ...keys) {
+    const sources = [libro, libro?.articulo, libro?.libro, libro?.metadata];
+
+    for (const source of sources) {
+      if (!source) continue;
+      for (const key of keys) {
+        const value = source[key];
+        if (value !== undefined && value !== null && value !== '') {
+          return value;
+        }
+      }
+    }
+
+    return '';
+  }
+
+  getBookId(libro) {
+    return this.getBookField(libro, 'id', 'libro_id', 'libroId', 'articleId', 'article_id', 'articulo_id', 'articuloId');
+  }
+
+  saveSelectedBookForDetail(libro) {
+    try {
+      sessionStorage.setItem('selectedBookForDetail', JSON.stringify(libro));
+    } catch (error) {
+      console.warn('No se pudo guardar el libro seleccionado para el detalle:', error);
+    }
+  }
+
+  getBookTitle(libro) {
+    return this.getBookField(libro, 'titulo', 'title');
+  }
+
+  getBookAuthors(libro) {
+    const directAuthor = this.getBookField(libro, 'autor', 'author', 'autorInformativo');
+    if (directAuthor) return directAuthor;
+
+    const authors = this.getBookField(libro, 'autores', 'authors');
+    if (Array.isArray(authors) && authors.length > 0) {
+      return authors.map(author => this.normalizePersonText(author)).filter(Boolean).join(', ');
+    }
+
+    const personas = this.getBookField(libro, 'personas');
+    if (Array.isArray(personas) && personas.length > 0) {
+      return personas
+        .filter(person => this.isAuthorPerson(person))
+        .map(person => this.normalizePersonText(person))
+        .filter(Boolean)
+        .join(', ');
+    }
+
+    return '';
+  }
+
+  getBookDescription(libro) {
+    return this.getBookField(libro, 'description', 'descripcion', 'resumen');
+  }
+
+  getBookYear(libro) {
+    return this.getBookField(libro, 'año', 'anio', 'anio_publicacion', 'anioPublicacion', 'publicationYear', 'year');
+  }
+
+  getBookAvailability(libro) {
+    return this.getBookField(libro, 'disponibilidad', 'estado') || 'available';
+  }
+
+  getBookRating(libro) {
+    const rating = this.getBookField(libro, 'rating', 'calificacion');
+    const numericRating = Number(rating);
+    return Number.isFinite(numericRating) ? numericRating : null;
+  }
+
+  normalizePersonText(person) {
+    if (typeof person === 'string') return person.trim();
+    if (!person || typeof person !== 'object') return '';
+
+    const nombreCompleto = person.nombre_completo || person.nombreCompleto;
+    if (nombreCompleto) return String(nombreCompleto).trim();
+
+    const nombre = String(person.nombre || person.firstName || '').trim();
+    const apellido = String(person.apellido || person.lastName || '').trim();
+
+    if (nombre && apellido) return `${apellido}, ${nombre}`;
+    return apellido || nombre || '';
+  }
+
+  isAuthorPerson(person) {
+    const role = String(person?.rol || person?.role || person?.tipo || '').toLowerCase();
+    return role.includes('autor') || role.includes('coautor');
   }
 
   /**
@@ -533,7 +623,7 @@ class CatalogRenderer {
   updateResultsCount(total, startIndex, endIndex) {
     if (!this.resultsCount) return;
 
-    const from = total === 0 ? 0 : startIndex + 1;
+    const from = total === 0 ? 0 : startIndex;
     const to = Math.min(endIndex, total);
 
     if (total === 0) {

@@ -11,6 +11,80 @@ class LibroService {
     this.librosAbortController = null;
   }
 
+  get apiBaseUrl() {
+    return 'http://localhost:8080/api/v1';
+  }
+
+  /**
+   * Extrae la lista de libros y la paginacion desde la respuesta del backend.
+   * @param {Object|Array} data
+   * @returns {{libros: Array, total: number, pagination: Object|null}}
+   */
+  normalizeListResponse(data) {
+    if (Array.isArray(data)) {
+      return { libros: data, total: data.length, pagination: null };
+    }
+
+    const libros = Array.isArray(data?.data)
+      ? data.data
+      : Array.isArray(data?.libros)
+        ? data.libros
+        : [];
+    const pagination = data?.pagination || null;
+    const total = typeof pagination?.total === 'number'
+      ? pagination.total
+      : typeof data?.total === 'number'
+        ? data.total
+        : libros.length;
+
+    return { libros, total, pagination };
+  }
+
+  /**
+   * Carga todo el catálogo en una sola request.
+   * @returns {Promise<{libros: Array, total: number, pagination: Object|null}|{cancelled: true}>}
+   */
+  async loadAllLibros() {
+    const allLibros = [];
+    let currentPage = 1;
+    let lastPage = 1;
+    let pagination = null;
+
+    while (currentPage <= lastPage) {
+      const params = new URLSearchParams();
+      params.set('page', String(currentPage));
+      params.set('per_page', '100');
+
+      const result = await this.loadLibros(params);
+      if (result.cancelled) {
+        return { cancelled: true };
+      }
+
+      allLibros.push(...(Array.isArray(result.libros) ? result.libros : []));
+      pagination = result.pagination || pagination;
+      lastPage = typeof pagination?.last_page === 'number'
+        ? pagination.last_page
+        : currentPage;
+
+      if (!result.libros || result.libros.length === 0) {
+        break;
+      }
+
+      currentPage++;
+    }
+
+    return {
+      libros: allLibros,
+      total: typeof pagination?.total === 'number' ? pagination.total : allLibros.length,
+      pagination: {
+        ...(pagination || {}),
+        current_page: 1,
+        per_page: 100,
+        last_page: Math.max(1, Math.ceil((typeof pagination?.total === 'number' ? pagination.total : allLibros.length) / 100))
+      }
+    };
+  }
+
   /**
    * Carga libros aplicando filtros y paginacion.
    * @param {URLSearchParams} params
@@ -30,18 +104,17 @@ class LibroService {
       //ARMAMOS LA URL CON LOS PARAMETROS DE FILTRO Y PAGINACION
       const query = params ? `?${params.toString()}` : '';
       //LLAMAMOS LA API CON FETCH Y EL SIGNAL DEL ABORT CONTROLLER
-      const response = await fetch(`/api/v1/libros${query}`, {
+      const response = await fetch(`${this.apiBaseUrl}/libros${query}`, {
         signal: this.librosAbortController.signal
       });
       //MANEJO DE ERRORES HTTP
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       //PARSEAMOS LA RESPUESTA JSON Y NORMALIZAMOS EL FORMATO
       const data = await response.json();
-      const libros = Array.isArray(data) ? data : data.libros || [];
-      const total = typeof data.total === 'number' ? data.total : libros.length;
+      const normalized = this.normalizeListResponse(data);
       //LOG Y RETURN
-      console.log(`✅ Libros cargados: ${libros.length} (Total: ${total})`);
-      return { libros, total };
+      console.log(`✅ Libros cargados: ${normalized.libros.length} (Total: ${normalized.total})`);
+      return normalized;
 
     } catch (error) {
       if (error.name === 'AbortError') {
@@ -210,10 +283,11 @@ class LibroService {
   async loadLibroById(id) {
     // --- FETCH REAL ---
     try {
-      const response = await fetch(`/api/v1/libros/${encodeURIComponent(id)}`);
+      const response = await fetch(`${this.apiBaseUrl}/libros/${encodeURIComponent(id)}`);
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       const data = await response.json();
-      return Array.isArray(data) ? data[0] || null : data.libro || data;
+      if (Array.isArray(data)) return data[0] || null;
+      return data.data || data.libro || data;
     } catch (error) {
       throw error;
     }
@@ -226,51 +300,13 @@ class LibroService {
    */
   async loadCategorias() {
     try {
-      const response = await fetch('/api/categorias');
+      const response = await fetch(`${this.apiBaseUrl}/categorias`);
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       const data = await response.json();
       return Array.isArray(data) ? data : data.categorias || [];
     } catch (error) {
       throw error;
     }
-
-    // --- MOCK ---
-    // if (window.CATEGORIAS_MOCK && window.CATEGORIAS_MOCK.length > 0) {
-    //   return Promise.resolve(window.CATEGORIAS_MOCK);
-    // }
-    // return Promise.resolve(this.buildCategoriasFromLibros());
-  }
-
-  /**
-   * Construye categorias unicas a partir de LIBROS_MOCK si no existe CATEGORIAS_MOCK.
-   * @returns {Array}
-   */
-  buildCategoriasFromLibros() {
-    const libros = window.LIBROS_MOCK || [];
-    const seen = new Map();
-    libros.forEach(libro => {
-      if (libro.categoria?.id && !seen.has(libro.categoria.id)) {
-        seen.set(libro.categoria.id, {
-          id: libro.categoria.id,
-          nombre: libro.categoria.nombre || libro.categoria.id,
-          cdu_prefijo: ''
-        });
-      }
-    });
-    return Array.from(seen.values());
-  }
-
-  /**
-   * Genera el siguiente ID de libro disponible (formato LIB-XXXX).
-   * @returns {string}
-   */
-  generateNextId() {
-    const libros = window.LIBROS_MOCK || [];
-    const maxNum = libros.reduce((max, libro) => {
-      const match = String(libro.id || '').match(/\d+$/);
-      return match ? Math.max(max, parseInt(match[0], 10)) : max;
-    }, 0);
-    return `LIB-${String(maxNum + 1).padStart(4, '0')}`;
   }
 
   /**
@@ -281,7 +317,7 @@ class LibroService {
   async createLibro(libroData) {
     // --- FETCH REAL ---
     try {
-      const response = await fetch('/api/v1/libros', {
+      const response = await fetch(`${this.apiBaseUrl}/libros`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(libroData)
@@ -315,7 +351,7 @@ class LibroService {
   async updateLibro(id, libroData) {
     // --- FETCH REAL ---
     try {
-      const response = await fetch(`/api/libros/${encodeURIComponent(id)}`, {
+      const response = await fetch(`${this.apiBaseUrl}/libros/${encodeURIComponent(id)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(libroData)

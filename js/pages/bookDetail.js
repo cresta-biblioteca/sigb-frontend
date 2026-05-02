@@ -16,8 +16,9 @@ class BookDetailController {
 	}
 
 	async init() {
+		const storedLibro = this.getLibroFromSession();
 		const libroId = this.getLibroIdFromUrl();
-		if (!libroId) {
+		if (!libroId && !storedLibro) {
 			this.renderer.showError('No se encontro el ID del libro en la URL.');
 			return;
 		}
@@ -25,7 +26,14 @@ class BookDetailController {
 		this.currentId = libroId;
 		this.setupEventListeners();
 
-		await this.loadLibro(libroId);
+		if (storedLibro) {
+			this.libro = storedLibro;
+			this.renderer.renderLibro(storedLibro);
+		}
+
+		if (libroId) {
+			await this.loadLibro(libroId, { showLoading: !storedLibro });
+		}
 	}
 
 	setupEventListeners() {
@@ -54,13 +62,28 @@ class BookDetailController {
 
 	getLibroIdFromUrl() {
 		const params = new URLSearchParams(window.location.search);
-		return params.get('id');
+		return params.get('id')
+			|| params.get('libroId')
+			|| params.get('articleId')
+			|| params.get('articuloId');
 	}
 
-	async loadLibro(id) {
+	getLibroFromSession() {
+		try {
+			const raw = sessionStorage.getItem('selectedBookForDetail');
+			return raw ? JSON.parse(raw) : null;
+		} catch (error) {
+			console.warn('No se pudo leer el libro seleccionado desde sessionStorage:', error);
+			return null;
+		}
+	}
+
+	async loadLibro(id, options = {}) {
 		try {
 			this.loading = true;
-			this.renderer.showLoading();
+			if (options.showLoading !== false) {
+				this.renderer.showLoading();
+			}
 
 			const libro = await this.service.loadLibroById(id);
 
@@ -73,7 +96,9 @@ class BookDetailController {
 		} catch (error) {
 			console.error('❌ Error al cargar detalle del libro:', error);
 			this.error = error;
-			this.renderer.showError('Error al cargar el libro. Por favor, intenta mas tarde.');
+			if (!this.libro) {
+				this.renderer.showError('Error al cargar el libro. Por favor, intenta mas tarde.');
+			}
 		} finally {
 			this.loading = false;
 		}

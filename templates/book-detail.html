@@ -10,7 +10,7 @@
 	<link rel="stylesheet" href="../css/layout.css">
 	<link rel="stylesheet" href="../css/components.css">
 	<link rel="stylesheet" href="../css/pages/bookDetail.css">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 <body>
 
@@ -18,17 +18,7 @@
 	<header class="navbar" id="navbar">
 		<div class="navbar__container">
 			<a href="../index.html" class="navbar__brand">
-				<div class="navbar__logo">
-					<svg class="navbar__logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<rect width="40" height="40" rx="8" fill="white"/>
-						<path d="M10 30V12C10 10.9 10.9 10 12 10H28C29.1 10 30 10.9 30 12V30L20 25L10 30Z" fill="#0F2B5B"/>
-						<path d="M14 16H26M14 20H22" stroke="white" stroke-width="2" stroke-linecap="round"/>
-					</svg>
-				</div>
-				<div class="navbar__brand-text">
-					<span class="navbar__brand-name">BIBLIOTECA CRESTA</span>
-					<span class="navbar__brand-subtitle">CENTRO REGIONAL DE ESTUDIOS SUPERIORES</span>
-				</div>
+				<img src="../assets/logo_header.png" alt="Biblioteca CRESTA" class="navbar__brand-image">
 			</a>
 
 			<button class="navbar__toggle" id="navbarToggle" aria-label="Abrir menÃº de navegaciÃ³n" aria-expanded="false">
@@ -42,23 +32,14 @@
 					<li class="navbar__item">
 						<a href="../index.html" class="navbar__link">Inicio</a>
 					</li>
-					<li class="navbar__item navbar__item--dropdown">
-						<button class="navbar__link navbar__link--dropdown" aria-expanded="false" aria-haspopup="true">
-							Servicios
-							<svg class="navbar__dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
-								<path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-							</svg>
-						</button>
-						<ul class="navbar__dropdown">
-							<li><a href="catalog.html" class="navbar__link navbar__link--active">CatÃ¡logo</a></li>
-							<li><a href="dashboard.html" class="navbar__link">Mi Ãrea</a></li>
-							<li><a href="loans.html" class="navbar__link">Mis PrÃ©stamos</a></li>
-						</ul>
-					</li>
 					<li class="navbar__item">
-						<a href="readers.html" class="navbar__link">Lectores</a>
+						<a href="catalog.html" class="navbar__link navbar__link--active">Catálogo</a>
+					</li>
+					<li class="navbar__item navbar__item--private">
+						<a href="mi-perfil.html" class="navbar__link">Mi Perfil</a>
 					</li>
 				</ul>
+				<button class="navbar__link navbar__item--private" id="logoutBtn" type="button">Cerrar sesión</button>
 			</nav>
 		</div>
 	</header>
@@ -104,12 +85,6 @@
 						<!-- Sidebar -->
 						<aside class="book-detail__sidebar">
 							<div class="book-detail__sidebar-card">
-
-								<!-- Portada -->
-								<div class="book-detail__cover-wrapper">
-									<img id="bookCover" class="book-detail__cover" src="../assets/book-cover-default.jpg" alt="Portada del libro">
-								</div>
-
 								<!-- Acciones principales -->
 								<div class="book-detail__sidebar-actions">
 									<button class="btn btn--primary" type="button">Reservar</button>
@@ -121,12 +96,9 @@
 									<a href="#" class="book-detail__action-link">Guardar en favoritos</a>
 								</div>
 
-								<!-- Acciones de administracion -->
 								<div class="book-detail__admin-actions">
-									<button class="btn btn--outline book-detail__edit-toggle" id="bookEditToggle" type="button">Editar (Administracion)</button>
 									<a href="catalog.html" class="btn btn--outline book-detail__back">Volver al catalogo</a>
 								</div>
-
 							</div>
 						</aside>
 					</div>
@@ -154,58 +126,50 @@
 			</div>
 		</section>
 
-		<!-- Formulario de edicion (fuera del layout para no afectar el grid) -->
-		<section class="book-detail-content" style="padding-top:0;">
-			<div class="container">
-				<form class="book-detail__edit-form is-hidden" id="bookEditForm" novalidate>
-					<h2 class="book-detail__section-title">Edicion de libro</h2>
-					<div class="book-detail__edit-grid">
-						<div class="book-detail__field">
-							<label for="editTitulo" class="book-detail__label">Titulo</label>
-							<input id="editTitulo" name="titulo" class="book-detail__input" type="text" required>
-						</div>
-						<div class="book-detail__field">
-							<label for="editAutor" class="book-detail__label">Autor</label>
-							<input id="editAutor" name="autor" class="book-detail__input" type="text">
-						</div>
-						<div class="book-detail__field">
-							<label for="editISBN" class="book-detail__label">ISBN</label>
-							<input id="editISBN" name="isbn" class="book-detail__input" type="text">
-						</div>
-						<div class="book-detail__field">
-							<label for="editEditorial" class="book-detail__label">Editorial</label>
-							<input id="editEditorial" name="editorial" class="book-detail__input" type="text">
-						</div>
-						<div class="book-detail__field">
-							<label for="editAnio" class="book-detail__label">Ano</label>
-							<input id="editAnio" name="anio" class="book-detail__input" type="number" min="0" step="1">
-						</div>
-						<div class="book-detail__field">
-							<label for="editCDU" class="book-detail__label">CDU</label>
-							<input id="editCDU" name="cdu" class="book-detail__input" type="text">
-						</div>
-						<div class="book-detail__field book-detail__field--full">
-							<label for="editDescripcion" class="book-detail__label">Descripcion</label>
-							<textarea id="editDescripcion" name="descripcion" class="book-detail__textarea" rows="4"></textarea>
-						</div>
-						<div class="book-detail__field">
-							<label for="editEjemplares" class="book-detail__label">Ejemplares disponibles</label>
-							<input id="editEjemplares" name="ejemplares" class="book-detail__input" type="number" min="0" step="1" required>
-						</div>
-					</div>
-					<p class="book-detail__form-message is-hidden" id="bookEditMessage"></p>
-					<div class="book-detail__edit-actions">
-						<button type="button" class="btn btn--outline" id="bookEditCancel">Cancelar</button>
-						<button type="submit" class="btn btn--primary" id="bookEditSave">Guardar cambios</button>
-					</div>
-				</form>
-			</div>
-		</section>
-
 	</main>
 
 	<!-- ========== FOOTER ========== -->
-	<footer class="footer" id="footer"></footer>
+	<footer class="footer" id="contacto">
+		<div class="footer__container">
+			<div class="footer__grid">
+
+				<div class="footer__col">
+					<div class="footer__brand">
+						<img src="../assets/logo_footer.png" alt="CRESTA Biblioteca" class="footer__brand-image">
+					</div>
+					<address class="footer__address footer__contact">
+						<p>Maipú 270 - (7500) Tres Arroyos</p>
+						<p class="footer__phone"><strong>Consultas frecuentes:</strong> (02983) 430093</p>
+						<p><strong>Email:</strong> <a href="mailto:valeria.rodriguez@cresta.edu.ar" class="footer__link">valeria.rodriguez@cresta.edu.ar</a></p>
+					</address>
+					<div class="footer__social" aria-label="Redes sociales">
+						<a href="https://www.facebook.com/crestaoficial/" class="footer__social-link" aria-label="Facebook" title="Facebook" target="_blank" rel="noopener noreferrer">
+							<i class="fab fa-facebook-f" aria-hidden="true"></i>
+						</a>
+						<a href="https://www.instagram.com/crestaoficial/" class="footer__social-link" aria-label="Instagram" title="Instagram" target="_blank" rel="noopener noreferrer">
+							<i class="fab fa-instagram" aria-hidden="true"></i>
+						</a>
+						<a href="https://wa.me/2983380689" class="footer__social-link" aria-label="WhatsApp" title="WhatsApp" target="_blank" rel="noopener noreferrer">
+							<i class="fab fa-whatsapp" aria-hidden="true"></i>
+						</a>
+					</div>
+				</div>
+
+				<div class="footer__col">
+					<h3 class="footer__heading">Links de interés</h3>
+					<ul class="footer__links footer__links--interest">
+						<li><a href="https://www.tresarroyos.gov.ar/" class="footer__link" target="_blank" rel="noopener noreferrer">Municipalidad de Tres Arroyos</a></li>
+						<li><a href="https://campus.cresta.edu.ar/" class="footer__link" target="_blank" rel="noopener noreferrer">Campus virtual</a></li>
+						<li><a href="https://sga.cresta.edu.ar/" class="footer__link" target="_blank" rel="noopener noreferrer">Sistema de gestión académica</a></li>
+					</ul>
+				</div>
+
+			</div>
+		</div>
+		<div class="footer__bottom">
+			<p>© 2024 CRESTA - Centro Regional de Estudios Superiores de Tres Arroyos. Todos los derechos reservados.</p>
+		</div>
+	</footer>
 
 	<!-- ========== SCRIPTS ========== -->
 	<script src="../js/components/navbar.js"></script>
@@ -216,23 +180,4 @@
 	<script src="../js/pages/bookDetail.js"></script>
 </body>
 </html>
-						<button type="submit" class="btn btn--primary" id="bookEditSave">Guardar cambios</button>
-					</div>
-				</form>
-			</div>
-		</section>
 
-	</main>
-
-	<!-- ========== FOOTER ========== -->
-	<footer class="footer" id="footer"></footer>
-
-	<!-- ========== SCRIPTS ========== -->
-	<script src="../js/components/navbar.js"></script>
-	<script src="../js/components/footer.js"></script>
-
-	<script src="../js/services/libroService.js"></script>
-	<script src="../js/components/bookDetailRenderer.js"></script>
-	<script src="../js/pages/bookDetail.js"></script>
-</body>
-</html>

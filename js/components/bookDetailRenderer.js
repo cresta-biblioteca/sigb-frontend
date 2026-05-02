@@ -7,7 +7,6 @@ class BookDetailRenderer {
 		this.bookTitle = document.getElementById('bookTitle');
 		this.bookAuthor = document.getElementById('bookAuthor');
 		this.bookBreadcrumbTitle = document.getElementById('bookBreadcrumbTitle');
-		this.bookCover = document.getElementById('bookCover');
 		this.bookMetaList = document.getElementById('bookMetaList');
 		this.bookDescription = document.getElementById('bookDescription');
 		this.bookChips = document.getElementById('bookChips');
@@ -80,13 +79,13 @@ class BookDetailRenderer {
 
 	fillEditForm(libro) {
 		if (!libro) return;
-		if (this.editTitulo) this.editTitulo.value = libro.titulo || '';
-		if (this.editAutor) this.editAutor.value = libro.autor || (Array.isArray(libro.autores) ? libro.autores.join(', ') : '');
-		if (this.editISBN) this.editISBN.value = libro.isbn || '';
-		if (this.editEditorial) this.editEditorial.value = libro.editorial || '';
-		if (this.editAnio) this.editAnio.value = libro.anio || libro.año || '';
-		if (this.editCDU) this.editCDU.value = libro.cdu || '';
-		if (this.editDescripcion) this.editDescripcion.value = libro.descripcion || libro.description || libro.resumen || '';
+		if (this.editTitulo) this.editTitulo.value = this.getBookTitle(libro);
+		if (this.editAutor) this.editAutor.value = this.getBookAuthors(libro);
+		if (this.editISBN) this.editISBN.value = this.getBookField(libro, 'isbn') || '';
+		if (this.editEditorial) this.editEditorial.value = this.getBookField(libro, 'editorial') || '';
+		if (this.editAnio) this.editAnio.value = this.getBookYear(libro) || '';
+		if (this.editCDU) this.editCDU.value = this.getBookField(libro, 'cdu') || '';
+		if (this.editDescripcion) this.editDescripcion.value = this.getBookDescription(libro);
 		if (this.editEjemplares) this.editEjemplares.value = this.getEjemplares(libro);
 	}
 
@@ -136,25 +135,19 @@ class BookDetailRenderer {
 		if (this.bookLayout) this.bookLayout.classList.remove('is-hidden');
 		if (this.bookAvailabilityPanel) this.bookAvailabilityPanel.classList.remove('is-hidden');
 
-		const title = libro.titulo || 'Libro sin titulo';
-		const authorInfo = this.formatAuthors(libro);
-		const description = libro.descripcion || libro.description || libro.resumen || 'Sin descripcion disponible.';
-		const cover = libro.portada || '../assets/book-cover-default.jpg';
-
+		const title = this.getBookTitle(libro) || 'Libro sin titulo';
+		const authorInfo = this.getBookAuthors(libro);
+		const description = this.getBookDescription(libro) || 'Sin descripcion disponible.';
 		if (this.bookBreadcrumbTitle) this.bookBreadcrumbTitle.textContent = title;
 		if (this.bookTitle) this.bookTitle.textContent = title;
 		if (this.bookAuthor) this.bookAuthor.textContent = authorInfo || 'Autor desconocido';
-		if (this.bookCover) {
-			this.bookCover.src = cover;
-			this.bookCover.alt = `Portada de ${title}`;
-			this.bookCover.onerror = () => { this.bookCover.src = '../assets/book-cover-default.jpg'; };
-		}
 		if (this.bookDescription) this.bookDescription.textContent = description;
 
 		this.renderMeta(libro);
 		this.renderChips(libro);
 		this.renderAvailabilityTable(libro);
 	}
+
 
 	getEjemplares(libro) {
 		const sources = [libro.ejemplares, libro.disponibles, libro.cantidad];
@@ -172,21 +165,16 @@ class BookDetailRenderer {
 		if (!this.bookMetaList) return;
 		this.bookMetaList.innerHTML = '';
 
-		const metaItems = [
-			{ label: 'Autor/es', value: this.formatAuthors(libro) },
-			{ label: 'ISBN', value: libro.isbn },
-			{ label: 'Tipo de Material', value: this.getTipoMaterialText(libro.tipo_documento) },
-			{ label: 'CDU', value: libro.cdu },
-			{ label: 'Editorial', value: libro.editorial },
-			{ label: 'Ano de publicacion', value: libro.anio || libro.año },
-			{ label: 'Idioma', value: this.getIdiomaText(libro.idioma) },
-			{ label: 'Materia', value: libro.materia },
-			{ label: 'Estante Virtual / Carrera', value: libro.estante }
-		];
+		const sections = this.buildDetailSections(libro);
+		sections.forEach(section => {
+			if (!section.items.length) return;
 
-		metaItems
-			.filter(item => item.value !== undefined && item.value !== null && item.value !== '')
-			.forEach(item => {
+			const heading = document.createElement('h3');
+			heading.className = 'book-detail__section-title';
+			heading.textContent = section.title;
+			this.bookMetaList.appendChild(heading);
+
+			section.items.forEach(item => {
 				const div = document.createElement('div');
 				div.className = 'book-detail__meta-row';
 				div.innerHTML = `
@@ -195,6 +183,7 @@ class BookDetailRenderer {
 				`;
 				this.bookMetaList.appendChild(div);
 			});
+		});
 	}
 
 	renderChips(libro) {
@@ -202,14 +191,8 @@ class BookDetailRenderer {
 		this.bookChips.innerHTML = '';
 
 		const chips = [];
-		if (Array.isArray(libro.colaboradores) && libro.colaboradores.length > 0) {
-			libro.colaboradores.forEach(colaborador => {
-				chips.push(colaborador);
-			});
-		}
-		if (libro.titulo_informativo) {
-			chips.push(libro.titulo_informativo);
-		}
+		chips.push(...this.getBookPersonas(libro));
+		chips.push(...this.getBookTemas(libro));
 
 		if (chips.length === 0) {
 			this.bookChips.innerHTML = '<span class="book-detail__meta-value">Sin informacion adicional.</span>';
@@ -224,12 +207,184 @@ class BookDetailRenderer {
 		});
 	}
 
-	formatAuthors(libro) {
-		if (libro.autor) return libro.autor;
-		if (Array.isArray(libro.autores) && libro.autores.length > 0) {
-			return libro.autores.join(', ');
+	getBookField(libro, ...keys) {
+		const sources = [libro, libro?.articulo, libro?.libro, libro?.metadata];
+
+		for (const source of sources) {
+			if (!source) continue;
+			for (const key of keys) {
+				if (String(key).includes('.')) {
+					const nestedValue = this.getNestedValue(source, key);
+					if (nestedValue !== undefined && nestedValue !== null && nestedValue !== '') {
+						return nestedValue;
+					}
+					continue;
+				}
+				const value = source[key];
+				if (value !== undefined && value !== null && value !== '') {
+					return value;
+				}
+			}
 		}
+
 		return '';
+	}
+
+	getNestedValue(object, path) {
+		return String(path).split('.').reduce((current, segment) => {
+			if (!current || typeof current !== 'object') return undefined;
+			return current[segment];
+		}, object);
+	}
+
+	getBookTitle(libro) {
+		return this.getBookField(libro, 'titulo', 'title', 'articulo.titulo');
+	}
+
+	getBookAuthors(libro) {
+		const directAuthor = this.getBookField(libro, 'autor', 'author', 'autorInformativo');
+		if (directAuthor) return directAuthor;
+
+		const authors = this.getBookField(libro, 'autores', 'authors');
+		if (Array.isArray(authors) && authors.length > 0) {
+			return authors.map(author => this.normalizePersonText(author)).filter(Boolean).join(', ');
+		}
+
+		const personas = this.getBookField(libro, 'personas');
+		if (Array.isArray(personas) && personas.length > 0) {
+			return personas
+				.filter(person => this.isAuthorPerson(person))
+				.map(person => this.normalizePersonText(person))
+				.filter(Boolean)
+				.join(', ');
+		}
+
+		return '';
+	}
+
+	getBookDescription(libro) {
+		return this.getBookField(libro, 'description', 'descripcion', 'resumen', 'articulo.descripcion');
+	}
+
+	getBookYear(libro) {
+		return this.getBookField(libro, 'año', 'anio', 'anio_publicacion', 'anioPublicacion', 'publicationYear', 'year', 'articulo.anio_publicacion', 'articulo.anioPublicacion');
+	}
+
+	buildDetailSections(libro) {
+		const article = libro?.articulo || {};
+		const topLevelItems = [
+			{ label: 'ISBN', value: this.getBookField(libro, 'isbn') },
+			{ label: 'ISSN', value: this.getBookField(libro, 'issn') },
+			{ label: 'Páginas', value: this.getBookField(libro, 'paginas') },
+			{ label: 'Título informativo', value: this.getBookField(libro, 'titulo_informativo', 'tituloInformativo') },
+			{ label: 'CDU', value: this.getBookField(libro, 'cdu') },
+			{ label: 'Editorial', value: this.getBookField(libro, 'editorial') },
+			{ label: 'Lugar de publicación', value: this.getBookField(libro, 'lugar_de_publicacion', 'lugarDePublicacion') },
+			{ label: 'Edición', value: this.getBookField(libro, 'edicion') },
+			{ label: 'Dimensiones', value: this.getBookField(libro, 'dimensiones') },
+			{ label: 'Ilustraciones', value: this.getBookField(libro, 'ilustraciones') },
+			{ label: 'Serie', value: this.getBookField(libro, 'serie') },
+			{ label: 'Número de serie', value: this.getBookField(libro, 'numero_serie', 'numeroSerie') },
+			{ label: 'Notas', value: this.getBookField(libro, 'notas') },
+			{ label: 'País de publicación', value: this.getBookField(libro, 'pais_publicacion', 'paisPublicacion') }
+		].filter(item => item.value !== undefined && item.value !== null && item.value !== '');
+
+		const personas = this.getBookContributorItems(libro);
+		const temaItems = this.getBookTemas(libro);
+
+		return [
+			{ title: 'Datos generales', items: topLevelItems },
+			{ title: 'Autores y colaboradores', items: personas },
+			{
+				title: 'Artículo',
+				items: [
+					{ label: 'Título', value: article.titulo },
+					{ label: 'Año de publicación', value: article.anio_publicacion || article.anioPublicacion },
+					{ label: 'Tipo', value: article.tipo },
+					{ label: 'Idioma', value: article.idioma },
+					{ label: 'Descripción', value: article.descripcion },
+					{ label: 'Temas', value: temaItems.length > 0 ? temaItems.join(', ') : '' }
+				].filter(item => item.value !== undefined && item.value !== null && item.value !== '')
+			}
+		].filter(section => section.items.length > 0);
+	}
+
+	getBookContributorItems(libro) {
+		const personas = this.getBookField(libro, 'personas');
+		if (!Array.isArray(personas) || personas.length === 0) return [];
+
+		return personas
+			.map((person, index) => {
+				const value = this.formatPersonDetail(person);
+				if (!value) return null;
+
+				const roleLabel = this.getPersonRoleLabel(person);
+				return {
+					label: roleLabel || 'Persona',
+					value
+				};
+			})
+			.filter(Boolean);
+	}
+
+	getBookPersonas(libro) {
+		const personas = this.getBookField(libro, 'personas');
+		if (!Array.isArray(personas)) return [];
+
+		return personas.map(person => this.formatPersonDetail(person)).filter(Boolean);
+	}
+
+	getBookTemas(libro) {
+		const temas = this.getBookField(libro, 'articulo.temas', 'temas');
+		if (!Array.isArray(temas)) return [];
+
+		return temas.map(tema => {
+			if (typeof tema === 'string') return tema.trim();
+			if (!tema || typeof tema !== 'object') return '';
+			return String(tema.titulo || tema.nombre || tema.id || '').trim();
+		}).filter(Boolean);
+	}
+
+	formatPersonDetail(person) {
+		if (!person || typeof person !== 'object') return '';
+
+		const nombre = String(person.nombre || '').trim();
+		const apellido = String(person.apellido || '').trim();
+		const base = [nombre, apellido].filter(Boolean).join(' ').trim();
+		return base || 'Persona sin nombre';
+	}
+
+	getPersonRoleLabel(person) {
+		const role = String(person?.rol || person?.role || person?.tipo || '').trim().toLowerCase();
+		if (!role) return '';
+
+		if (role.includes('autor') && role.includes('co')) return 'Coautor';
+		if (role.includes('autor')) return 'Autor';
+		if (role.includes('editor')) return 'Editor';
+		if (role.includes('compil')) return 'Compilador';
+		if (role.includes('traduc')) return 'Traductor';
+		if (role.includes('ilustr')) return 'Ilustrador';
+		if (role.includes('colab')) return 'Colaborador';
+		return role.charAt(0).toUpperCase() + role.slice(1);
+	}
+
+	normalizePersonText(person) {
+		if (typeof person === 'string') return person.trim();
+		if (!person || typeof person !== 'object') return '';
+
+		const nombreCompleto = person.nombre_completo || person.nombreCompleto;
+		if (nombreCompleto) return String(nombreCompleto).trim();
+
+		const nombre = String(person.nombre || person.firstName || '').trim();
+		const apellido = String(person.apellido || person.lastName || '').trim();
+
+		if (nombre && apellido) return `${apellido}, ${nombre}`;
+		return apellido || nombre || '';
+	}
+
+	isAuthorPerson(person) {
+		const role = String(person?.rol || person?.role || person?.tipo || '').toLowerCase();
+		return role.includes('autor') || role.includes('coautor');
 	}
 
 	getCategoriaText(libro) {

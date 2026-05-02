@@ -16,6 +16,7 @@ class CatalogController {
     this.filteredLibros = [];
     this.totalLibros = 0;
     this.allCategorias = [];
+    this.hasLoadedAllBooks = false;
     this.currentPage = 1;
     this.itemsPerPage = 10;
     this.currentView = 'grid';
@@ -50,12 +51,26 @@ class CatalogController {
     try {
       console.log('🚀 Inicializando catálogo...');
       this.setupEventListeners();
-      await this.applyFiltersAndRender();
+      await this.loadAllBooksAndRender();
       console.log('✅ Catálogo inicializado correctamente');
     } catch (error) {
       console.error('❌ Error al inicializar el catálogo:', error);
       this.renderer.showErrorMessage('Error al cargar el catálogo. Por favor, intenta más tarde.');
     }
+  }
+
+  async loadAllBooksAndRender() {
+    const result = await this.service.loadAllLibros();
+
+    if (result.cancelled) {
+      return;
+    }
+
+    this.allLibros = Array.isArray(result.libros) ? result.libros : [];
+    this.hasLoadedAllBooks = true;
+    this.currentPage = 1;
+
+    await this.applyFiltersAndRender();
   }
 
   setupEventListeners() {
@@ -86,23 +101,23 @@ class CatalogController {
     this.renderer.onPrevPage(() => {
       if (this.currentPage > 1) {
         this.currentPage--;
-        this.applyFiltersAndRender();
+        this.renderCurrentPage();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     });
 
     this.renderer.onNextPage(() => {
-      const totalPages = Math.ceil(this.totalLibros / this.itemsPerPage);
+      const totalPages = this.getTotalPages();
       if (this.currentPage < totalPages) {
         this.currentPage++;
-        this.applyFiltersAndRender();
+        this.renderCurrentPage();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     });
 
     this.renderer.setOnPageClick((pageNumber) => {
       this.currentPage = pageNumber;
-      this.applyFiltersAndRender();
+      this.renderCurrentPage();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
@@ -151,42 +166,51 @@ class CatalogController {
 
   async applyFiltersAndRender() {
     try {
-      const params = this.buildQueryParams();
-      const result = await this.service.loadLibros(params);
-
-      if (result.cancelled) {
-        console.log('⏭️ Request cancelado, esperando el nuevo...');
+      if (!this.hasLoadedAllBooks) {
         return;
       }
 
-      const { libros, total } = result;
+      const params = this.buildFilterParams();
+      const filtered = this.service.applyFilters(this.allLibros, params);
+      const sorted = this.service.applySort(filtered, params);
 
-      this.allLibros = libros;
-      this.filteredLibros = [...libros];
-      this.totalLibros = total;
+      this.filteredLibros = sorted;
+      this.totalLibros = sorted.length;
 
-      console.log(`📖 Se cargaron ${libros.length} libros (Total: ${total})`);
+      const totalPages = this.getTotalPages();
+      if (this.currentPage > totalPages) {
+        this.currentPage = totalPages || 1;
+      }
 
-      const startIndex = (this.currentPage - 1) * this.itemsPerPage + 1;
-      const endIndex = Math.min(this.currentPage * this.itemsPerPage, total);
-
-      this.renderer.renderLibros(libros, {
-        total,
-        startIndex,
-        endIndex
-      });
-
-      this.renderer.updatePagination({
-        totalPages: Math.ceil(total / this.itemsPerPage),
-        currentPage: this.currentPage
-      });
+      this.renderCurrentPage();
     } catch (error) {
       console.error('❌ Error al aplicar filtros y renderizar:', error);
       this.renderer.showErrorMessage('Error al cargar el catálogo. Por favor, intenta más tarde.');
     }
   }
 
-  buildQueryParams() {
+  renderCurrentPage() {
+    const total = this.totalLibros;
+    const totalPages = this.getTotalPages();
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    const pageLibros = this.filteredLibros.slice(start, start + this.itemsPerPage);
+    const startIndex = total === 0 ? 0 : start + 1;
+    const endIndex = Math.min(start + this.itemsPerPage, total);
+
+    this.renderer.renderLibros(pageLibros, {
+      total,
+      startIndex,
+      endIndex
+    });
+
+    this.renderer.updatePagination({
+      totalPages,
+      currentPage: this.currentPage,
+      perPage: this.itemsPerPage
+    });
+  }
+
+  buildFilterParams() {
     const params = new URLSearchParams();
 
     if (this.filters.titulo) params.set('titulo', this.filters.titulo);
@@ -213,11 +237,11 @@ class CatalogController {
       }
     }
 
-    params.set('page', String(this.currentPage));
-    params.set('per_page', String(this.itemsPerPage));
-
-    console.log(`🔍 Query params: ${params.toString()}`);
     return params;
+  }
+
+  getTotalPages() {
+    return Math.max(1, Math.ceil(this.totalLibros / this.itemsPerPage));
   }
 
   getState() {
