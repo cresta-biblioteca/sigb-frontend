@@ -67,11 +67,20 @@
 
 						<!-- Panel principal -->
 						<div class="book-detail__main-panel">
-							<h1 class="book-detail__title" id="bookTitle">Titulo del libro</h1>
+							<div class="book-detail__title-row">
+								<h1 class="book-detail__title" id="bookTitle">Titulo del libro</h1>
+								<div class="book-detail__badges" id="bookBadges">
+									<span class="book-detail__badge">Obra</span>
+									<span class="book-detail__badge book-detail__badge--muted" id="workBadgeEjemplares">Ejemplares: 0</span>
+								</div>
+							</div>
 							<p class="book-detail__author" id="bookAuthor">Autor</p>
 
-							<!-- Tabla de metadatos -->
-							<div class="book-detail__meta-table" id="bookMetaList"></div>
+							<!-- Card: Datos bibliográficos (unificado) -->
+							<div class="book-detail__work-card">
+								<h2 class="book-detail__section-title">Datos bibliográficos</h2>
+								<div class="book-detail__meta-table" id="workMetaList"></div>
+							</div>
 
 							<!-- Descripcion -->
 							<h2 class="book-detail__section-title">Descripcion</h2>
@@ -80,6 +89,14 @@
 							<!-- Chips adicionales -->
 							<h2 class="book-detail__section-title">Informacion adicional</h2>
 							<div class="book-detail__chips" id="bookChips"></div>
+
+							<!-- Card: Ejemplar (resumen local) -->
+							<div class="book-detail__item-card" id="itemCard">
+								<h3 class="book-detail__section-subtitle">Ejemplar (resumen)</h3>
+								<div class="book-detail__item-meta" id="itemMetaList">
+									<p class="book-detail__meta-value">Sin datos del ejemplar.</p>
+								</div>
+							</div>
 						</div>
 
 						<!-- Sidebar -->
@@ -172,12 +189,9 @@
 	</footer>
 
 	<!-- ========== SCRIPTS ========== -->
-	<script src="../js/components/navbar.js"></script>
-	<script src="../js/components/footer.js"></script>
-
-	<script src="../js/services/libroService.js"></script>
-	<script src="../js/components/bookDetailRenderer.js"></script>
-	<script src="../js/pages/bookDetail.js"></script>
+	<script type="module" src="../js/components/navbar.js"></script>
+	<script type="module" src="../js/components/footer.js"></script>
+	<script type="module" src="../js/pages/book-detail.js"></script>
 </body>
 </html>
 

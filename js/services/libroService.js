@@ -5,6 +5,8 @@
  * Servicio orientado a API real.
  */
 
+import { api } from './api.js';
+
 class LibroService {
   constructor() {
     // AbortController para cancelar requests en vuelo (usado en fetch real)
@@ -101,18 +103,12 @@ class LibroService {
     this.librosAbortController = new AbortController();
 
     try {
-      //ARMAMOS LA URL CON LOS PARAMETROS DE FILTRO Y PAGINACION
+      // Armamos endpoint con query y usamos el cliente HTTP centralizado.
       const query = params ? `?${params.toString()}` : '';
-      //LLAMAMOS LA API CON FETCH Y EL SIGNAL DEL ABORT CONTROLLER
-      const response = await fetch(`${this.apiBaseUrl}/libros${query}`, {
+      const data = await api.get(`/libros${query}`, {
         signal: this.librosAbortController.signal
       });
-      //MANEJO DE ERRORES HTTP
-      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-      //PARSEAMOS LA RESPUESTA JSON Y NORMALIZAMOS EL FORMATO
-      const data = await response.json();
       const normalized = this.normalizeListResponse(data);
-      //LOG Y RETURN
       console.log(`✅ Libros cargados: ${normalized.libros.length} (Total: ${normalized.total})`);
       return normalized;
 
@@ -281,17 +277,9 @@ class LibroService {
    * @returns {Promise<Object>}
    */
   async loadLibroById(id) {
-    // --- FETCH REAL ---
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/libros/${encodeURIComponent(id)}`);
-      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-      const data = await response.json();
-      if (Array.isArray(data)) return data[0] || null;
-      return data.data || data.libro || data;
-    } catch (error) {
-      throw error;
-    }
-
+    const data = await api.get(`/libros/${encodeURIComponent(id)}`);
+    if (Array.isArray(data)) return data[0] || null;
+    return data?.data || data?.libro || data;
   }
 
   /**
@@ -299,14 +287,8 @@ class LibroService {
    * @returns {Promise<Array>}
    */
   async loadCategorias() {
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/categorias`);
-      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-      const data = await response.json();
-      return Array.isArray(data) ? data : data.categorias || [];
-    } catch (error) {
-      throw error;
-    }
+    const data = await api.get('/categorias');
+    return Array.isArray(data) ? data : data?.categorias || [];
   }
 
   /**
@@ -315,22 +297,8 @@ class LibroService {
    * @returns {Promise<Object>}
    */
   async createLibro(libroData) {
-    // --- FETCH REAL ---
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/libros`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(libroData)
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Error HTTP: ${response.status}`);
-      }
-      const data = await response.json();
-      return data.libro || data;
-    } catch (error) {
-      throw error;
-    }
+    const data = await api.post('/libros', libroData);
+    return data?.libro || data;
 
     // --- MOCK ---
     // const nuevoLibro = { ...libroData, id: this.generateNextId(), disponibilidad: 'available' };
@@ -349,22 +317,8 @@ class LibroService {
    * @returns {Promise<Object>}
    */
   async updateLibro(id, libroData) {
-    // --- FETCH REAL ---
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/libros/${encodeURIComponent(id)}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(libroData)
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Error HTTP: ${response.status}`);
-      }
-      const data = await response.json();
-      return data.libro || data;
-    } catch (error) {
-      throw error;
-    }
+    const data = await api.put(`/libros/${encodeURIComponent(id)}`, libroData);
+    return data?.libro || data;
 
     // --- MOCK ---
     // if (window.LIBROS_MOCK) {
@@ -379,4 +333,6 @@ class LibroService {
     // return Promise.reject(new Error(`Libro con id ${id} no encontrado`));
   }
 }
+
+export { LibroService };
 

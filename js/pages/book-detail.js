@@ -1,4 +1,10 @@
 /**
+ * ========== BOOK DETAIL PAGE - PUNTO DE ENTRADA ==========
+ * Inicializa la pagina de detalle de libro sin controller separado.
+ */
+import { LibroService } from '../services/libroService.js';
+
+/**
  * BookDetailRenderer - Renderizado de la pagina de detalle
  * NO depende del State. Recibe datos desde el Controller.
  */
@@ -7,7 +13,10 @@ class BookDetailRenderer {
 		this.bookTitle = document.getElementById('bookTitle');
 		this.bookAuthor = document.getElementById('bookAuthor');
 		this.bookBreadcrumbTitle = document.getElementById('bookBreadcrumbTitle');
-		this.bookMetaList = document.getElementById('bookMetaList');
+		this.workMetaList = document.getElementById('workMetaList');
+		this.workBadgeEjemplares = document.getElementById('workBadgeEjemplares');
+		this.bookBadges = document.getElementById('bookBadges');
+		this.itemMetaList = document.getElementById('itemMetaList');
 		this.bookDescription = document.getElementById('bookDescription');
 		this.bookChips = document.getElementById('bookChips');
 		this.bookLoading = document.getElementById('bookLoading');
@@ -143,8 +152,14 @@ class BookDetailRenderer {
 		if (this.bookAuthor) this.bookAuthor.textContent = authorInfo || 'Autor desconocido';
 		if (this.bookDescription) this.bookDescription.textContent = description;
 
+		// Badges y resumen de ejemplares
+		const ejemplaresCount = this.getEjemplares(libro);
+		if (this.workBadgeEjemplares) this.workBadgeEjemplares.textContent = `Ejemplares: ${ejemplaresCount}`;
+		if (this.bookBadges) this.bookBadges.classList.remove('is-hidden');
+
 		this.renderMeta(libro);
 		this.renderChips(libro);
+		this.renderItemSummary(libro);
 		this.renderAvailabilityTable(libro);
 	}
 
@@ -161,9 +176,30 @@ class BookDetailRenderer {
 		return 0;
 	}
 
+	hasValue(value) {
+		return value !== undefined && value !== null && value !== '';
+	}
+
+	createMetaRowElement(label, value) {
+		const div = document.createElement('div');
+		div.className = 'book-detail__meta-row';
+
+		const labelSpan = document.createElement('span');
+		labelSpan.className = 'book-detail__meta-label';
+		labelSpan.textContent = String(label);
+
+		const valueSpan = document.createElement('span');
+		valueSpan.className = 'book-detail__meta-value';
+		valueSpan.textContent = String(value);
+
+		div.appendChild(labelSpan);
+		div.appendChild(valueSpan);
+		return div;
+	}
+
 	renderMeta(libro) {
-		if (!this.bookMetaList) return;
-		this.bookMetaList.innerHTML = '';
+		if (!this.workMetaList) return;
+		this.workMetaList.innerHTML = '';
 
 		const sections = this.buildDetailSections(libro);
 		sections.forEach(section => {
@@ -172,18 +208,36 @@ class BookDetailRenderer {
 			const heading = document.createElement('h3');
 			heading.className = 'book-detail__section-title';
 			heading.textContent = section.title;
-			this.bookMetaList.appendChild(heading);
+			this.workMetaList.appendChild(heading);
 
 			section.items.forEach(item => {
-				const div = document.createElement('div');
-				div.className = 'book-detail__meta-row';
-				div.innerHTML = `
-					<span class="book-detail__meta-label">${this.escapeHtml(item.label)}</span>
-					<span class="book-detail__meta-value">${this.escapeHtml(String(item.value))}</span>
-				`;
-				this.bookMetaList.appendChild(div);
+				this.workMetaList.appendChild(this.createMetaRowElement(item.label, item.value));
 			});
 		});
+	}
+
+	renderItemSummary(libro) {
+		if (!this.itemMetaList) return;
+		this.itemMetaList.innerHTML = '';
+
+		if (Array.isArray(libro.ejemplares_detalle) && libro.ejemplares_detalle.length > 0) {
+			const first = libro.ejemplares_detalle[0];
+			this.itemMetaList.appendChild(this.createMetaRowElement('Código', first.codigo_barras || this.buildBarcode(libro.id || libro.codigo, 1)));
+			this.itemMetaList.appendChild(this.createMetaRowElement('Ubicación', first.ubicacion || libro.estante || ''));
+			this.itemMetaList.appendChild(this.createMetaRowElement('Estado', this.normalizeAvailability(first.estado || first.disponibilidad).text));
+			return;
+		}
+
+		const total = this.getEjemplares(libro);
+		if (total <= 0) {
+			const empty = document.createElement('p');
+			empty.className = 'book-detail__meta-value';
+			empty.textContent = 'Sin ejemplares registrados.';
+			this.itemMetaList.appendChild(empty);
+			return;
+		}
+
+		this.itemMetaList.appendChild(this.createMetaRowElement('Ejemplares totales', total));
 	}
 
 	renderChips(libro) {
@@ -287,7 +341,7 @@ class BookDetailRenderer {
 			{ label: 'Número de serie', value: this.getBookField(libro, 'numero_serie', 'numeroSerie') },
 			{ label: 'Notas', value: this.getBookField(libro, 'notas') },
 			{ label: 'País de publicación', value: this.getBookField(libro, 'pais_publicacion', 'paisPublicacion') }
-		].filter(item => item.value !== undefined && item.value !== null && item.value !== '');
+		].filter(item => this.hasValue(item.value));
 
 		const personas = this.getBookContributorItems(libro);
 		const temaItems = this.getBookTemas(libro);
@@ -304,7 +358,7 @@ class BookDetailRenderer {
 					{ label: 'Idioma', value: article.idioma },
 					{ label: 'Descripción', value: article.descripcion },
 					{ label: 'Temas', value: temaItems.length > 0 ? temaItems.join(', ') : '' }
-				].filter(item => item.value !== undefined && item.value !== null && item.value !== '')
+				].filter(item => this.hasValue(item.value))
 			}
 		].filter(section => section.items.length > 0);
 	}
@@ -314,7 +368,7 @@ class BookDetailRenderer {
 		if (!Array.isArray(personas) || personas.length === 0) return [];
 
 		return personas
-			.map((person, index) => {
+			.map(person => {
 				const value = this.formatPersonDetail(person);
 				if (!value) return null;
 
@@ -387,12 +441,6 @@ class BookDetailRenderer {
 		return role.includes('autor') || role.includes('coautor');
 	}
 
-	getCategoriaText(libro) {
-		if (libro.categoria && libro.categoria.nombre) return libro.categoria.nombre;
-		if (libro.categoria) return libro.categoria;
-		return '';
-	}
-
 	getTipoMaterialText(tipoDocumento) {
 		const map = {
 			libro: 'Libro',
@@ -404,18 +452,6 @@ class BookDetailRenderer {
 			otro: 'Otro'
 		};
 		return map[String(tipoDocumento || '').toLowerCase()] || tipoDocumento || '';
-	}
-
-	getIdiomaText(idioma) {
-		const map = {
-			es: 'Espanol',
-			en: 'Ingles',
-			fr: 'Frances',
-			pt: 'Portugues',
-			de: 'Aleman',
-			it: 'Italiano'
-		};
-		return map[String(idioma || '').toLowerCase()] || idioma || '';
 	}
 
 	renderAvailabilityTable(libro) {
@@ -488,3 +524,179 @@ class BookDetailRenderer {
 			.replace(/'/g, '&#39;');
 	}
 }
+
+// ========== CONTROLLER ==========
+
+class BookDetailController {
+	constructor(service, renderer) {
+		this.service = service;
+		this.renderer = renderer;
+		this.libro = null;
+		this.loading = false;
+		this.error = null;
+		this.editMode = false;
+		this.currentId = null;
+
+		this.init();
+	}
+
+	async init() {
+		const storedLibro = this.getLibroFromSession();
+		const libroId = this.getLibroIdFromUrl();
+		if (!libroId && !storedLibro) {
+			this.renderer.showError('No se encontro el ID del libro en la URL.');
+			return;
+		}
+
+		this.currentId = libroId;
+		this.setupEventListeners();
+
+		if (storedLibro) {
+			this.libro = storedLibro;
+			this.renderer.renderLibro(storedLibro);
+		}
+
+		if (libroId) {
+			await this.loadLibro(libroId, { showLoading: !storedLibro });
+		}
+	}
+
+	setupEventListeners() {
+		this.renderer.onToggleEdit(() => {
+			if (!this.libro) return;
+
+			if (this.editMode) {
+				this.editMode = false;
+				this.renderer.hideEditMode();
+				return;
+			}
+
+			this.editMode = true;
+			this.renderer.showEditMode(this.libro);
+		});
+
+		this.renderer.onCancelEdit(() => {
+			this.editMode = false;
+			this.renderer.hideEditMode();
+		});
+
+		this.renderer.onSubmitEdit(async formData => {
+			await this.updateLibro(formData);
+		});
+	}
+
+	getLibroIdFromUrl() {
+		const params = new URLSearchParams(window.location.search);
+		return params.get('id')
+			|| params.get('libroId')
+			|| params.get('articleId')
+			|| params.get('articuloId');
+	}
+
+	getLibroFromSession() {
+		try {
+			const raw = sessionStorage.getItem('selectedBookForDetail');
+			return raw ? JSON.parse(raw) : null;
+		} catch (error) {
+			console.warn('No se pudo leer el libro seleccionado desde sessionStorage:', error);
+			return null;
+		}
+	}
+
+	async loadLibro(id, options = {}) {
+		try {
+			this.loading = true;
+			if (options.showLoading !== false) {
+				this.renderer.showLoading();
+			}
+
+			const libro = await this.service.loadLibroById(id);
+
+			this.libro = libro;
+			this.error = null;
+			this.renderer.renderLibro(libro);
+			if (this.editMode) {
+				this.renderer.showEditMode(libro);
+			}
+		} catch (error) {
+			console.error('❌ Error al cargar detalle del libro:', error);
+			this.error = error;
+			if (!this.libro) {
+				this.renderer.showError('Error al cargar el libro. Por favor, intenta mas tarde.');
+			}
+		} finally {
+			this.loading = false;
+		}
+	}
+
+	validateEditForm(formData) {
+		if (!formData.titulo) {
+			return 'El titulo es obligatorio.';
+		}
+
+		if (!Number.isInteger(formData.ejemplares) || formData.ejemplares < 0) {
+			return 'La cantidad de ejemplares debe ser un numero entero mayor o igual a 0.';
+		}
+
+		if (formData.anio !== null && (!Number.isInteger(formData.anio) || formData.anio < 0)) {
+			return 'El ano debe ser un numero entero positivo.';
+		}
+
+		return null;
+	}
+
+	buildUpdatePayload(formData) {
+		return {
+			titulo: formData.titulo,
+			autor: formData.autor,
+			isbn: formData.isbn,
+			editorial: formData.editorial,
+			anio: formData.anio,
+			cdu: formData.cdu,
+			descripcion: formData.descripcion,
+			ejemplares: formData.ejemplares,
+			disponibilidad: formData.ejemplares > 0 ? 'disponible' : 'no disponible'
+		};
+	}
+
+	async updateLibro(formData) {
+		const validationError = this.validateEditForm(formData);
+		if (validationError) {
+			this.renderer.showFormMessage(validationError, true);
+			return;
+		}
+
+		if (!this.currentId) {
+			this.renderer.showFormMessage('No se encontro el ID del libro para guardar.', true);
+			return;
+		}
+
+		try {
+			this.renderer.setEditSubmitting(true);
+			this.renderer.showFormMessage('', false);
+
+			const payload = this.buildUpdatePayload(formData);
+			const libroActualizado = await this.service.updateLibro(this.currentId, payload);
+
+			this.libro = libroActualizado;
+			this.renderer.renderLibro(libroActualizado);
+			this.renderer.showEditMode(libroActualizado);
+			this.renderer.showFormMessage('Libro actualizado correctamente.', false);
+		} catch (error) {
+			console.error('❌ Error al actualizar libro:', error);
+			this.renderer.showFormMessage(error.message || 'No se pudo guardar el libro.', true);
+		} finally {
+			this.renderer.setEditSubmitting(false);
+		}
+	}
+}
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', () => {
+	const service = new LibroService();
+	const renderer = new BookDetailRenderer();
+
+	const controller = new BookDetailController(service, renderer);
+
+	window.bookDetailController = controller;
+});

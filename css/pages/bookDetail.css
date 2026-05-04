@@ -95,6 +95,49 @@ padding: var(--spacing-lg) 0 var(--spacing-3xl);
   line-height: var(--line-height-tight);
 }
 
+.book-detail__title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  justify-content: space-between;
+}
+
+.book-detail__badges {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+.book-detail__badge {
+  background: var(--color-gray-100);
+  border: 1px solid var(--color-gray-200);
+  color: var(--color-gray-800);
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+}
+
+.book-detail__badge--muted {
+  background: transparent;
+  border: 1px dashed var(--color-gray-200);
+  color: var(--color-gray-600);
+}
+
+.book-detail__work-card,
+.book-detail__item-card {
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-gray-200);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.book-detail__section-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-700);
+  margin: 0 0 var(--spacing-xs);
+}
+
 .book-detail__author {
   font-size: var(--font-size-base);
   color: var(--color-gray-600);
