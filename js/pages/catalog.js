@@ -1,18 +1,25 @@
 /**
- * ========== CATALOG PAGE - PUNTO DE ENTRADA ==========
- * 
- * Inicializa la aplicación del catálogo con arquitectura MVC:
- * - Service: LibroService (comunicación HTTP)
- * - View: CatalogRenderer (renderizado de UI)
- * - Orquestación: esta página (sin capa controller separada)
+ * Catalog Page Script — Catálogo
+ *
+ * Orquesta la búsqueda y el render del catálogo.
+ *
+ * Flujo principal:
+ *   1. Cargar todos los libros (paginado)
+ *   2. Aplicar filtros y orden
+ *   3. Renderizar vista (grid/list) + paginación
+ *
+ * Capas:
+ *   - LibroService: comunicación HTTP
+ *   - CatalogRenderer: UI
  */
 
 import { LibroService } from '../services/libroService.js';
 
+// ── Renderer ──────────────────────────────────────────────────────────────
+
 /**
- * Renderizador de Catálogo - Actualización del DOM
- * Maneja la actualización visual de la interfaz del catálogo
- * Encapsula toda la interacción con el DOM
+ * CatalogRenderer — Renderizado del catálogo
+ * Encapsula toda la interacción con el DOM.
  */
 class CatalogRenderer {
   /**
@@ -58,6 +65,48 @@ class CatalogRenderer {
     this.onPageClickCallback = null;
     this.onSimpleSearchCallback = null;
     this.simpleSearchBound = false;
+    this.bookSourcesCache = new WeakMap();
+
+    this.simpleFilterFields = {
+      titulo: { el: this.simpleTituloInput, defaultValue: '' },
+      isbn: { el: this.simpleIsbnInput, defaultValue: '' },
+      persona: { el: this.simplePersonaInput, defaultValue: '' },
+      sortBy: { el: this.sortByFilter, defaultValue: 'titulo' },
+      sortDir: { el: this.sortDirFilter, defaultValue: 'asc' }
+    };
+
+    this.advancedFilterFields = {
+      issn: { el: this.advIssn, defaultValue: '' },
+      editorial: { el: this.advEditorial, defaultValue: '' },
+      idioma: { el: this.advIdioma, defaultValue: '' },
+      anioPublicacion: { el: this.advAnioPublicacion, defaultValue: '' },
+      tipo: { el: this.advTipo, defaultValue: '' },
+      cdu: { el: this.advCdu, defaultValue: '' },
+      lugarDePublicacion: { el: this.advLugarPublicacion, defaultValue: '' },
+      tituloInformativo: { el: this.advTituloInformativo, defaultValue: '' },
+      persona: { el: this.advPersona, defaultValue: '' },
+      temas: { el: this.advTemas, defaultValue: '' }
+    };
+  }
+
+  readFilters(fields) {
+    return Object.entries(fields).reduce((acc, [key, { el, defaultValue }]) => {
+      if (!el) {
+        acc[key] = defaultValue;
+        return acc;
+      }
+      acc[key] = typeof el.value === 'string' ? el.value.trim() : el.value;
+      if (acc[key] === '') acc[key] = defaultValue;
+      return acc;
+    }, {});
+  }
+
+  getBookSources(libro) {
+    if (!libro || typeof libro !== 'object') return [];
+    if (this.bookSourcesCache.has(libro)) return this.bookSourcesCache.get(libro);
+    const sources = [libro, libro?.articulo, libro?.libro, libro?.metadata].filter(Boolean);
+    this.bookSourcesCache.set(libro, sources);
+    return sources;
   }
 
   /**
@@ -137,13 +186,7 @@ class CatalogRenderer {
    * @returns {Object} {search, category, sort}
    */
   getSimpleFilters() {
-    return {
-      titulo: this.simpleTituloInput ? this.simpleTituloInput.value.trim() : '',
-      isbn: this.simpleIsbnInput ? this.simpleIsbnInput.value.trim() : '',
-      persona: this.simplePersonaInput ? this.simplePersonaInput.value.trim() : '',
-      sortBy: this.sortByFilter ? this.sortByFilter.value : 'titulo',
-      sortDir: this.sortDirFilter ? this.sortDirFilter.value : 'asc'
-    };
+    return this.readFilters(this.simpleFilterFields);
   }
 
   /**
@@ -151,18 +194,7 @@ class CatalogRenderer {
    * @returns {Object}
    */
   getAdvancedFilters() {
-    return {
-      issn: this.advIssn ? this.advIssn.value.trim() : '',
-      editorial: this.advEditorial ? this.advEditorial.value.trim() : '',
-      idioma: this.advIdioma ? this.advIdioma.value : '',
-      anioPublicacion: this.advAnioPublicacion ? this.advAnioPublicacion.value : '',
-      tipo: this.advTipo ? this.advTipo.value.trim() : '',
-      cdu: this.advCdu ? this.advCdu.value.trim() : '',
-      lugarDePublicacion: this.advLugarPublicacion ? this.advLugarPublicacion.value.trim() : '',
-      tituloInformativo: this.advTituloInformativo ? this.advTituloInformativo.value.trim() : '',
-      persona: this.advPersona ? this.advPersona.value.trim() : '',
-      temas: this.advTemas ? this.advTemas.value.trim() : ''
-    };
+    return this.readFilters(this.advancedFilterFields);
   }
 
   /**
@@ -307,22 +339,12 @@ class CatalogRenderer {
    * Limpia los inputs de los filtros
    */
   clearFilterInputs() {
-    if (this.simpleTituloInput) this.simpleTituloInput.value = '';
-    if (this.simpleIsbnInput) this.simpleIsbnInput.value = '';
-    if (this.simplePersonaInput) this.simplePersonaInput.value = '';
-    if (this.sortByFilter) this.sortByFilter.value = 'titulo';
-    if (this.sortDirFilter) this.sortDirFilter.value = 'asc';
-    // Limpiar campos avanzados
-    if (this.advIssn) this.advIssn.value = '';
-    if (this.advEditorial) this.advEditorial.value = '';
-    if (this.advIdioma) this.advIdioma.value = '';
-    if (this.advAnioPublicacion) this.advAnioPublicacion.value = '';
-    if (this.advTipo) this.advTipo.value = '';
-    if (this.advCdu) this.advCdu.value = '';
-    if (this.advLugarPublicacion) this.advLugarPublicacion.value = '';
-    if (this.advTituloInformativo) this.advTituloInformativo.value = '';
-    if (this.advPersona) this.advPersona.value = '';
-    if (this.advTemas) this.advTemas.value = '';
+    Object.values(this.simpleFilterFields).forEach(({ el, defaultValue }) => {
+      if (el) el.value = defaultValue;
+    });
+    Object.values(this.advancedFilterFields).forEach(({ el, defaultValue }) => {
+      if (el) el.value = defaultValue;
+    });
   }
 
   /**
@@ -385,31 +407,13 @@ class CatalogRenderer {
     const title = this.getBookTitle(libro);
     const authorInfo = this.getBookAuthors(libro);
     const description = this.getBookDescription(libro);
-    const availability = this.getAvailabilityInfo(this.getBookAvailability(libro));
+    const availability = this.getAvailabilityInfoForBook(libro);
     const year = this.getBookYear(libro);
     const rating = this.getBookRating(libro);
 
     article.setAttribute('data-libro-id', libroId || '');
 
-    // Construir información adicional
-    const infoItems = [];
-    const cdu = this.getBookField(libro, 'cdu');
-    const tituloInformativo = this.getBookField(libro, 'titulo_informativo', 'tituloInformativo');
-    if (cdu) {
-      infoItems.push(`<span class="catalog-book-info-item"><strong>CDU:</strong> ${this.escapeHtml(cdu)}</span>`);
-    }
-    if (tituloInformativo) {
-      infoItems.push(`<span class="catalog-book-info-item"><strong>Info:</strong> ${this.escapeHtml(tituloInformativo)}</span>`);
-    }
-    if (Array.isArray(libro.colaboradores) && libro.colaboradores.length > 0) {
-      infoItems.push(`<span class="catalog-book-info-item"><strong>Colaboradores:</strong> ${this.escapeHtml(libro.colaboradores.join(', '))}</span>`);
-    }
-    const locationText = this.getLocationText(libro);
-    if (locationText) {
-      infoItems.push(`<span class="catalog-book-info-item"><strong>Ubicación:</strong> ${this.escapeHtml(locationText)}</span>`);
-    }
-
-    const additionalInfo = infoItems.length > 0 ? `<div class="catalog-book-additional-info">${infoItems.join('')}</div>` : '';
+    const additionalInfo = this.buildAdditionalInfo(libro);
 
     article.innerHTML = `
       <div class="catalog-book-card__content">
@@ -423,12 +427,7 @@ class CatalogRenderer {
         ${additionalInfo}
 
         <div class="catalog-book-card__meta">
-          <div class="catalog-book-card__rating">
-            ${rating ? `
-              <span class="catalog-book-card__stars">${this.renderStars(rating)}</span>
-              <span class="catalog-book-card__rating-value">(${rating.toFixed(1)})</span>
-            ` : '<span class="catalog-book-card__rating-value">Sin calificación</span>'}
-          </div>
+          ${this.buildRatingHtml(rating)}
           <span class="catalog-book-card__year">${year || 'S/A'}</span>
         </div>
         <div class="catalog-book-card__actions">
@@ -459,12 +458,53 @@ class CatalogRenderer {
     return article;
   }
 
+  buildRatingHtml(rating) {
+    if (!rating) {
+      return '<div class="catalog-book-card__rating"><span class="catalog-book-card__rating-value">Sin calificación</span></div>';
+    }
+    return `
+      <div class="catalog-book-card__rating">
+        <span class="catalog-book-card__stars">${this.renderStars(rating)}</span>
+        <span class="catalog-book-card__rating-value">(${rating.toFixed(1)})</span>
+      </div>
+    `;
+  }
+
+  buildAdditionalInfo(libro) {
+    const infoItems = [];
+    const cdu = this.getBookField(libro, 'cdu');
+    const tituloInformativo = this.getBookField(libro, 'titulo_informativo', 'tituloInformativo');
+    if (cdu) {
+      infoItems.push(`<span class="catalog-book-info-item"><strong>CDU:</strong> ${this.escapeHtml(cdu)}</span>`);
+    }
+    if (tituloInformativo) {
+      infoItems.push(`<span class="catalog-book-info-item"><strong>Info:</strong> ${this.escapeHtml(tituloInformativo)}</span>`);
+    }
+    if (Array.isArray(libro.colaboradores) && libro.colaboradores.length > 0) {
+      infoItems.push(`<span class="catalog-book-info-item"><strong>Colaboradores:</strong> ${this.escapeHtml(libro.colaboradores.join(', '))}</span>`);
+    }
+    const locationText = this.getLocationText(libro);
+    if (locationText) {
+      infoItems.push(`<span class="catalog-book-info-item"><strong>Ubicación:</strong> ${this.escapeHtml(locationText)}</span>`);
+    }
+
+    return infoItems.length > 0
+      ? `<div class="catalog-book-additional-info">${infoItems.join('')}</div>`
+      : '';
+  }
+
   getBookField(libro, ...keys) {
-    const sources = [libro, libro?.articulo, libro?.libro, libro?.metadata];
+    const sources = this.getBookSources(libro);
 
     for (const source of sources) {
-      if (!source) continue;
       for (const key of keys) {
+        if (String(key).includes('.')) {
+          const nestedValue = this.getNestedValue(source, key);
+          if (nestedValue !== undefined && nestedValue !== null && nestedValue !== '') {
+            return nestedValue;
+          }
+          continue;
+        }
         const value = source[key];
         if (value !== undefined && value !== null && value !== '') {
           return value;
@@ -473,6 +513,13 @@ class CatalogRenderer {
     }
 
     return '';
+  }
+
+  getNestedValue(object, path) {
+    return String(path).split('.').reduce((current, segment) => {
+      if (!current || typeof current !== 'object') return undefined;
+      return current[segment];
+    }, object);
   }
 
   getBookId(libro) {
@@ -496,32 +543,25 @@ class CatalogRenderer {
     if (directAuthor) return directAuthor;
 
     const authors = this.getBookField(libro, 'autores', 'authors');
-    if (Array.isArray(authors) && authors.length > 0) {
-      return authors.map(author => this.normalizePersonText(author)).filter(Boolean).join(', ');
-    }
+    if (Array.isArray(authors) && authors.length > 0) return this.getPersonListText(authors);
 
     const personas = this.getBookField(libro, 'personas');
-    if (Array.isArray(personas) && personas.length > 0) {
-      return personas
-        .filter(person => this.isAuthorPerson(person))
-        .map(person => this.normalizePersonText(person))
-        .filter(Boolean)
-        .join(', ');
-    }
+    if (Array.isArray(personas) && personas.length > 0) return this.getPersonListText(personas, true);
 
     return '';
   }
 
   getBookDescription(libro) {
-    return this.getBookField(libro, 'description', 'descripcion', 'resumen');
+    return this.getBookField(libro, 'description', 'descripcion', 'resumen', 'articulo.descripcion');
   }
 
   getBookYear(libro) {
     return this.getBookField(libro, 'año', 'anio', 'anio_publicacion', 'anioPublicacion', 'publicationYear', 'year');
   }
 
-  getBookAvailability(libro) {
-    return this.getBookField(libro, 'disponibilidad', 'estado') || 'available';
+  getAvailabilityInfoForBook(libro) {
+    const availability = this.getBookField(libro, 'disponibilidad', 'estado') || 'available';
+    return this.getAvailabilityInfo(availability);
   }
 
   getBookRating(libro) {
@@ -530,7 +570,15 @@ class CatalogRenderer {
     return Number.isFinite(numericRating) ? numericRating : null;
   }
 
-  normalizePersonText(person) {
+  getPersonListText(personas, onlyAuthors = false) {
+    return personas
+      .filter(person => (onlyAuthors ? this.isAuthorPerson(person) : true))
+      .map(person => this.formatPersonName(person))
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  formatPersonName(person) {
     if (typeof person === 'string') return person.trim();
     if (!person || typeof person !== 'object') return '';
 
@@ -646,6 +694,11 @@ class CatalogRenderer {
 
     if (!paginationList) return;
 
+    const setNavDisabled = (disabled) => {
+      if (prevBtn) prevBtn.disabled = disabled || currentPage === 1;
+      if (nextBtn) nextBtn.disabled = disabled || currentPage === totalPages;
+    };
+
     // Ocultar paginación si hay 1 o menos páginas
     if (pagination) {
       pagination.classList.toggle('catalog-pagination--hidden', totalPages <= 1);
@@ -653,57 +706,43 @@ class CatalogRenderer {
 
     if (totalPages <= 1) {
       paginationList.innerHTML = '';
-      if (prevBtn) prevBtn.disabled = true;
-      if (nextBtn) nextBtn.disabled = true;
+      setNavDisabled(true);
       return;
     }
 
     // Limpiar paginación anterior
     paginationList.innerHTML = '';
 
-    // Generar números de página
-    if (totalPages <= 5) {
-      // Si hay 5 o menos páginas, mostrar todas
-      for (let i = 1; i <= totalPages; i++) {
-        this.createPageButton(i, paginationList, currentPage);
-      }
-    } else {
-      // Si hay más de 5 páginas, mostrar navegación inteligente
-      this.createPageButton(1, paginationList, currentPage);
+    const addEllipsis = () => {
+      const ellipsis = document.createElement('li');
+      ellipsis.className = 'catalog-pagination__ellipsis';
+      ellipsis.textContent = '...';
+      paginationList.appendChild(ellipsis);
+    };
 
-      if (currentPage > 3) {
-        const ellipsis = document.createElement('li');
-        ellipsis.className = 'catalog-pagination__ellipsis';
-        ellipsis.textContent = '...';
-        paginationList.appendChild(ellipsis);
-      }
-
-      // Páginas alrededor de la actual
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(totalPages - 1, currentPage + 1);
-
+    const addPageRange = (start, end) => {
       for (let i = start; i <= end; i++) {
         this.createPageButton(i, paginationList, currentPage);
       }
+    };
 
-      if (currentPage < totalPages - 2) {
-        const ellipsis = document.createElement('li');
-        ellipsis.className = 'catalog-pagination__ellipsis';
-        ellipsis.textContent = '...';
-        paginationList.appendChild(ellipsis);
-      }
+    if (totalPages <= 5) {
+      addPageRange(1, totalPages);
+    } else {
+      this.createPageButton(1, paginationList, currentPage);
+
+      if (currentPage > 3) addEllipsis();
+
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      addPageRange(start, end);
+
+      if (currentPage < totalPages - 2) addEllipsis();
 
       this.createPageButton(totalPages, paginationList, currentPage);
     }
 
-    // Actualizar estado de botones previo/siguiente
-    if (prevBtn) {
-      prevBtn.disabled = currentPage === 1;
-    }
-
-    if (nextBtn) {
-      nextBtn.disabled = currentPage === totalPages;
-    }
+    setNavDisabled(false);
   }
 
   /**
@@ -792,7 +831,7 @@ class CatalogRenderer {
   }
 }
 
-// ========== CONTROLLER ==========
+// ── Controller ───────────────────────────────────────────────────────────
 
 class CatalogController {
   constructor(service, renderer) {
@@ -802,7 +841,6 @@ class CatalogController {
     this.allLibros = [];
     this.filteredLibros = [];
     this.totalLibros = 0;
-    this.allCategorias = [];
     this.hasLoadedAllBooks = false;
     this.currentPage = 1;
     this.itemsPerPage = 10;
@@ -815,6 +853,7 @@ class CatalogController {
       sortDir: 'asc',
       advanced: this.getDefaultAdvancedFilters()
     };
+    this.lastRenderKey = '';
 
     this.init();
   }
@@ -984,6 +1023,12 @@ class CatalogController {
     const startIndex = total === 0 ? 0 : start + 1;
     const endIndex = Math.min(start + this.itemsPerPage, total);
 
+    const renderKey = `${this.filteredLibros.length}|${this.currentPage}|${this.currentView}|${JSON.stringify(this.filters)}`;
+    if (renderKey === this.lastRenderKey) {
+      return;
+    }
+    this.lastRenderKey = renderKey;
+
     this.renderer.renderLibros(pageLibros, {
       total,
       startIndex,
@@ -1031,20 +1076,9 @@ class CatalogController {
     return Math.max(1, Math.ceil(this.totalLibros / this.itemsPerPage));
   }
 
-  getState() {
-    return {
-      allLibros: this.allLibros,
-      filteredLibros: this.filteredLibros,
-      totalLibros: this.totalLibros,
-      currentPage: this.currentPage,
-      itemsPerPage: this.itemsPerPage,
-      currentView: this.currentView,
-      filters: this.filters
-    };
-  }
 }
 
-// Inicializar el catálogo cuando el DOM esté cargado
+// ── Init ─────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   const service = new LibroService();
   const renderer = new CatalogRenderer();

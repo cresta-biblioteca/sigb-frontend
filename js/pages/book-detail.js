@@ -1,9 +1,25 @@
 /**
- * ========== BOOK DETAIL PAGE - PUNTO DE ENTRADA ==========
- * Inicializa la pagina de detalle de libro sin controller separado.
+ * Book Detail Page Script — Detalle del libro
+ *
+ * Renderiza la ficha del libro y su disponibilidad.
+ * No incluye edición o creación de libros.
+ *
+ * Flujo principal:
+ *   1. Obtener ID desde URL o sessionStorage
+ *   2. Cargar libro desde API
+ *   3. Renderizar metadatos, chips y disponibilidad
+ *
+ * Contenedores usados en el HTML:
+ *   #bookTitle               — título principal
+ *   #bookAuthor              — autor principal
+ *   #workMetaList            — metadatos bibliográficos
+ *   #bookDescription         — descripción
+ *   #bookChips               — chips de personas/temas
+ *   #bookAvailabilityRows    — filas de disponibilidad
  */
 import { LibroService } from '../services/libroService.js';
 
+// ── Configuración de campos ───────────────────────────────────────────────
 const BOOK_DETAIL_TOP_FIELDS = [
 	{ label: 'ISBN', key: 'isbn' },
 	{ label: 'ISSN', key: 'issn' },
@@ -29,9 +45,10 @@ const BOOK_DETAIL_ARTICLE_FIELDS = [
 	{ label: 'Descripción', key: 'descripcion' }
 ];
 
+// ── Renderer ──────────────────────────────────────────────────────────────
 /**
- * BookDetailRenderer - Renderizado de la pagina de detalle
- * NO depende del State. Recibe datos desde el Controller.
+ * BookDetailRenderer — Renderizado de la ficha
+ * No depende de state: recibe datos desde el controller.
  */
 class BookDetailRenderer {
 	constructor() {
@@ -478,7 +495,7 @@ class BookDetailRenderer {
 	}
 }
 
-// ========== CONTROLLER ==========
+// ── Controller ───────────────────────────────────────────────────────────
 
 class BookDetailController {
 	constructor(service, renderer) {
@@ -551,7 +568,7 @@ class BookDetailController {
 	}
 }
 
-// Inicializar
+// ── Init ─────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
 	const service = new LibroService();
 	const renderer = new BookDetailRenderer();
