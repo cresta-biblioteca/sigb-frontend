@@ -374,8 +374,8 @@ class CatalogRenderer {
    */
   showNoResults() {
     this.booksGrid.innerHTML = `
-      <div class="catalog-no-results" style="grid-column: 1 / -1; padding: 3rem; text-align: center; background-color: white; border-radius: 8px;">
-        <p style="color: var(--color-gray-600); font-size: var(--font-size-lg);">No se encontraron libros con los criterios seleccionados.</p>
+      <div class="catalog-no-results">
+        <p class="catalog-no-results__text">No se encontraron libros con los criterios seleccionados.</p>
       </div>
     `;
   }
@@ -766,9 +766,9 @@ class CatalogRenderer {
   showErrorMessage(message) {
     if (this.booksGrid) {
       this.booksGrid.innerHTML = `
-        <div class="catalog-error" style="grid-column: 1 / -1; padding: 2rem; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; color: #721c24;">
+        <div class="catalog-error">
           <p>${this.escapeHtml(message)}</p>
-          <button onclick="location.reload()" class="btn btn--primary" style="margin-top: 1rem;">Reintentar</button>
+          <button onclick="location.reload()" class="btn btn--primary catalog-error__action">Reintentar</button>
         </div>
       `;
     }

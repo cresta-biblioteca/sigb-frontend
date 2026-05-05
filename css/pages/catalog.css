@@ -958,16 +958,26 @@
   text-align: center;
   padding: var(--spacing-2xl);
   border-radius: var(--radius-lg);
+  grid-column: 1 / -1;
 }
 
 .catalog-no-results {
   background-color: var(--color-white);
   color: var(--color-gray-600);
   border: 1px solid var(--color-gray-200);
+  padding: var(--spacing-3xl);
+}
+
+.catalog-no-results__text {
+  font-size: var(--font-size-lg);
 }
 
 .catalog-error {
   background-color: #f8d7da;
   border: 1px solid #f5c6cb;
   color: #721c24;
+}
+
+.catalog-error__action {
+  margin-top: var(--spacing-md);
 }
