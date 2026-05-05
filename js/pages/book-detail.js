@@ -4,6 +4,31 @@
  */
 import { LibroService } from '../services/libroService.js';
 
+const BOOK_DETAIL_TOP_FIELDS = [
+	{ label: 'ISBN', key: 'isbn' },
+	{ label: 'ISSN', key: 'issn' },
+	{ label: 'Páginas', key: 'paginas' },
+	{ label: 'Título informativo', key: ['titulo_informativo', 'tituloInformativo'] },
+	{ label: 'CDU', key: 'cdu' },
+	{ label: 'Editorial', key: 'editorial' },
+	{ label: 'Lugar de publicación', key: ['lugar_de_publicacion', 'lugarDePublicacion'] },
+	{ label: 'Edición', key: 'edicion' },
+	{ label: 'Dimensiones', key: 'dimensiones' },
+	{ label: 'Ilustraciones', key: 'ilustraciones' },
+	{ label: 'Serie', key: 'serie' },
+	{ label: 'Número de serie', key: ['numero_serie', 'numeroSerie'] },
+	{ label: 'Notas', key: 'notas' },
+	{ label: 'País de publicación', key: ['pais_publicacion', 'paisPublicacion'] }
+];
+
+const BOOK_DETAIL_ARTICLE_FIELDS = [
+	{ label: 'Título', key: 'titulo' },
+	{ label: 'Año de publicación', key: ['anio_publicacion', 'anioPublicacion'] },
+	{ label: 'Tipo', key: 'tipo' },
+	{ label: 'Idioma', key: 'idioma' },
+	{ label: 'Descripción', key: 'descripcion' }
+];
+
 /**
  * BookDetailRenderer - Renderizado de la pagina de detalle
  * NO depende del State. Recibe datos desde el Controller.
@@ -24,20 +49,42 @@ class BookDetailRenderer {
 		this.bookLayout = document.getElementById('bookLayout');
 		this.bookAvailabilityPanel = document.getElementById('bookAvailabilityPanel');
 		this.bookAvailabilityRows = document.getElementById('bookAvailabilityRows');
+		this.bookSourcesCache = new WeakMap();
+		this.detailSectionsCache = new WeakMap();
+		this.availabilityRowsCache = new WeakMap();
+	}
+
+	setVisibility(element, isVisible) {
+		if (!element) return;
+		element.classList.toggle('is-hidden', !isVisible);
+	}
+
+	setText(element, text) {
+		if (!element) return;
+		element.textContent = text;
+	}
+
+	clearError() {
+		if (!this.bookError) return;
+		this.bookError.classList.add('is-hidden');
+		this.bookError.textContent = '';
 	}
 
 	showLoading() {
-		if (this.bookLoading) this.bookLoading.classList.remove('is-hidden');
-		if (this.bookError) { this.bookError.classList.add('is-hidden'); this.bookError.textContent = ''; }
-		if (this.bookLayout) this.bookLayout.classList.add('is-hidden');
-		if (this.bookAvailabilityPanel) this.bookAvailabilityPanel.classList.add('is-hidden');
+		this.setVisibility(this.bookLoading, true);
+		this.clearError();
+		this.setVisibility(this.bookLayout, false);
+		this.setVisibility(this.bookAvailabilityPanel, false);
 	}
 
 	showError(message) {
-		if (this.bookError) { this.bookError.textContent = message; this.bookError.classList.remove('is-hidden'); }
-		if (this.bookLoading) this.bookLoading.classList.add('is-hidden');
-		if (this.bookLayout) this.bookLayout.classList.add('is-hidden');
-		if (this.bookAvailabilityPanel) this.bookAvailabilityPanel.classList.add('is-hidden');
+		if (this.bookError) {
+			this.bookError.textContent = message;
+			this.bookError.classList.remove('is-hidden');
+		}
+		this.setVisibility(this.bookLoading, false);
+		this.setVisibility(this.bookLayout, false);
+		this.setVisibility(this.bookAvailabilityPanel, false);
 	}
 
 	renderLibro(libro) {
@@ -46,22 +93,22 @@ class BookDetailRenderer {
 			return;
 		}
 
-		if (this.bookLoading) this.bookLoading.classList.add('is-hidden');
-		if (this.bookError) { this.bookError.classList.add('is-hidden'); this.bookError.textContent = ''; }
-		if (this.bookLayout) this.bookLayout.classList.remove('is-hidden');
-		if (this.bookAvailabilityPanel) this.bookAvailabilityPanel.classList.remove('is-hidden');
+		this.setVisibility(this.bookLoading, false);
+		this.clearError();
+		this.setVisibility(this.bookLayout, true);
+		this.setVisibility(this.bookAvailabilityPanel, true);
 
 		const title = this.getBookTitle(libro) || 'Libro sin titulo';
 		const authorInfo = this.getBookAuthors(libro);
 		const description = this.getBookDescription(libro) || 'Sin descripcion disponible.';
-		if (this.bookBreadcrumbTitle) this.bookBreadcrumbTitle.textContent = title;
-		if (this.bookTitle) this.bookTitle.textContent = title;
-		if (this.bookAuthor) this.bookAuthor.textContent = authorInfo || 'Autor desconocido';
-		if (this.bookDescription) this.bookDescription.textContent = description;
+		this.setText(this.bookBreadcrumbTitle, title);
+		this.setText(this.bookTitle, title);
+		this.setText(this.bookAuthor, authorInfo || 'Autor desconocido');
+		this.setText(this.bookDescription, description);
 
 		// Badges y resumen de ejemplares
 		const ejemplaresCount = this.getEjemplares(libro);
-		if (this.workBadgeEjemplares) this.workBadgeEjemplares.textContent = `Ejemplares: ${ejemplaresCount}`;
+		this.setText(this.workBadgeEjemplares, `Ejemplares: ${ejemplaresCount}`);
 		if (this.bookBadges) this.bookBadges.classList.remove('is-hidden');
 
 		this.renderMeta(libro);
@@ -87,40 +134,28 @@ class BookDetailRenderer {
 		return value !== undefined && value !== null && value !== '';
 	}
 
-	createMetaRowElement(label, value) {
-		const div = document.createElement('div');
-		div.className = 'book-detail__meta-row';
-
-		const labelSpan = document.createElement('span');
-		labelSpan.className = 'book-detail__meta-label';
-		labelSpan.textContent = String(label);
-
-		const valueSpan = document.createElement('span');
-		valueSpan.className = 'book-detail__meta-value';
-		valueSpan.textContent = String(value);
-
-		div.appendChild(labelSpan);
-		div.appendChild(valueSpan);
-		return div;
+	buildMetaRowHtml(label, value) {
+		return `<div class="book-detail__meta-row">
+			<span class="book-detail__meta-label">${this.escapeHtml(label)}</span>
+			<span class="book-detail__meta-value">${this.escapeHtml(value)}</span>
+		</div>`;
 	}
 
 	renderMeta(libro) {
 		if (!this.workMetaList) return;
-		this.workMetaList.innerHTML = '';
 
 		const sections = this.buildDetailSections(libro);
-		sections.forEach(section => {
-			if (!section.items.length) return;
+		const html = sections
+			.filter(section => section.items.length > 0)
+			.map(section => {
+				const rows = section.items
+					.map(item => this.buildMetaRowHtml(item.label, item.value))
+					.join('');
+				return `<h3 class="book-detail__section-title">${this.escapeHtml(section.title)}</h3>${rows}`;
+			})
+			.join('');
 
-			const heading = document.createElement('h3');
-			heading.className = 'book-detail__section-title';
-			heading.textContent = section.title;
-			this.workMetaList.appendChild(heading);
-
-			section.items.forEach(item => {
-				this.workMetaList.appendChild(this.createMetaRowElement(item.label, item.value));
-			});
-		});
+		this.workMetaList.innerHTML = html;
 	}
 
 	renderItemSummary(libro) {
@@ -129,9 +164,11 @@ class BookDetailRenderer {
 
 		if (Array.isArray(libro.ejemplares_detalle) && libro.ejemplares_detalle.length > 0) {
 			const first = libro.ejemplares_detalle[0];
-			this.itemMetaList.appendChild(this.createMetaRowElement('Código', first.codigo_barras || this.buildBarcode(libro.id || libro.codigo, 1)));
-			this.itemMetaList.appendChild(this.createMetaRowElement('Ubicación', first.ubicacion || libro.estante || ''));
-			this.itemMetaList.appendChild(this.createMetaRowElement('Estado', this.normalizeAvailability(first.estado || first.disponibilidad).text));
+			this.itemMetaList.innerHTML = [
+				this.buildMetaRowHtml('Código', first.codigo_barras || this.buildBarcode(libro.id || libro.codigo, 1)),
+				this.buildMetaRowHtml('Ubicación', first.ubicacion || libro.estante || ''),
+				this.buildMetaRowHtml('Estado', this.normalizeAvailability(first.estado || first.disponibilidad).text)
+			].join('');
 			return;
 		}
 
@@ -144,35 +181,33 @@ class BookDetailRenderer {
 			return;
 		}
 
-		this.itemMetaList.appendChild(this.createMetaRowElement('Ejemplares totales', total));
+		this.itemMetaList.innerHTML = this.buildMetaRowHtml('Ejemplares totales', total);
 	}
 
 	renderChips(libro) {
 		if (!this.bookChips) return;
-		this.bookChips.innerHTML = '';
+		const chips = [
+			...this.getBookPersonas(libro),
+			...this.getBookTemas(libro)
+		].filter(Boolean);
 
-		const chips = [];
-		chips.push(...this.getBookPersonas(libro));
-		chips.push(...this.getBookTemas(libro));
+		this.bookChips.innerHTML = chips.length === 0
+			? '<span class="book-detail__meta-value">Sin informacion adicional.</span>'
+			: chips.map(text => `<span class="book-detail__chip">${this.escapeHtml(text)}</span>`).join('');
+	}
 
-		if (chips.length === 0) {
-			this.bookChips.innerHTML = '<span class="book-detail__meta-value">Sin informacion adicional.</span>';
-			return;
-		}
-
-		chips.forEach(text => {
-			const span = document.createElement('span');
-			span.className = 'book-detail__chip';
-			span.textContent = text;
-			this.bookChips.appendChild(span);
-		});
+	getBookSources(libro) {
+		if (!libro || typeof libro !== 'object') return [];
+		if (this.bookSourcesCache.has(libro)) return this.bookSourcesCache.get(libro);
+		const sources = [libro, libro?.articulo, libro?.libro, libro?.metadata].filter(Boolean);
+		this.bookSourcesCache.set(libro, sources);
+		return sources;
 	}
 
 	getBookField(libro, ...keys) {
-		const sources = [libro, libro?.articulo, libro?.libro, libro?.metadata];
+		const sources = this.getBookSources(libro);
 
 		for (const source of sources) {
-			if (!source) continue;
 			for (const key of keys) {
 				if (String(key).includes('.')) {
 					const nestedValue = this.getNestedValue(source, key);
@@ -208,14 +243,14 @@ class BookDetailRenderer {
 
 		const authors = this.getBookField(libro, 'autores', 'authors');
 		if (Array.isArray(authors) && authors.length > 0) {
-			return authors.map(author => this.normalizePersonText(author)).filter(Boolean).join(', ');
+			return authors.map(author => this.formatPersonName(author, 'apellido-nombre')).filter(Boolean).join(', ');
 		}
 
 		const personas = this.getBookField(libro, 'personas');
 		if (Array.isArray(personas) && personas.length > 0) {
 			return personas
 				.filter(person => this.isAuthorPerson(person))
-				.map(person => this.normalizePersonText(person))
+				.map(person => this.formatPersonName(person, 'apellido-nombre'))
 				.filter(Boolean)
 				.join(', ');
 		}
@@ -232,42 +267,44 @@ class BookDetailRenderer {
 	}
 
 	buildDetailSections(libro) {
+		if (libro && this.detailSectionsCache.has(libro)) {
+			return this.detailSectionsCache.get(libro);
+		}
+
 		const article = libro?.articulo || {};
-		const topLevelItems = [
-			{ label: 'ISBN', value: this.getBookField(libro, 'isbn') },
-			{ label: 'ISSN', value: this.getBookField(libro, 'issn') },
-			{ label: 'Páginas', value: this.getBookField(libro, 'paginas') },
-			{ label: 'Título informativo', value: this.getBookField(libro, 'titulo_informativo', 'tituloInformativo') },
-			{ label: 'CDU', value: this.getBookField(libro, 'cdu') },
-			{ label: 'Editorial', value: this.getBookField(libro, 'editorial') },
-			{ label: 'Lugar de publicación', value: this.getBookField(libro, 'lugar_de_publicacion', 'lugarDePublicacion') },
-			{ label: 'Edición', value: this.getBookField(libro, 'edicion') },
-			{ label: 'Dimensiones', value: this.getBookField(libro, 'dimensiones') },
-			{ label: 'Ilustraciones', value: this.getBookField(libro, 'ilustraciones') },
-			{ label: 'Serie', value: this.getBookField(libro, 'serie') },
-			{ label: 'Número de serie', value: this.getBookField(libro, 'numero_serie', 'numeroSerie') },
-			{ label: 'Notas', value: this.getBookField(libro, 'notas') },
-			{ label: 'País de publicación', value: this.getBookField(libro, 'pais_publicacion', 'paisPublicacion') }
-		].filter(item => this.hasValue(item.value));
+		const topLevelItems = BOOK_DETAIL_TOP_FIELDS.map(field => {
+			const keys = Array.isArray(field.key) ? field.key : [field.key];
+			return { label: field.label, value: this.getBookField(libro, ...keys) };
+		}).filter(item => this.hasValue(item.value));
 
 		const personas = this.getBookContributorItems(libro);
 		const temaItems = this.getBookTemas(libro);
 
-		return [
+		const sections = [
 			{ title: 'Datos generales', items: topLevelItems },
 			{ title: 'Autores y colaboradores', items: personas },
 			{
 				title: 'Artículo',
 				items: [
-					{ label: 'Título', value: article.titulo },
-					{ label: 'Año de publicación', value: article.anio_publicacion || article.anioPublicacion },
-					{ label: 'Tipo', value: article.tipo },
-					{ label: 'Idioma', value: article.idioma },
-					{ label: 'Descripción', value: article.descripcion },
+					...BOOK_DETAIL_ARTICLE_FIELDS.map(field => {
+						const keys = Array.isArray(field.key) ? field.key : [field.key];
+						const value = keys.reduce((result, key) => {
+							if (result !== undefined && result !== null && result !== '') return result;
+							const nextValue = article[key];
+							return nextValue ?? result;
+						}, '');
+						return { label: field.label, value };
+					}),
 					{ label: 'Temas', value: temaItems.length > 0 ? temaItems.join(', ') : '' }
 				].filter(item => this.hasValue(item.value))
 			}
 		].filter(section => section.items.length > 0);
+
+		if (libro && typeof libro === 'object') {
+			this.detailSectionsCache.set(libro, sections);
+		}
+
+		return sections;
 	}
 
 	getBookContributorItems(libro) {
@@ -276,7 +313,7 @@ class BookDetailRenderer {
 
 		return personas
 			.map(person => {
-				const value = this.formatPersonDetail(person);
+				const value = this.formatPersonName(person, 'nombre-apellido');
 				if (!value) return null;
 
 				const roleLabel = this.getPersonRoleLabel(person);
@@ -292,7 +329,7 @@ class BookDetailRenderer {
 		const personas = this.getBookField(libro, 'personas');
 		if (!Array.isArray(personas)) return [];
 
-		return personas.map(person => this.formatPersonDetail(person)).filter(Boolean);
+		return personas.map(person => this.formatPersonName(person, 'nombre-apellido')).filter(Boolean);
 	}
 
 	getBookTemas(libro) {
@@ -304,15 +341,6 @@ class BookDetailRenderer {
 			if (!tema || typeof tema !== 'object') return '';
 			return String(tema.titulo || tema.nombre || tema.id || '').trim();
 		}).filter(Boolean);
-	}
-
-	formatPersonDetail(person) {
-		if (!person || typeof person !== 'object') return '';
-
-		const nombre = String(person.nombre || '').trim();
-		const apellido = String(person.apellido || '').trim();
-		const base = [nombre, apellido].filter(Boolean).join(' ').trim();
-		return base || 'Persona sin nombre';
 	}
 
 	getPersonRoleLabel(person) {
@@ -329,7 +357,7 @@ class BookDetailRenderer {
 		return role.charAt(0).toUpperCase() + role.slice(1);
 	}
 
-	normalizePersonText(person) {
+	formatPersonName(person, style = 'nombre-apellido') {
 		if (typeof person === 'string') return person.trim();
 		if (!person || typeof person !== 'object') return '';
 
@@ -339,7 +367,9 @@ class BookDetailRenderer {
 		const nombre = String(person.nombre || person.firstName || '').trim();
 		const apellido = String(person.apellido || person.lastName || '').trim();
 
-		if (nombre && apellido) return `${apellido}, ${nombre}`;
+		if (nombre && apellido) {
+			return style === 'apellido-nombre' ? `${apellido}, ${nombre}` : `${nombre} ${apellido}`;
+		}
 		return apellido || nombre || '';
 	}
 
@@ -368,8 +398,12 @@ class BookDetailRenderer {
 	}
 
 	buildAvailabilityRows(libro) {
+		if (libro && this.availabilityRowsCache.has(libro)) {
+			return this.availabilityRowsCache.get(libro);
+		}
+
 		if (Array.isArray(libro.ejemplares_detalle) && libro.ejemplares_detalle.length > 0) {
-			return libro.ejemplares_detalle.map((ej, i) => {
+			const rows = libro.ejemplares_detalle.map((ej, i) => {
 				const norm = this.normalizeAvailability(ej.estado || ej.disponibilidad);
 				const barcode = ej.codigo_barras || this.buildBarcode(libro.id || libro.codigo, i + 1);
 				const tipo = this.getTipoMaterialText(ej.tipo_documento || libro.tipo_documento);
@@ -383,30 +417,42 @@ class BookDetailRenderer {
 					<td>${this.escapeHtml(nota)}</td>
 				</tr>`;
 			}).join('');
+			if (libro && typeof libro === 'object') {
+				this.availabilityRowsCache.set(libro, rows);
+			}
+			return rows;
 		}
 
 		const total = this.getEjemplares(libro);
 		if (total <= 0) {
-			return `<tr><td colspan="5">Sin ejemplares registrados.</td></tr>`;
+			const emptyRows = `<tr><td colspan="5">Sin ejemplares registrados.</td></tr>`;
+			if (libro && typeof libro === 'object') {
+				this.availabilityRowsCache.set(libro, emptyRows);
+			}
+			return emptyRows;
 		}
 
 		const tipo = this.getTipoMaterialText(libro.tipo_documento);
 		const ubicacion = libro.estante || '';
-		const rows = [];
-		for (let i = 0; i < total; i++) {
+		const rows = Array.from({ length: total }, (_, i) => {
 			const barcode = this.buildBarcode(libro.id || libro.codigo, i + 1);
 			const isFirst = i === 0;
 			const norm = this.normalizeAvailability(isFirst ? 'available' : 'unavailable');
 			const nota = isFirst ? '' : 'Vence: 20/05/2024';
-			rows.push(`<tr>
+			return `<tr>
 				<td>${this.escapeHtml(barcode)}</td>
 				<td>${this.escapeHtml(tipo)}</td>
 				<td>${this.escapeHtml(ubicacion)}</td>
 				<td><span class="book-detail__avail-badge book-detail__avail-badge--${norm.css}">${this.escapeHtml(norm.text)}</span></td>
 				<td>${this.escapeHtml(nota)}</td>
-			</tr>`);
+			</tr>`;
+		}).join('');
+
+		if (libro && typeof libro === 'object') {
+			this.availabilityRowsCache.set(libro, rows);
 		}
-		return rows.join('');
+
+		return rows;
 	}
 
 	normalizeAvailability(value) {
