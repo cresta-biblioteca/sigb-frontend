@@ -269,18 +269,13 @@ padding: var(--spacing-lg) 0 var(--spacing-3xl);
 }
 
 .book-detail__admin-actions .btn,
-.book-detail__back,
-.book-detail__edit-toggle {
+.book-detail__back {
   width: 100%;
   min-height: 46px;
   padding: 10px 12px;
   text-align: center;
   line-height: 1.25;
   white-space: normal;
-}
-
-.book-detail__edit-toggle {
-  font-size: 13px;
 }
 
 .book-detail__back {
@@ -364,87 +359,6 @@ padding: var(--spacing-lg) 0 var(--spacing-3xl);
   color: #004085;
 }
 
-/* ========== EDIT FORM ========== */
-.book-detail__edit-form {
-  background: var(--color-white);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-gray-200);
-  padding: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
-}
-
-.book-detail__edit-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-md);
-}
-
-.book-detail__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.book-detail__field--full {
-  grid-column: 1 / -1;
-}
-
-.book-detail__label {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-gray-700);
-}
-
-.book-detail__input,
-.book-detail__textarea {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-base);
-  color: var(--color-gray-900);
-  font-family: var(--font-family-base);
-  background: var(--color-white);
-  transition: border-color 0.2s;
-}
-
-.book-detail__input:focus,
-.book-detail__textarea:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(15, 43, 91, 0.1);
-}
-
-.book-detail__textarea {
-  resize: vertical;
-}
-
-.book-detail__form-message {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  margin-top: var(--spacing-sm);
-}
-
-.book-detail__form-message--error {
-  background: #fff0f0;
-  color: var(--color-error);
-  border: 1px solid rgba(220, 53, 69, 0.2);
-}
-
-.book-detail__form-message--success {
-  background: #f0fff4;
-  color: var(--color-success);
-  border: 1px solid rgba(40, 167, 69, 0.2);
-}
-
-.book-detail__edit-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-  justify-content: flex-end;
-  margin-top: var(--spacing-md);
-  padding-top: var(--spacing-md);
-  border-top: 1px solid var(--color-gray-200);
-}
 
 /* ========== HIDDEN UTILITY ========== */
 .is-hidden {

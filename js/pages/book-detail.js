@@ -24,19 +24,6 @@ class BookDetailRenderer {
 		this.bookLayout = document.getElementById('bookLayout');
 		this.bookAvailabilityPanel = document.getElementById('bookAvailabilityPanel');
 		this.bookAvailabilityRows = document.getElementById('bookAvailabilityRows');
-		this.bookEditToggle = document.getElementById('bookEditToggle');
-		this.bookEditForm = document.getElementById('bookEditForm');
-		this.bookEditCancel = document.getElementById('bookEditCancel');
-		this.bookEditSave = document.getElementById('bookEditSave');
-		this.bookEditMessage = document.getElementById('bookEditMessage');
-		this.editTitulo = document.getElementById('editTitulo');
-		this.editAutor = document.getElementById('editAutor');
-		this.editISBN = document.getElementById('editISBN');
-		this.editEditorial = document.getElementById('editEditorial');
-		this.editAnio = document.getElementById('editAnio');
-		this.editCDU = document.getElementById('editCDU');
-		this.editDescripcion = document.getElementById('editDescripcion');
-		this.editEjemplares = document.getElementById('editEjemplares');
 	}
 
 	showLoading() {
@@ -51,86 +38,6 @@ class BookDetailRenderer {
 		if (this.bookLoading) this.bookLoading.classList.add('is-hidden');
 		if (this.bookLayout) this.bookLayout.classList.add('is-hidden');
 		if (this.bookAvailabilityPanel) this.bookAvailabilityPanel.classList.add('is-hidden');
-	}
-
-	onToggleEdit(callback) {
-		if (!this.bookEditToggle) return;
-		this.bookEditToggle.addEventListener('click', callback);
-	}
-
-	onCancelEdit(callback) {
-		if (!this.bookEditCancel) return;
-		this.bookEditCancel.addEventListener('click', callback);
-	}
-
-	onSubmitEdit(callback) {
-		if (!this.bookEditForm) return;
-		this.bookEditForm.addEventListener('submit', event => {
-			event.preventDefault();
-			callback(this.getEditFormData());
-		});
-	}
-
-	showEditMode(libro) {
-		if (!this.bookEditForm) return;
-		this.bookEditForm.classList.remove('is-hidden');
-		if (this.bookEditToggle) this.bookEditToggle.textContent = 'Ocultar edicion';
-		this.fillEditForm(libro);
-		this.showFormMessage('', false);
-	}
-
-	hideEditMode() {
-		if (!this.bookEditForm) return;
-		this.bookEditForm.classList.add('is-hidden');
-		if (this.bookEditToggle) this.bookEditToggle.textContent = 'Editar (Administracion)';
-		this.showFormMessage('', false);
-	}
-
-	fillEditForm(libro) {
-		if (!libro) return;
-		if (this.editTitulo) this.editTitulo.value = this.getBookTitle(libro);
-		if (this.editAutor) this.editAutor.value = this.getBookAuthors(libro);
-		if (this.editISBN) this.editISBN.value = this.getBookField(libro, 'isbn') || '';
-		if (this.editEditorial) this.editEditorial.value = this.getBookField(libro, 'editorial') || '';
-		if (this.editAnio) this.editAnio.value = this.getBookYear(libro) || '';
-		if (this.editCDU) this.editCDU.value = this.getBookField(libro, 'cdu') || '';
-		if (this.editDescripcion) this.editDescripcion.value = this.getBookDescription(libro);
-		if (this.editEjemplares) this.editEjemplares.value = this.getEjemplares(libro);
-	}
-
-	getEditFormData() {
-		return {
-			titulo: this.editTitulo ? this.editTitulo.value.trim() : '',
-			autor: this.editAutor ? this.editAutor.value.trim() : '',
-			isbn: this.editISBN ? this.editISBN.value.trim() : '',
-			editorial: this.editEditorial ? this.editEditorial.value.trim() : '',
-			anio: this.editAnio && this.editAnio.value !== '' ? Number(this.editAnio.value) : null,
-			cdu: this.editCDU ? this.editCDU.value.trim() : '',
-			descripcion: this.editDescripcion ? this.editDescripcion.value.trim() : '',
-			ejemplares: this.editEjemplares && this.editEjemplares.value !== '' ? Number(this.editEjemplares.value) : 0
-		};
-	}
-
-	setEditSubmitting(isSubmitting) {
-		if (this.bookEditSave) {
-			this.bookEditSave.disabled = isSubmitting;
-			this.bookEditSave.textContent = isSubmitting ? 'Guardando...' : 'Guardar cambios';
-		}
-	}
-
-	showFormMessage(message, isError = false) {
-		if (!this.bookEditMessage) return;
-		if (!message) {
-			this.bookEditMessage.classList.add('is-hidden');
-			this.bookEditMessage.textContent = '';
-			this.bookEditMessage.classList.remove('book-detail__form-message--error', 'book-detail__form-message--success');
-			return;
-		}
-
-		this.bookEditMessage.textContent = message;
-		this.bookEditMessage.classList.remove('is-hidden');
-		this.bookEditMessage.classList.toggle('book-detail__form-message--error', isError);
-		this.bookEditMessage.classList.toggle('book-detail__form-message--success', !isError);
 	}
 
 	renderLibro(libro) {
@@ -534,8 +441,6 @@ class BookDetailController {
 		this.libro = null;
 		this.loading = false;
 		this.error = null;
-		this.editMode = false;
-		this.currentId = null;
 
 		this.init();
 	}
@@ -548,9 +453,6 @@ class BookDetailController {
 			return;
 		}
 
-		this.currentId = libroId;
-		this.setupEventListeners();
-
 		if (storedLibro) {
 			this.libro = storedLibro;
 			this.renderer.renderLibro(storedLibro);
@@ -559,30 +461,6 @@ class BookDetailController {
 		if (libroId) {
 			await this.loadLibro(libroId, { showLoading: !storedLibro });
 		}
-	}
-
-	setupEventListeners() {
-		this.renderer.onToggleEdit(() => {
-			if (!this.libro) return;
-
-			if (this.editMode) {
-				this.editMode = false;
-				this.renderer.hideEditMode();
-				return;
-			}
-
-			this.editMode = true;
-			this.renderer.showEditMode(this.libro);
-		});
-
-		this.renderer.onCancelEdit(() => {
-			this.editMode = false;
-			this.renderer.hideEditMode();
-		});
-
-		this.renderer.onSubmitEdit(async formData => {
-			await this.updateLibro(formData);
-		});
 	}
 
 	getLibroIdFromUrl() {
@@ -615,9 +493,6 @@ class BookDetailController {
 			this.libro = libro;
 			this.error = null;
 			this.renderer.renderLibro(libro);
-			if (this.editMode) {
-				this.renderer.showEditMode(libro);
-			}
 		} catch (error) {
 			console.error('❌ Error al cargar detalle del libro:', error);
 			this.error = error;
@@ -626,67 +501,6 @@ class BookDetailController {
 			}
 		} finally {
 			this.loading = false;
-		}
-	}
-
-	validateEditForm(formData) {
-		if (!formData.titulo) {
-			return 'El titulo es obligatorio.';
-		}
-
-		if (!Number.isInteger(formData.ejemplares) || formData.ejemplares < 0) {
-			return 'La cantidad de ejemplares debe ser un numero entero mayor o igual a 0.';
-		}
-
-		if (formData.anio !== null && (!Number.isInteger(formData.anio) || formData.anio < 0)) {
-			return 'El ano debe ser un numero entero positivo.';
-		}
-
-		return null;
-	}
-
-	buildUpdatePayload(formData) {
-		return {
-			titulo: formData.titulo,
-			autor: formData.autor,
-			isbn: formData.isbn,
-			editorial: formData.editorial,
-			anio: formData.anio,
-			cdu: formData.cdu,
-			descripcion: formData.descripcion,
-			ejemplares: formData.ejemplares,
-			disponibilidad: formData.ejemplares > 0 ? 'disponible' : 'no disponible'
-		};
-	}
-
-	async updateLibro(formData) {
-		const validationError = this.validateEditForm(formData);
-		if (validationError) {
-			this.renderer.showFormMessage(validationError, true);
-			return;
-		}
-
-		if (!this.currentId) {
-			this.renderer.showFormMessage('No se encontro el ID del libro para guardar.', true);
-			return;
-		}
-
-		try {
-			this.renderer.setEditSubmitting(true);
-			this.renderer.showFormMessage('', false);
-
-			const payload = this.buildUpdatePayload(formData);
-			const libroActualizado = await this.service.updateLibro(this.currentId, payload);
-
-			this.libro = libroActualizado;
-			this.renderer.renderLibro(libroActualizado);
-			this.renderer.showEditMode(libroActualizado);
-			this.renderer.showFormMessage('Libro actualizado correctamente.', false);
-		} catch (error) {
-			console.error('❌ Error al actualizar libro:', error);
-			this.renderer.showFormMessage(error.message || 'No se pudo guardar el libro.', true);
-		} finally {
-			this.renderer.setEditSubmitting(false);
 		}
 	}
 }

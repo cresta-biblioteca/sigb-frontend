@@ -13,10 +13,6 @@ class LibroService {
     this.librosAbortController = null;
   }
 
-  get apiBaseUrl() {
-    return 'http://localhost:8080/api/v1';
-  }
-
   /**
    * Extrae la lista de libros y la paginacion desde la respuesta del backend.
    * @param {Object|Array} data
@@ -259,19 +255,6 @@ class LibroService {
   }
 
   /**
-   * Normaliza los distintos valores de disponibilidad al formato interno.
-   * @param {string} value
-   * @returns {'available'|'unavailable'|'digital'|string}
-   */
-  normalizeDisponibilidad(value) {
-    const v = String(value || '').toLowerCase();
-    if (v === 'available'   || v === 'disponible')    return 'available';
-    if (v === 'unavailable' || v === 'no disponible') return 'unavailable';
-    if (v === 'digital')                              return 'digital';
-    return v;
-  }
-
-  /**
    * Carga un libro especifico por ID.
    * @param {string|number} id
    * @returns {Promise<Object>}
@@ -282,56 +265,7 @@ class LibroService {
     return data?.data || data?.libro || data;
   }
 
-  /**
-   * Carga todas las categorias disponibles.
-   * @returns {Promise<Array>}
-   */
-  async loadCategorias() {
-    const data = await api.get('/categorias');
-    return Array.isArray(data) ? data : data?.categorias || [];
-  }
-
-  /**
-   * Crea un nuevo libro.
-   * @param {Object} libroData
-   * @returns {Promise<Object>}
-   */
-  async createLibro(libroData) {
-    const data = await api.post('/libros', libroData);
-    return data?.libro || data;
-
-    // --- MOCK ---
-    // const nuevoLibro = { ...libroData, id: this.generateNextId(), disponibilidad: 'available' };
-    // if (window.LIBROS_MOCK) {
-    //   window.LIBROS_MOCK.push(nuevoLibro);
-    //   if (window.LIBROS_MOCK_POR_ID) window.LIBROS_MOCK_POR_ID[nuevoLibro.id] = nuevoLibro;
-    // }
-    // console.log('✅ [Mock] Libro creado:', nuevoLibro.id);
-    // return Promise.resolve({ success: true, libro: nuevoLibro });
-  }
-
-  /**
-   * Actualiza un libro existente por ID.
-   * @param {string|number} id
-   * @param {Object} libroData
-   * @returns {Promise<Object>}
-   */
-  async updateLibro(id, libroData) {
-    const data = await api.put(`/libros/${encodeURIComponent(id)}`, libroData);
-    return data?.libro || data;
-
-    // --- MOCK ---
-    // if (window.LIBROS_MOCK) {
-    //   const idx = window.LIBROS_MOCK.findIndex(l => String(l.id) === String(id));
-    //   if (idx !== -1) {
-    //     window.LIBROS_MOCK[idx] = { ...window.LIBROS_MOCK[idx], ...libroData };
-    //     if (window.LIBROS_MOCK_POR_ID) window.LIBROS_MOCK_POR_ID[id] = window.LIBROS_MOCK[idx];
-    //     console.log('✅ [Mock] Libro actualizado:', id);
-    //     return Promise.resolve({ success: true, libro: window.LIBROS_MOCK[idx] });
-    //   }
-    // }
-    // return Promise.reject(new Error(`Libro con id ${id} no encontrado`));
-  }
+ 
 }
 
 export { LibroService };
