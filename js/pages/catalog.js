@@ -321,21 +321,6 @@ class CatalogRenderer {
   }
 
   /**
-   * Registra callback para toggle de favorito
-   * Será usado con event delegation
-   * @param {Function} callback - Función(libroId, button)
-   */
-  setOnFavoriteToggle(callback) {
-    document.addEventListener('click', (e) => {
-      if (e.target.closest('.catalog-favorite-btn')) {
-        const button = e.target.closest('.catalog-favorite-btn');
-        const libroId = button.dataset.libroId;
-        callback(libroId, button);
-      }
-    });
-  }
-
-  /**
    * Limpia los inputs de los filtros
    */
   clearFilterInputs() {
@@ -432,21 +417,9 @@ class CatalogRenderer {
         </div>
         <div class="catalog-book-card__actions">
           <a href="book-detail.html?id=${encodeURIComponent(libroId || '')}" class="btn btn--primary catalog-book-detail-link">Ver Detalle</a>
-          <button class="btn btn--outline catalog-favorite-btn" 
-                  aria-label="Agregar a favoritos"
-                  data-libro-id="${libroId || ''}"
-                  title="Agregar a favoritos">
-            <i class="lucide" data-lucide="heart"></i>
-          </button>
         </div>
       </div>
     `;
-
-    // Aplicar estado de favorito si está guardado
-    const favoriteBtn = article.querySelector('.catalog-favorite-btn');
-    if (favoriteBtn) {
-      this.updateFavoriteButtonState(libroId, favoriteBtn);
-    }
 
     const detailLink = article.querySelector('.catalog-book-detail-link');
     if (detailLink) {
@@ -647,18 +620,6 @@ class CatalogRenderer {
    * @param {string} libroId - ID del libro
    * @param {HTMLElement} button - Elemento del botón
    */
-  updateFavoriteButtonState(libroId, button) {
-    if (!libroId) return;
-
-    const favorites = JSON.parse(localStorage.getItem('bookFavorites') || '[]');
-    const isFavorite = favorites.includes(libroId);
-
-    if (isFavorite) {
-      button.classList.add('catalog-favorite-btn--active');
-    } else {
-      button.classList.remove('catalog-favorite-btn--active');
-    }
-  }
 
   /**
    * Actualiza el contador de resultados
@@ -947,9 +908,6 @@ class CatalogController {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    this.renderer.setOnFavoriteToggle((libroId, button) => {
-      this.toggleFavorite(libroId, button);
-    });
   }
 
   handleViewChange(view) {
@@ -971,24 +929,6 @@ class CatalogController {
     this.applyFiltersAndRender();
   }
 
-  toggleFavorite(libroId, button) {
-    if (!libroId) return;
-
-    let favorites = JSON.parse(localStorage.getItem('bookFavorites') || '[]');
-    const isFavorite = favorites.includes(libroId);
-
-    if (isFavorite) {
-      favorites = favorites.filter(id => id !== libroId);
-      button.classList.remove('catalog-favorite-btn--active');
-      console.log(`➖ Libro ${libroId} eliminado de favoritos`);
-    } else {
-      favorites.push(libroId);
-      button.classList.add('catalog-favorite-btn--active');
-      console.log(`➕ Libro ${libroId} agregado a favoritos`);
-    }
-
-    localStorage.setItem('bookFavorites', JSON.stringify(favorites));
-  }
 
   async applyFiltersAndRender() {
     try {

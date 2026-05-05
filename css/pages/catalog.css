@@ -539,22 +539,6 @@
   padding: var(--spacing-sm);
 }
 
-/* Botón de favoritos activo */
-.catalog-favorite-btn {
-  transition: all var(--transition-fast);
-}
-
-.catalog-favorite-btn--active,
-.catalog-favorite-btn--active:hover {
-  background-color: #ffebee;
-  border-color: var(--color-error);
-  color: var(--color-error);
-}
-
-.catalog-favorite-btn--active i {
-  fill: var(--color-error);
-}
-
 /* ========== PAGINATION ========== */
 .catalog-pagination {
   display: flex;
