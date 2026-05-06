@@ -241,6 +241,13 @@ padding: var(--spacing-lg) 0 var(--spacing-3xl);
   line-height: 1.25;
 }
 
+.book-detail__reserve-status {
+  margin: var(--spacing-xs) 0 0;
+  font-size: var(--font-size-xs);
+  color: #1f6f43;
+  text-align: center;
+}
+
 .book-detail__action-links {
   display: grid;
   gap: var(--spacing-xs);

@@ -2799,6 +2799,7 @@
               "summary": "Crear reserva",
               "description": "Crear una nueva reserva para un articulo. Si hay ejemplares disponibles se asigna uno de inmediato con fecha de vencimiento; si no, queda en cola de espera.",
               "operationId": "a5d99dbfb8a60c0153a85de68d8e8043",
+              "security": [{ "bearerAuth": [] }],
               "requestBody":
                 {
                   "required": true,
@@ -2810,6 +2811,7 @@
                             {
                               "$ref": "#/components/schemas/CreateReservaRequest",
                             },
+                          "example": { "articuloId": 5 },
                         },
                     },
                 },
@@ -2848,6 +2850,8 @@
                             },
                         },
                     },
+                  "401": { "description": "No autenticado (JWT invalido/ausente)" },
+                  "403": { "description": "Forbidden (rol no permitido)" },
                   "404":
                     {
                       "description": "Articulo no encontrado",
@@ -4590,15 +4594,9 @@
             },
           "CreateReservaRequest":
             {
-              "required": ["lectorId", "articuloId"],
+              "required": ["articuloId"],
               "properties":
                 {
-                  "lectorId":
-                    {
-                      "description": "ID del lector que realiza la reserva",
-                      "type": "integer",
-                      "example": 1,
-                    },
                   "articuloId":
                     {
                       "description": "ID del articulo a reservar",
@@ -4729,15 +4727,15 @@
               "properties":
                 {
                   "id": { "type": "integer", "example": 1 },
-                  "lectorId": { "type": "integer", "example": 3 },
-                  "articuloId": { "type": "integer", "example": 5 },
-                  "fechaInicio":
+                  "lector_id": { "type": "integer", "example": 3 },
+                  "articulo_id": { "type": "integer", "example": 5 },
+                  "fecha_inicio":
                     {
                       "type": "string",
                       "format": "date-time",
                       "example": "2026-04-06 10:00:00",
                     },
-                  "fechaVencimiento":
+                  "fecha_vencimiento":
                     {
                       "type": "string",
                       "format": "date-time",

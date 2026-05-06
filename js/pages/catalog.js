@@ -616,12 +616,6 @@ class CatalogRenderer {
   }
 
   /**
-   * Actualiza el estado visual del botón de favorito
-   * @param {string} libroId - ID del libro
-   * @param {HTMLElement} button - Elemento del botón
-   */
-
-  /**
    * Actualiza el contador de resultados
    * @param {number} total - Total de libros encontrados
    * @param {number} startIndex - Índice del primer libro en la página actual

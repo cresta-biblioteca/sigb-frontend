@@ -18,6 +18,12 @@
  *   #bookAvailabilityRows    — filas de disponibilidad
  */
 import { LibroService } from '../services/libroService.js';
+import { store } from '../core/store.js';
+import { Modal } from '../components/modal.js';
+import { authService } from '../services/authService.js';
+import { ApiError } from '../services/api.js';
+import { setButtonLoading, resetButton } from '../components/ui.js';
+import { reservationsService } from '../services/reservationsService.js';
 
 // ── Configuración de campos ───────────────────────────────────────────────
 const BOOK_DETAIL_TOP_FIELDS = [
@@ -568,12 +574,238 @@ class BookDetailController {
 	}
 }
 
+function handleReserveClick(event) {
+	store.init();
+	const reserveBtn = event?.currentTarget || null;
+	const articleId = getArticleIdForReservation();
+
+	if (store.isLoggedIn()) {
+		void executeReservation(articleId, reserveBtn);
+		return;
+	}
+
+	createReserveLoginModal(articleId, reserveBtn);
+}
+
+function createReserveLoginModal(articleId, reserveBtn) {
+	const existing = document.getElementById('reserve-login-overlay');
+	if (existing) existing.remove();
+
+	const overlay = document.createElement('div');
+	overlay.id = 'reserve-login-overlay';
+	overlay.style.cssText = `
+		position: fixed; inset: 0; z-index: 2100;
+		background: rgba(0,0,0,0.5); display: flex;
+		align-items: center; justify-content: center;
+		animation: fadeIn 0.2s ease;
+	`;
+
+	const modal = document.createElement('div');
+	modal.style.cssText = `
+		background: white; border-radius: 12px; padding: 2rem;
+		max-width: 440px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+		animation: slideUp 0.25s ease;
+	`;
+
+	modal.innerHTML = `
+		<h3 style="margin-bottom: 0.75rem; font-size: 1.125rem; color: #212529;">Inicia sesion para reservar</h3>
+		<p style="margin-bottom: 1rem; color: #495057; font-size: 0.9375rem; line-height: 1.6;">
+			Necesitas una cuenta activa para reservar este libro.
+		</p>
+		<form id="reserveLoginForm" autocomplete="off" style="display: grid; gap: 0.75rem;">
+			<div style="display: grid; gap: 0.35rem;">
+				<label for="reserveLoginDni" style="font-size: 0.875rem; color: #495057; font-weight: 600;">DNI</label>
+				<input type="text" id="reserveLoginDni" inputmode="numeric" autocomplete="username" placeholder="Ej: 12345678" style="padding: 0.55rem 0.75rem; border: 1px solid #dee2e6; border-radius: 8px; font-size: 0.95rem;">
+			</div>
+			<div style="display: grid; gap: 0.35rem;">
+				<label for="reserveLoginPassword" style="font-size: 0.875rem; color: #495057; font-weight: 600;">Contraseña</label>
+				<input type="password" id="reserveLoginPassword" autocomplete="current-password" placeholder="••••••••" style="padding: 0.55rem 0.75rem; border: 1px solid #dee2e6; border-radius: 8px; font-size: 0.95rem;">
+			</div>
+			<p id="reserveLoginError" role="alert" style="margin: 0; font-size: 0.875rem; color: #b3261e; display: none;"></p>
+			<div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
+				<button type="button" id="reserveLoginCancel" style="padding: 0.5rem 1.25rem; border: 1.5px solid #dee2e6; border-radius: 8px; background: white; color: #495057; cursor: pointer; font-weight: 500;">Cancelar</button>
+				<button type="submit" id="reserveLoginSubmit" style="padding: 0.5rem 1.25rem; border: none; border-radius: 8px; background: #0F2B5B; color: white; cursor: pointer; font-weight: 600;">Iniciar sesion</button>
+			</div>
+		</form>
+	`;
+
+	overlay.appendChild(modal);
+	document.body.appendChild(overlay);
+
+	const reserveForm = document.getElementById('reserveLoginForm');
+	const dniInput = document.getElementById('reserveLoginDni');
+	const passwordInput = document.getElementById('reserveLoginPassword');
+	const cancelBtn = document.getElementById('reserveLoginCancel');
+
+	const closeModal = () => {
+		overlay.style.opacity = '0';
+		setTimeout(() => overlay.remove(), 200);
+	};
+
+	cancelBtn?.addEventListener('click', closeModal);
+
+	overlay.addEventListener('click', (event) => {
+		if (event.target === overlay) closeModal();
+	});
+
+	document.addEventListener('keydown', function handler(event) {
+		if (event.key === 'Escape') {
+			closeModal();
+			document.removeEventListener('keydown', handler);
+		}
+	});
+
+	reserveForm?.addEventListener('submit', (event) => {
+		event.preventDefault();
+		void submitReserveLogin();
+	});
+
+	setTimeout(() => {
+		dniInput?.focus();
+	}, 0);
+
+	async function submitReserveLogin() {
+		const errorEl = document.getElementById('reserveLoginError');
+		const submitBtn = document.getElementById('reserveLoginSubmit');
+		const dni = dniInput?.value.trim();
+		const password = passwordInput?.value.trim();
+
+		if (errorEl) {
+			errorEl.textContent = '';
+			errorEl.style.display = 'none';
+		}
+
+		if (!dni || !password) {
+			if (errorEl) {
+				errorEl.textContent = 'Completá tu DNI y contraseña para continuar.';
+				errorEl.style.display = 'block';
+			}
+			return;
+		}
+
+		if (submitBtn) {
+			setButtonLoading(submitBtn, 'Ingresando...');
+		}
+
+		try {
+			const { token } = await authService.login({ dni, password });
+			store.setSession(token);
+			closeModal();
+			void executeReservation(articleId, reserveBtn);
+		} catch (error) {
+			const errorMessages = {
+				401: 'DNI o contraseña incorrectos. Verificá tus datos e intentá de nuevo.',
+				500: 'El servidor no está disponible en este momento. Intentá más tarde.',
+			};
+
+			const message = error instanceof ApiError
+				? (errorMessages[error.status] ?? error.message)
+				: 'No se pudo conectar con el servidor. Verificá tu conexión.';
+
+			if (errorEl) {
+				errorEl.textContent = message;
+				errorEl.style.display = 'block';
+			}
+		} finally {
+			if (submitBtn) {
+				resetButton(submitBtn);
+			}
+		}
+	}
+}
+
+function getArticleIdForReservation() {
+	const controller = window.bookDetailController;
+	return getArticuloIdFromLibro(controller?.libro) || controller?.getLibroIdFromUrl?.();
+}
+
+function getArticuloIdFromLibro(libro) {
+	if (!libro || typeof libro !== 'object') return null;
+
+	const sources = [libro, libro?.articulo, libro?.libro, libro?.metadata].filter(Boolean);
+	const keys = ['articulo_id', 'articuloId', 'articleId', 'article_id', 'id', 'libro_id', 'libroId'];
+
+	for (const source of sources) {
+		for (const key of keys) {
+			const value = source[key];
+			if (value !== undefined && value !== null && value !== '') {
+				return value;
+			}
+		}
+	}
+
+	return null;
+}
+
+async function executeReservation(articleId, reserveBtn) {
+	if (!articleId) {
+		Modal.create({
+			title: 'No se pudo reservar',
+			content: 'No se encontró el artículo asociado a este libro.',
+		});
+		return;
+	}
+
+	if (reserveBtn) {
+		setButtonLoading(reserveBtn, 'Reservando...');
+	}
+
+	try {
+		const response = await reservationsService.createReservation(articleId);
+		const dueDate = response?.fecha_vencimiento ?? response?.fechaVencimiento;
+		const message = dueDate
+			? `Reserva confirmada. Vence: ${dueDate}.`
+			: 'Reserva creada. Te avisaremos cuando haya un ejemplar disponible.';
+		const dashboardLink = '<a href="dashboard.html" style="color: #0F2B5B; font-weight: 600; text-decoration: underline;">Ver mis reservas en el panel</a>';
+		const content = `${message}<br>${dashboardLink}`;
+
+		Modal.create({
+			title: 'Reserva creada',
+			content,
+		});
+
+		if (reserveBtn) {
+			reserveBtn.textContent = 'Reserva creada';
+			reserveBtn.disabled = true;
+		}
+
+		const statusText = document.getElementById('reserveStatusText');
+		if (statusText) {
+			statusText.textContent = 'Ya reservaste este libro.';
+		}
+	} catch (error) {
+		const errorMessages = {
+			401: 'Tu sesión venció. Iniciá sesión nuevamente para reservar.',
+			403: 'Tu perfil no tiene permisos para reservar.',
+			404: 'No se encontró el artículo solicitado.',
+			422: 'Ya tenés una reserva o préstamo activo para este artículo.',
+			500: 'Ocurrió un error en el servidor. Intentá más tarde.',
+		};
+
+		const message = error instanceof ApiError
+			? (errorMessages[error.status] ?? (error.data?.message || error.message))
+			: 'No se pudo conectar con el servidor. Verificá tu conexión.';
+
+		Modal.create({
+			title: 'No se pudo reservar',
+			content: message,
+		});
+	} finally {
+		if (reserveBtn) {
+			resetButton(reserveBtn);
+		}
+	}
+}
+
 // ── Init ─────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
 	const service = new LibroService();
 	const renderer = new BookDetailRenderer();
+	const reserveBtn = document.getElementById('reserveBtn');
 
 	const controller = new BookDetailController(service, renderer);
+
+	reserveBtn?.addEventListener('click', handleReserveClick);
 
 	window.bookDetailController = controller;
 });
