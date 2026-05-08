@@ -158,6 +158,21 @@ padding: var(--spacing-lg) 0 var(--spacing-3xl);
   padding: var(--spacing-xs) 0;
 }
 
+.book-detail__meta-row--cols {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-md);
+  border: none;
+  padding: var(--spacing-xs) 0;
+}
+
+.book-detail__meta-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
 .book-detail__meta-label {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
@@ -391,6 +406,16 @@ padding: var(--spacing-lg) 0 var(--spacing-3xl);
   .book-detail__meta-row {
     grid-template-columns: 1fr;
     gap: 4px;
+  }
+
+  .book-detail__meta-row--cols {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  .book-detail__meta-col {
+    border-bottom: 1px solid var(--color-gray-100);
+    padding-bottom: var(--spacing-xs);
   }
 
   .book-detail__meta-label {

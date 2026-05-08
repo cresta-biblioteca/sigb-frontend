@@ -164,6 +164,21 @@ class BookDetailRenderer {
 		</div>`;
 	}
 
+	buildMetaColumnsHtml(columns) {
+		const colsHtml = columns
+			.filter(column => this.hasValue(column.value))
+			.map(column => {
+				return `<div class="book-detail__meta-col">
+					<span class="book-detail__meta-label">${this.escapeHtml(column.label)}</span>
+					<span class="book-detail__meta-value">${this.escapeHtml(column.value)}</span>
+				</div>`;
+			})
+			.join('');
+
+		if (!colsHtml) return '';
+		return `<div class="book-detail__meta-row book-detail__meta-row--cols">${colsHtml}</div>`;
+	}
+
 	renderMeta(libro) {
 		if (!this.workMetaList) return;
 
@@ -172,8 +187,14 @@ class BookDetailRenderer {
 			.filter(section => section.items.length > 0)
 			.map(section => {
 				const rows = section.items
-					.map(item => this.buildMetaRowHtml(item.label, item.value))
+					.map(item => {
+						if (item.columns) {
+							return this.buildMetaColumnsHtml(item.columns);
+						}
+						return this.buildMetaRowHtml(item.label, item.value);
+					})
 					.join('');
+				if (!section.title) return rows;
 				return `<h3 class="book-detail__section-title">${this.escapeHtml(section.title)}</h3>${rows}`;
 			})
 			.join('');
@@ -294,40 +315,63 @@ class BookDetailRenderer {
 			return this.detailSectionsCache.get(libro);
 		}
 
-		const article = libro?.articulo || {};
-		const topLevelItems = BOOK_DETAIL_TOP_FIELDS.map(field => {
-			const keys = Array.isArray(field.key) ? field.key : [field.key];
-			return { label: field.label, value: this.getBookField(libro, ...keys) };
-		}).filter(item => this.hasValue(item.value));
+		const author = this.getBookAuthors(libro);
+		const additionalAuthors = this.getAdditionalAuthors(libro);
+		const title = this.getBookTitle(libro);
+		const year = this.getBookYear(libro);
+		const edition = this.getBookField(libro, 'edicion');
+		const temas = this.getBookTemas(libro).join(', ');
+		const nivel = this.getBookField(libro, 'nivel_bibliografico', 'nivelBibliografico');
+		const tipo = this.getBookField(libro, 'tipo_documento', 'tipoDocumento', 'tipo');
+		const lugar = this.getBookField(libro, 'lugar_de_publicacion', 'lugarDePublicacion');
+		const editor = this.getBookField(libro, 'editorial', 'editor');
+		const paginas = this.getBookField(libro, 'paginas');
+		const isbn = this.getBookField(libro, 'isbn');
 
-		const personas = this.getBookContributorItems(libro);
-		const temaItems = this.getBookTemas(libro);
+		const tipoDocumento = this.getTipoMaterialText(tipo);
 
-		const sections = [
-			{ title: 'Datos generales', items: topLevelItems },
-			{ title: 'Autores y colaboradores', items: personas },
+		const items = [
+			{ label: 'Autor', value: author },
+			{ label: 'Autores adicionales', value: additionalAuthors },
+			{ label: 'Título', value: title },
+			{ label: 'Año', value: year },
+			{ label: 'Edición', value: edition },
+			{ label: 'Tema', value: temas },
+			{ label: 'Nivel bibliográfico', value: nivel },
+			{ label: 'Tipo de documento', value: tipoDocumento },
 			{
-				title: 'Artículo',
-				items: [
-					...BOOK_DETAIL_ARTICLE_FIELDS.map(field => {
-						const keys = Array.isArray(field.key) ? field.key : [field.key];
-						const value = keys.reduce((result, key) => {
-							if (result !== undefined && result !== null && result !== '') return result;
-							const nextValue = article[key];
-							return nextValue ?? result;
-						}, '');
-						return { label: field.label, value };
-					}),
-					{ label: 'Temas', value: temaItems.length > 0 ? temaItems.join(', ') : '' }
-				].filter(item => this.hasValue(item.value))
+				columns: [
+					{ label: 'Lugar', value: lugar },
+					{ label: 'Editorial', value: editor },
+					{ label: 'Páginas', value: paginas }
+				]
+			},
+			{ label: 'ISBN', value: isbn }
+		].filter(item => {
+			if (item.columns) {
+				return item.columns.some(column => this.hasValue(column.value));
 			}
-		].filter(section => section.items.length > 0);
+			return this.hasValue(item.value);
+		});
+
+		const sections = [{ title: '', items }];
 
 		if (libro && typeof libro === 'object') {
 			this.detailSectionsCache.set(libro, sections);
 		}
 
 		return sections;
+	}
+
+	getAdditionalAuthors(libro) {
+		const personas = this.getBookField(libro, 'personas');
+		if (!Array.isArray(personas) || personas.length === 0) return '';
+
+		return personas
+			.filter(person => !this.isAuthorPerson(person))
+			.map(person => this.formatPersonName(person, 'apellido-nombre'))
+			.filter(Boolean)
+			.join(', ');
 	}
 
 	getBookContributorItems(libro) {

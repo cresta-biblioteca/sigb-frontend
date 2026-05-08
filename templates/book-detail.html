@@ -1,197 +1,305 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="es">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Detalle del Libro - Biblioteca CRESTA</title>
-	<meta name="description" content="Detalle del libro seleccionado en el catÃ¡logo de la Biblioteca CRESTA.">
-	<link rel="stylesheet" href="../css/reset.css">
-	<link rel="stylesheet" href="../css/variables.css">
-	<link rel="stylesheet" href="../css/layout.css">
-	<link rel="stylesheet" href="../css/components.css">
-	<link rel="stylesheet" href="../css/pages/bookDetail.css">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detalle del Libro - Biblioteca CRESTA</title>
+    <meta
+      name="description"
+      content="Detalle del libro seleccionado en el catÃ¡logo de la Biblioteca CRESTA."
+    />
+    <link rel="stylesheet" href="../css/reset.css" />
+    <link rel="stylesheet" href="../css/variables.css" />
+    <link rel="stylesheet" href="../css/layout.css" />
+    <link rel="stylesheet" href="../css/components.css" />
+    <link rel="stylesheet" href="../css/pages/bookDetail.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body>
+    <!-- ========== NAVBAR ========== -->
+    <header class="navbar" id="navbar">
+      <div class="navbar__container">
+        <a href="../index.html" class="navbar__brand">
+          <img
+            src="../assets/logo_header.png"
+            alt="Biblioteca CRESTA"
+            class="navbar__brand-image"
+          />
+        </a>
 
-	<!-- ========== NAVBAR ========== -->
-	<header class="navbar" id="navbar">
-		<div class="navbar__container">
-			<a href="../index.html" class="navbar__brand">
-				<img src="../assets/logo_header.png" alt="Biblioteca CRESTA" class="navbar__brand-image">
-			</a>
+        <button
+          class="navbar__toggle"
+          id="navbarToggle"
+          aria-label="Abrir menÃº de navegaciÃ³n"
+          aria-expanded="false"
+        >
+          <span class="navbar__toggle-line"></span>
+          <span class="navbar__toggle-line"></span>
+          <span class="navbar__toggle-line"></span>
+        </button>
 
-			<button class="navbar__toggle" id="navbarToggle" aria-label="Abrir menÃº de navegaciÃ³n" aria-expanded="false">
-				<span class="navbar__toggle-line"></span>
-				<span class="navbar__toggle-line"></span>
-				<span class="navbar__toggle-line"></span>
-			</button>
+        <nav class="navbar__nav" id="navbarMenu">
+          <ul class="navbar__list">
+            <li class="navbar__item">
+              <a href="../index.html" class="navbar__link">Inicio</a>
+            </li>
+            <li class="navbar__item">
+              <a href="catalog.html" class="navbar__link navbar__link--active"
+                >Catálogo</a
+              >
+            </li>
+            <li class="navbar__item navbar__item--private">
+              <a href="mi-perfil.html" class="navbar__link">Mi Perfil</a>
+            </li>
+          </ul>
+          <button
+            class="navbar__link navbar__item--private"
+            id="logoutBtn"
+            type="button"
+          >
+            Cerrar sesión
+          </button>
+        </nav>
+      </div>
+    </header>
 
-			<nav class="navbar__nav" id="navbarMenu">
-				<ul class="navbar__list">
-					<li class="navbar__item">
-						<a href="../index.html" class="navbar__link">Inicio</a>
-					</li>
-					<li class="navbar__item">
-						<a href="catalog.html" class="navbar__link navbar__link--active">Catálogo</a>
-					</li>
-					<li class="navbar__item navbar__item--private">
-						<a href="mi-perfil.html" class="navbar__link">Mi Perfil</a>
-					</li>
-				</ul>
-				<button class="navbar__link navbar__item--private" id="logoutBtn" type="button">Cerrar sesión</button>
-			</nav>
-		</div>
-	</header>
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="book-detail-main">
+      <!-- Breadcrumbs bar -->
+      <nav class="book-detail-breadcrumbs">
+        <div class="container">
+          <a href="catalog.html" class="book-detail-breadcrumbs__link"
+            >Catalogo</a
+          >
+          <span class="book-detail-breadcrumbs__separator">/</span>
+          <span
+            class="book-detail-breadcrumbs__current"
+            id="bookBreadcrumbTitle"
+            >Detalle del libro</span
+          >
+        </div>
+      </nav>
 
-	<!-- ========== MAIN CONTENT ========== -->
-	<main class="book-detail-main">
+      <section class="book-detail-content">
+        <div class="container">
+          <div class="book-detail" id="bookDetail">
+            <div
+              class="book-detail__loading"
+              id="bookLoading"
+              aria-live="polite"
+            >
+              Cargando informacion del libro...
+            </div>
+            <div
+              class="book-detail__error is-hidden"
+              id="bookError"
+              role="alert"
+            ></div>
 
-		<!-- Breadcrumbs bar -->
-		<nav class="book-detail-breadcrumbs">
-			<div class="container">
-				<a href="catalog.html" class="book-detail-breadcrumbs__link">Catalogo</a>
-				<span class="book-detail-breadcrumbs__separator">/</span>
-				<span class="book-detail-breadcrumbs__current" id="bookBreadcrumbTitle">Detalle del libro</span>
-			</div>
-		</nav>
+            <!-- Layout: panel principal + sidebar -->
+            <div class="book-detail__layout is-hidden" id="bookLayout">
+              <!-- Panel principal -->
+              <div class="book-detail__main-panel">
+                <div class="book-detail__title-row">
+                  <h1 class="book-detail__title" id="bookTitle">
+                    Titulo del libro
+                  </h1>
+                </div>
+                <p class="book-detail__author" id="bookAuthor">Autor</p>
 
-		<section class="book-detail-content">
-			<div class="container">
-				<div class="book-detail" id="bookDetail">
-					<div class="book-detail__loading" id="bookLoading" aria-live="polite">Cargando informacion del libro...</div>
-					<div class="book-detail__error is-hidden" id="bookError" role="alert"></div>
+                <!-- Card: Datos bibliográficos (unificado) -->
+                <div class="book-detail__work-card">
+                  <h2 class="book-detail__section-title">
+                    Datos bibliográficos
+                  </h2>
+                  <div class="book-detail__meta-table" id="workMetaList"></div>
+                </div>
 
-					<!-- Layout: panel principal + sidebar -->
-					<div class="book-detail__layout is-hidden" id="bookLayout">
+                <!-- Descripcion -->
+                <h2 class="book-detail__section-title">Descripcion</h2>
+                <p class="book-detail__description-text" id="bookDescription">
+                  Sin descripcion disponible.
+                </p>
 
-						<!-- Panel principal -->
-						<div class="book-detail__main-panel">
-							<div class="book-detail__title-row">
-								<h1 class="book-detail__title" id="bookTitle">Titulo del libro</h1>
-								<div class="book-detail__badges" id="bookBadges">
-									<span class="book-detail__badge">Obra</span>
-									<span class="book-detail__badge book-detail__badge--muted" id="workBadgeEjemplares">Ejemplares: 0</span>
-								</div>
-							</div>
-							<p class="book-detail__author" id="bookAuthor">Autor</p>
+                <!-- Chips adicionales -->
+                <h2 class="book-detail__section-title">
+                  Informacion adicional
+                </h2>
+                <div class="book-detail__chips" id="bookChips"></div>
+              </div>
 
-							<!-- Card: Datos bibliográficos (unificado) -->
-							<div class="book-detail__work-card">
-								<h2 class="book-detail__section-title">Datos bibliográficos</h2>
-								<div class="book-detail__meta-table" id="workMetaList"></div>
-							</div>
+              <!-- Sidebar -->
+              <aside class="book-detail__sidebar">
+                <div class="book-detail__sidebar-card">
+                  <!-- Acciones principales -->
+                  <div class="book-detail__sidebar-actions">
+                    <button
+                      class="btn btn--primary"
+                      type="button"
+                      id="reserveBtn"
+                    >
+                      Reservar
+                    </button>
+                    <p
+                      class="book-detail__reserve-status"
+                      id="reserveStatusText"
+                    ></p>
+                  </div>
 
-							<!-- Descripcion -->
-							<h2 class="book-detail__section-title">Descripcion</h2>
-							<p class="book-detail__description-text" id="bookDescription">Sin descripcion disponible.</p>
+                  <!-- Links de accion -->
+                  <div class="book-detail__action-links">
+                    <a href="#" class="book-detail__action-link"
+                      >Imprimir ficha</a
+                    >
+                  </div>
 
-							<!-- Chips adicionales -->
-							<h2 class="book-detail__section-title">Informacion adicional</h2>
-							<div class="book-detail__chips" id="bookChips"></div>
+                  <div class="book-detail__admin-actions">
+                    <a
+                      href="catalog.html"
+                      class="btn btn--outline book-detail__back"
+                      >Volver al catalogo</a
+                    >
+                  </div>
+                </div>
+              </aside>
+            </div>
 
-							<!-- Card: Ejemplar (resumen local) -->
-							<div class="book-detail__item-card" id="itemCard">
-								<h3 class="book-detail__section-subtitle">Ejemplar (resumen)</h3>
-								<div class="book-detail__item-meta" id="itemMetaList">
-									<p class="book-detail__meta-value">Sin datos del ejemplar.</p>
-								</div>
-							</div>
-						</div>
+            <!-- Tabla de disponibilidad de ejemplares -->
+            <div
+              class="book-detail__availability-panel is-hidden"
+              id="bookAvailabilityPanel"
+            >
+              <h2>Disponibilidad de ejemplares</h2>
+              <div class="book-detail__availability-table-wrapper">
+                <table class="book-detail__availability-table">
+                  <thead>
+                    <tr>
+                      <th>Codigo de barras</th>
+                      <th>Tipo de material</th>
+                      <th>Ubicacion</th>
+                      <th>Estado</th>
+                      <th>Nota</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bookAvailabilityRows"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
 
-						<!-- Sidebar -->
-						<aside class="book-detail__sidebar">
-							<div class="book-detail__sidebar-card">
-								<!-- Acciones principales -->
-								<div class="book-detail__sidebar-actions">
-									<button class="btn btn--primary" type="button" id="reserveBtn">Reservar</button>
-									<p class="book-detail__reserve-status" id="reserveStatusText"></p>
-								</div>
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer" id="contacto">
+      <div class="footer__container">
+        <div class="footer__grid">
+          <div class="footer__col">
+            <div class="footer__brand">
+              <img
+                src="../assets/logo_footer.png"
+                alt="CRESTA Biblioteca"
+                class="footer__brand-image"
+              />
+            </div>
+            <address class="footer__address footer__contact">
+              <p>Maipú 270 - (7500) Tres Arroyos</p>
+              <p class="footer__phone">
+                <strong>Consultas frecuentes:</strong> (02983) 430093
+              </p>
+              <p>
+                <strong>Email:</strong>
+                <a
+                  href="mailto:valeria.rodriguez@cresta.edu.ar"
+                  class="footer__link"
+                  >valeria.rodriguez@cresta.edu.ar</a
+                >
+              </p>
+            </address>
+            <div class="footer__social" aria-label="Redes sociales">
+              <a
+                href="https://www.facebook.com/crestaoficial/"
+                class="footer__social-link"
+                aria-label="Facebook"
+                title="Facebook"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <i class="fab fa-facebook-f" aria-hidden="true"></i>
+              </a>
+              <a
+                href="https://www.instagram.com/crestaoficial/"
+                class="footer__social-link"
+                aria-label="Instagram"
+                title="Instagram"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <i class="fab fa-instagram" aria-hidden="true"></i>
+              </a>
+              <a
+                href="https://wa.me/2983380689"
+                class="footer__social-link"
+                aria-label="WhatsApp"
+                title="WhatsApp"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <i class="fab fa-whatsapp" aria-hidden="true"></i>
+              </a>
+            </div>
+          </div>
 
-								<!-- Links de accion -->
-								<div class="book-detail__action-links">
-									<a href="#" class="book-detail__action-link">Imprimir ficha</a>
-								</div>
+          <div class="footer__col">
+            <h3 class="footer__heading">Links de interés</h3>
+            <ul class="footer__links footer__links--interest">
+              <li>
+                <a
+                  href="https://www.tresarroyos.gov.ar/"
+                  class="footer__link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Municipalidad de Tres Arroyos</a
+                >
+              </li>
+              <li>
+                <a
+                  href="https://campus.cresta.edu.ar/"
+                  class="footer__link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Campus virtual</a
+                >
+              </li>
+              <li>
+                <a
+                  href="https://sga.cresta.edu.ar/"
+                  class="footer__link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Sistema de gestión académica</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p>
+          © 2024 CRESTA - Centro Regional de Estudios Superiores de Tres
+          Arroyos. Todos los derechos reservados.
+        </p>
+      </div>
+    </footer>
 
-								<div class="book-detail__admin-actions">
-									<a href="catalog.html" class="btn btn--outline book-detail__back">Volver al catalogo</a>
-								</div>
-							</div>
-						</aside>
-					</div>
-
-					<!-- Tabla de disponibilidad de ejemplares -->
-					<div class="book-detail__availability-panel is-hidden" id="bookAvailabilityPanel">
-						<h2>Disponibilidad de ejemplares</h2>
-						<div class="book-detail__availability-table-wrapper">
-							<table class="book-detail__availability-table">
-								<thead>
-									<tr>
-										<th>Codigo de barras</th>
-										<th>Tipo de material</th>
-										<th>Ubicacion</th>
-										<th>Estado</th>
-										<th>Nota</th>
-									</tr>
-								</thead>
-								<tbody id="bookAvailabilityRows"></tbody>
-							</table>
-						</div>
-					</div>
-
-				</div>
-			</div>
-		</section>
-
-	</main>
-
-	<!-- ========== FOOTER ========== -->
-	<footer class="footer" id="contacto">
-		<div class="footer__container">
-			<div class="footer__grid">
-
-				<div class="footer__col">
-					<div class="footer__brand">
-						<img src="../assets/logo_footer.png" alt="CRESTA Biblioteca" class="footer__brand-image">
-					</div>
-					<address class="footer__address footer__contact">
-						<p>Maipú 270 - (7500) Tres Arroyos</p>
-						<p class="footer__phone"><strong>Consultas frecuentes:</strong> (02983) 430093</p>
-						<p><strong>Email:</strong> <a href="mailto:valeria.rodriguez@cresta.edu.ar" class="footer__link">valeria.rodriguez@cresta.edu.ar</a></p>
-					</address>
-					<div class="footer__social" aria-label="Redes sociales">
-						<a href="https://www.facebook.com/crestaoficial/" class="footer__social-link" aria-label="Facebook" title="Facebook" target="_blank" rel="noopener noreferrer">
-							<i class="fab fa-facebook-f" aria-hidden="true"></i>
-						</a>
-						<a href="https://www.instagram.com/crestaoficial/" class="footer__social-link" aria-label="Instagram" title="Instagram" target="_blank" rel="noopener noreferrer">
-							<i class="fab fa-instagram" aria-hidden="true"></i>
-						</a>
-						<a href="https://wa.me/2983380689" class="footer__social-link" aria-label="WhatsApp" title="WhatsApp" target="_blank" rel="noopener noreferrer">
-							<i class="fab fa-whatsapp" aria-hidden="true"></i>
-						</a>
-					</div>
-				</div>
-
-				<div class="footer__col">
-					<h3 class="footer__heading">Links de interés</h3>
-					<ul class="footer__links footer__links--interest">
-						<li><a href="https://www.tresarroyos.gov.ar/" class="footer__link" target="_blank" rel="noopener noreferrer">Municipalidad de Tres Arroyos</a></li>
-						<li><a href="https://campus.cresta.edu.ar/" class="footer__link" target="_blank" rel="noopener noreferrer">Campus virtual</a></li>
-						<li><a href="https://sga.cresta.edu.ar/" class="footer__link" target="_blank" rel="noopener noreferrer">Sistema de gestión académica</a></li>
-					</ul>
-				</div>
-
-			</div>
-		</div>
-		<div class="footer__bottom">
-			<p>© 2024 CRESTA - Centro Regional de Estudios Superiores de Tres Arroyos. Todos los derechos reservados.</p>
-		</div>
-	</footer>
-
-	<!-- ========== SCRIPTS ========== -->
-	<script type="module" src="../js/components/navbar.js"></script>
-	<script type="module" src="../js/components/footer.js"></script>
-	<script type="module" src="../js/pages/book-detail.js"></script>
-</body>
+    <!-- ========== SCRIPTS ========== -->
+    <script type="module" src="../js/components/navbar.js"></script>
+    <script type="module" src="../js/components/footer.js"></script>
+    <script type="module" src="../js/pages/book-detail.js"></script>
+  </body>
 </html>
-
