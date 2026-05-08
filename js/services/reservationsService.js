@@ -161,6 +161,19 @@ const reservationsService = {
   },
 
   /**
+   * Crea una reserva para un articulo.
+   *
+   * @param {number|string} articuloId
+   * @returns {Promise<object>}
+   */
+  createReservation(articuloId) {
+    const normalizedId = Number.parseInt(String(articuloId), 10);
+    const safeId = Number.isNaN(normalizedId) ? String(articuloId).trim() : normalizedId;
+
+    return api.post('/reservas', { articuloId: safeId });
+  },
+
+  /**
    * Obtiene los datos bibliográficos del recurso asociado a una reserva.
    *
    * @param {string|number} articleId

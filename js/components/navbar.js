@@ -20,6 +20,46 @@ function normalizePath(pathname) {
   return pathname.replace(/\/$/, '').toLowerCase();
 }
 
+function isSessionActive() {
+  const token = localStorage.getItem('auth_token');
+  if (!token) return false;
+
+  try {
+    const payload = token.split('.')[1];
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const data = JSON.parse(atob(base64));
+    if (!data.exp) return true;
+    return Date.now() / 1000 < data.exp;
+  } catch {
+    return false;
+  }
+}
+
+function updateAuthNavigation() {
+  const loggedIn = isSessionActive();
+  const authItems = document.querySelectorAll('.navbar__item--auth');
+  const privateItems = document.querySelectorAll('.navbar__item--private');
+  const logoutButton = document.getElementById('logoutBtn');
+
+  const setVisibility = (element, visible) => {
+    if (!element) return;
+    element.hidden = !visible;
+    element.style.display = visible ? '' : 'none';
+  };
+
+  authItems.forEach((item) => {
+    setVisibility(item, !loggedIn);
+  });
+
+  privateItems.forEach((item) => {
+    setVisibility(item, loggedIn);
+  });
+
+  if (logoutButton && !privateItems.length) {
+    setVisibility(logoutButton, loggedIn);
+  }
+}
+
 function setActiveLinkByPath() {
   const currentPath = normalizePath(window.location.pathname);
   const links = navbarMenu.querySelectorAll('a.navbar__link');
@@ -39,6 +79,7 @@ function setActiveLinkByPath() {
 }
 
 setActiveLinkByPath();
+updateAuthNavigation();
 
 // Mobile menu toggle
 navbarToggle.addEventListener('click', () => {

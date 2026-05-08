@@ -110,6 +110,10 @@
   font-weight: var(--font-weight-semibold);
 }
 
+.navbar__nav [hidden] {
+  display: none !important;
+}
+
 /* Dropdown */
 .navbar__item--dropdown {
   position: relative;

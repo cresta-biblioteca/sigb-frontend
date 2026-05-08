@@ -2065,16 +2065,16 @@
               "tags": ["Libros"],
               "summary": "Obtener libro por ID",
               "description": "Obtener la información completa de un libro por su ID",
-              "operationId": "317481ea9aa26688d617cc7dcd621640",
+              "security": [],
               "parameters":
                 [
                   {
                     "name": "id",
                     "in": "path",
-                    "description": "ID del libro",
                     "required": true,
+                    "description": "ID del libro",
                     "schema": { "type": "integer", "minimum": 1 },
-                  },
+                  }
                 ],
               "responses":
                 {
@@ -2087,24 +2087,23 @@
                             {
                               "schema":
                                 {
+                                  "type": "object",
                                   "properties":
                                     {
                                       "data":
                                         {
-                                          "$ref": "#/components/schemas/LibroResponse",
-                                        },
-                                    },
-                                  "type": "object",
-                                },
-                            },
-                        },
+                                          "$ref": "#/components/schemas/LibroResponse"
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                   "400": { "description": "ID inválido" },
                   "401": { "description": "No autenticado" },
                   "404": { "description": "Libro no encontrado" },
-                  "500": { "description": "Error interno del servidor" },
-                },
-              "security": [{ "bearerAuth": [] }],
+                  "500": { "description": "Error interno del servidor" }
+                }
             },
           "delete":
             {
@@ -2800,6 +2799,7 @@
               "summary": "Crear reserva",
               "description": "Crear una nueva reserva para un articulo. Si hay ejemplares disponibles se asigna uno de inmediato con fecha de vencimiento; si no, queda en cola de espera.",
               "operationId": "a5d99dbfb8a60c0153a85de68d8e8043",
+              "security": [{ "bearerAuth": [] }],
               "requestBody":
                 {
                   "required": true,
@@ -2811,6 +2811,7 @@
                             {
                               "$ref": "#/components/schemas/CreateReservaRequest",
                             },
+                          "example": { "articuloId": 5 },
                         },
                     },
                 },
@@ -2849,6 +2850,8 @@
                             },
                         },
                     },
+                  "401": { "description": "No autenticado (JWT invalido/ausente)" },
+                  "403": { "description": "Forbidden (rol no permitido)" },
                   "404":
                     {
                       "description": "Articulo no encontrado",
@@ -4591,15 +4594,9 @@
             },
           "CreateReservaRequest":
             {
-              "required": ["lectorId", "articuloId"],
+              "required": ["articuloId"],
               "properties":
                 {
-                  "lectorId":
-                    {
-                      "description": "ID del lector que realiza la reserva",
-                      "type": "integer",
-                      "example": 1,
-                    },
                   "articuloId":
                     {
                       "description": "ID del articulo a reservar",
@@ -4730,15 +4727,15 @@
               "properties":
                 {
                   "id": { "type": "integer", "example": 1 },
-                  "lectorId": { "type": "integer", "example": 3 },
-                  "articuloId": { "type": "integer", "example": 5 },
-                  "fechaInicio":
+                  "lector_id": { "type": "integer", "example": 3 },
+                  "articulo_id": { "type": "integer", "example": 5 },
+                  "fecha_inicio":
                     {
                       "type": "string",
                       "format": "date-time",
                       "example": "2026-04-06 10:00:00",
                     },
-                  "fechaVencimiento":
+                  "fecha_vencimiento":
                     {
                       "type": "string",
                       "format": "date-time",
