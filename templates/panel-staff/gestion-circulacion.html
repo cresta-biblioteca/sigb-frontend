@@ -104,9 +104,6 @@
                     <h1 class="admin-page-title">Reservas y Préstamos</h1>
                     <p class="admin-page-subtitle">Gestioná las reservas pendientes y el ciclo de préstamos de la biblioteca.</p>
                 </div>
-                <button class="btn btn--primary" id="btnNuevoPrestamo">
-                    <i class="fas fa-plus"></i> Nuevo Préstamo
-                </button>
             </div>
 
             <!-- ── Stats ── -->
@@ -173,12 +170,21 @@
                 <div class="circ-toolbar">
                     <div class="circ-filters" role="group" aria-label="Filtrar reservas">
                         <button class="circ-filter circ-filter--active" data-filter="todas">Todas</button>
-                        <button class="circ-filter" data-filter="pendiente">
+                        <button class="circ-filter" id="btnReservasPendientes" data-filter="pendiente">
                             Pendientes
                             <span class="circ-filter__count" id="countPendientes">0</span>
                         </button>
-                        <button class="circ-filter" data-filter="aprobada">Aprobadas</button>
-                        <button class="circ-filter" data-filter="rechazada">Rechazadas</button>
+                        <button class="circ-filter" data-filter="completada">Completadas</button>
+                        <button class="circ-filter" data-filter="cancelada">Canceladas</button>
+                    </div>
+
+                    <div class="circ-date-filters" style="display: flex; gap: var(--spacing-sm); align-items: center;">
+                        <input type="date" class="form-input" id="reservaFechaDesde" title="Fecha Desde">
+                        <span style="color: var(--color-gray-500);">-</span>
+                        <input type="date" class="form-input" id="reservaFechaHasta" title="Fecha Hasta">
+                        <button class="btn btn--outline" id="btnLimpiarFechasReservas" title="Limpiar fechas" style="padding: 0.5rem; border-color: var(--color-gray-300); color: var(--color-gray-600);">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
 
                     <div class="circ-search">
@@ -196,7 +202,7 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Usuario</th>
+                                    <th>Usuario_ID</th>
                                     <th>Artículo</th>
                                     <th>Solicitado</th>
                                     <th>Estado</th>
@@ -204,95 +210,6 @@
                                 </tr>
                             </thead>
                             <tbody id="tbodyReservas">
-                                <!-- Fila de muestra — reemplazada por JS -->
-                                <tr>
-                                    <td class="circ-id">#R-1042</td>
-                                    <td>
-                                        <div class="circ-user-cell">
-                                            <div class="circ-user-cell__avatar">MG</div>
-                                            <div>
-                                                <p class="circ-user-cell__name">María García</p>
-                                                <p class="circ-user-cell__sub">DNI 28.901.234</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="circ-article-cell">
-                                            <p class="circ-article-cell__title">Cálculo Integral — Tomo II</p>
-                                            <p class="circ-article-cell__sub">Stewart, James · ISBN 978-0-495-47152-5</p>
-                                        </div>
-                                    </td>
-                                    <td class="circ-date">12 abr, 10:30</td>
-                                    <td><span class="status-badge status-badge--pending">Pendiente</span></td>
-                                    <td>
-                                        <div class="circ-actions">
-                                            <button class="btn-action btn-action--approve"
-                                                    title="Aprobar y generar préstamo" data-id="1042">
-                                                <i class="fas fa-check"></i> Aprobar
-                                            </button>
-                                            <button class="btn-action btn-action--reject"
-                                                    title="Rechazar reserva" data-id="1042">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="circ-id">#R-1038</td>
-                                    <td>
-                                        <div class="circ-user-cell">
-                                            <div class="circ-user-cell__avatar">LP</div>
-                                            <div>
-                                                <p class="circ-user-cell__name">Lucas Pérez</p>
-                                                <p class="circ-user-cell__sub">Legajo L-44201</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="circ-article-cell">
-                                            <p class="circ-article-cell__title">Introducción a la Programación</p>
-                                            <p class="circ-article-cell__sub">Kernighan, B. · ISBN 978-0-13-110362-7</p>
-                                        </div>
-                                    </td>
-                                    <td class="circ-date">10 abr, 09:15</td>
-                                    <td><span class="status-badge status-badge--approved">Aprobada</span></td>
-                                    <td>
-                                        <div class="circ-actions">
-                                            <button class="btn-action btn-action--view"
-                                                    title="Ver detalle" data-id="1038">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="circ-id">#R-1031</td>
-                                    <td>
-                                        <div class="circ-user-cell">
-                                            <div class="circ-user-cell__avatar">CR</div>
-                                            <div>
-                                                <p class="circ-user-cell__name">Carlos Ruiz</p>
-                                                <p class="circ-user-cell__sub">DNI 32.100.456</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="circ-article-cell">
-                                            <p class="circ-article-cell__title">Álgebra Lineal</p>
-                                            <p class="circ-article-cell__sub">Grossman, S.</p>
-                                        </div>
-                                    </td>
-                                    <td class="circ-date">5 abr, 14:00</td>
-                                    <td><span class="status-badge status-badge--rejected">Rechazada</span></td>
-                                    <td>
-                                        <div class="circ-actions">
-                                            <button class="btn-action btn-action--view"
-                                                    title="Ver detalle" data-id="1031">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -306,7 +223,10 @@
                         <p class="circ-empty-state__desc">No hay reservas que coincidan con el filtro seleccionado.</p>
                     </div>
                 </div>
+                <!-- Paginación -->
+                <div class="pagination" id="reservasPagination"></div>
             </div>
+            
             <!-- /panel-reservas -->
 
             <!-- ══════════════════════════════════════════════════ -->
@@ -318,12 +238,21 @@
                 <div class="circ-toolbar">
                     <div class="circ-filters" role="group" aria-label="Filtrar préstamos">
                         <button class="circ-filter circ-filter--active" data-filter="todos">Todos</button>
-                        <button class="circ-filter" data-filter="activo">Activos</button>
-                        <button class="circ-filter circ-filter--danger" data-filter="vencido">
+                        <button class="circ-filter" data-filter="vigente">Vigentes</button>
+                        <button class="circ-filter circ-filter--danger" data-filter="completado_vencido">
                             Vencidos
                             <span class="circ-filter__count" id="countVencidos">0</span>
                         </button>
-                        <button class="circ-filter" data-filter="devuelto">Devueltos</button>
+                        <button class="circ-filter" data-filter="completado_exito">Devueltos</button>
+                    </div>
+
+                    <div class="circ-date-filters" style="display: flex; gap: var(--spacing-sm); align-items: center;">
+                        <input type="date" class="form-input" id="prestamoFechaDesde" title="Fecha Desde">
+                        <span style="color: var(--color-gray-500);">-</span>
+                        <input type="date" class="form-input" id="prestamoFechaHasta" title="Fecha Hasta">
+                        <button class="btn btn--outline" id="btnLimpiarFechasPrestamos" title="Limpiar fechas" style="padding: 0.5rem; border-color: var(--color-gray-300); color: var(--color-gray-600);">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
 
                     <div class="circ-search">
@@ -341,7 +270,7 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Usuario</th>
+                                    <th>Usuario_ID</th>
                                     <th>Artículo</th>
                                     <th>Prestado</th>
                                     <th>Vence</th>
@@ -459,8 +388,11 @@
                         <p class="circ-empty-state__desc">No hay préstamos que coincidan con el filtro seleccionado.</p>
                     </div>
                 </div>
+                <!-- Paginación -->
+                <div class="pagination" id="prestamosPagination"></div>
             </div>
             <!-- /panel-prestamos -->
+             
 
         </div><!-- /admin-content -->
     </main>
@@ -494,12 +426,13 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="modalFechaVencimiento">
-                    Fecha de Vencimiento <span class="required">*</span>
+                <label class="form-label" for="modalTipoPrestamo">
+                    Tipo de Préstamo <span class="required">*</span>
                 </label>
-                <input type="date" id="modalFechaVencimiento" class="form-input">
-                <span class="form-hint">Por defecto: 14 días a partir de hoy</span>
-                <span class="field-error" id="modalFechaError"></span>
+                <select id="modalTipoPrestamo" class="form-input">
+                    <option value="">Seleccione un tipo...</option>
+                </select>
+                <span class="field-error" id="modalTipoError"></span>
             </div>
 
             <div class="form-group" style="margin-top: var(--spacing-md);">
@@ -665,6 +598,56 @@
     </div>
 </div>
 
+<!-- Modal: Renovar Préstamo (Extender plazo) -->
+<div class="circ-modal-overlay" id="modalRenovarOverlay" aria-hidden="true">
+    <div class="circ-modal" role="dialog" aria-modal="true" aria-labelledby="modalRenovarTitle">
+        <div class="circ-modal__header">
+            <h2 class="circ-modal__title" id="modalRenovarTitle">
+                <i class="fas fa-calendar-plus"></i> Extender Plazo
+            </h2>
+            <button class="circ-modal__close" id="btnCloseModalRenovar" aria-label="Cerrar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="circ-modal__body">
+            <p style="font-size: var(--font-size-sm); color: var(--color-gray-600); margin-bottom: var(--spacing-md);">
+                Estás por renovar el préstamo
+                <strong id="modalRenovarId">—</strong>
+                de <strong id="modalRenovarUsuario">—</strong>.
+            </p>
+
+            <div class="circ-devolucion-summary" style="margin-bottom: var(--spacing-lg);">
+                <div class="circ-devolucion-summary__item">
+                    <span>Artículo</span>
+                    <strong id="modalRenovarArticulo">—</strong>
+                </div>
+                <div class="circ-devolucion-summary__item">
+                    <span>Vencimiento actual</span>
+                    <strong id="modalRenovarVencActual">—</strong>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="modalRenovarTipoPrestamo">
+                    Cambiar tipo de préstamo <span style="color: var(--color-gray-400); font-weight: normal;">(opcional)</span>
+                </label>
+                <select id="modalRenovarTipoPrestamo" class="form-input">
+                    <option value="">Mantener tipo actual</option>
+                </select>
+                <span class="form-hint">Si no seleccionás un tipo, se mantendrá el tipo de préstamo actual.</span>
+            </div>
+        </div>
+        <div class="circ-modal__footer">
+            <button class="btn btn--outline" id="btnCancelarRenovar">Cancelar</button>
+            <button class="btn btn--primary" id="btnConfirmarRenovar">
+                <i class="fas fa-redo"></i> Confirmar Renovación
+            </button>
+        </div>
+    </div>
+</div>
+
 <script type="module" src="../../js/pages/gestion-circulacion.js"></script>
+<script type="module" src="../../js/pages/prestamos.js"></script>
+<script type="module" src="../../js/pages/reservas.js"></script>
 </body>
 </html>
