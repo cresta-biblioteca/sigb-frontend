@@ -47,6 +47,10 @@ const articulosService = {
     return api.get('/documentos');
   },
 
+  getArticuloById(id) {
+    return api.get(`/articulos/${id}`);
+  },
+
   /**
    * Importa registros MARC21 (ISO 2709 o MARCXML) desde un archivo.
    * El backend determina el tipo de artículo según el leader del registro.
