@@ -96,7 +96,7 @@ const api = {
     if (!response.ok) {
       throw new ApiError(
         response.status,
-        body?.message ?? `Error ${response.status}`,
+        body?.error?.message ?? `Error ${response.status}`,
         body,
       );
     }
