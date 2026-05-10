@@ -1,0 +1,98 @@
+/* ========== DETALLE DE PRÉSTAMO — Overrides & extras ========== */
+
+.dp-header__icon {
+  background-color: #E0F2F1;
+  border-color: #B2DFDB;
+  color: #00796B;
+}
+
+.dp-status-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  background: linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%);
+  border: 1px solid #C8E6C9;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base);
+}
+
+.dp-status-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.dp-status-card__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  background-color: rgba(76, 175, 80, 0.15);
+  color: #2E7D32;
+}
+
+.dp-status-card__label {
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-gray-500);
+  margin-bottom: 4px;
+}
+
+.dp-status-card__value {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: #2E7D32;
+  line-height: 1.2;
+}
+
+.dp-status-card--overdue {
+  background: linear-gradient(135deg, #FFF3E0 0%, #FBE9E7 100%);
+  border-color: #FFCCBC;
+}
+
+.dp-status-card--overdue .dp-status-card__icon {
+  background-color: rgba(244, 67, 54, 0.12);
+  color: #C62828;
+}
+
+.dp-status-card--overdue .dp-status-card__value {
+  color: #C62828;
+  animation: dp-pulse 2s ease-in-out infinite;
+}
+
+.dp-status-card--returned {
+  background: linear-gradient(135deg, #E3F2FD 0%, #E8EAF6 100%);
+  border-color: #BBDEFB;
+}
+
+.dp-status-card--returned .dp-status-card__icon {
+  background-color: rgba(33, 150, 243, 0.12);
+  color: #1565C0;
+}
+
+.dp-status-card--returned .dp-status-card__value {
+  color: #1565C0;
+}
+
+.dp-reserva-link {
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  transition: color var(--transition-fast);
+}
+
+.dp-reserva-link:hover {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
+}
+
+@keyframes dp-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
