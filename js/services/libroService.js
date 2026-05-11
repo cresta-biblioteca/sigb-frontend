@@ -13,6 +13,44 @@ class LibroService {
     this.librosAbortController = null;
   }
 
+  normalizeText(value) {
+    return String(value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  getNestedValue(source, path) {
+    return String(path).split('.').reduce((current, segment) => {
+      if (!current || typeof current !== 'object') return undefined;
+      return current[segment];
+    }, source);
+  }
+
+  getLibroField(libro, ...keys) {
+    const sources = [libro, libro?.articulo, libro?.libro, libro?.metadata].filter(Boolean);
+
+    for (const source of sources) {
+      for (const key of keys) {
+        if (String(key).includes('.')) {
+          const nestedValue = this.getNestedValue(source, key);
+          if (nestedValue !== undefined && nestedValue !== null && nestedValue !== '') {
+            return nestedValue;
+          }
+          continue;
+        }
+
+        const value = source[key];
+        if (value !== undefined && value !== null && value !== '') {
+          return value;
+        }
+      }
+    }
+
+    return '';
+  }
+
   /**
    * Extrae la lista de libros y la paginacion desde la respuesta del backend.
    * @param {Object|Array} data
@@ -127,30 +165,41 @@ class LibroService {
   applyFilters(libros, params) {
     if (!params) return libros;
 
-    const titulo = (params.get('titulo') || '').toLowerCase().trim();
-    const isbn = (params.get('isbn') || '').toLowerCase().trim();
-    const issn = (params.get('issn') || '').toLowerCase().trim();
-    const editorial = (params.get('editorial') || '').toLowerCase().trim();
-    const idioma = (params.get('idioma') || '').toLowerCase().trim();
+    const titulo = this.normalizeText(params.get('titulo') || '');
+    const isbn = this.normalizeText(params.get('isbn') || '');
+    const issn = this.normalizeText(params.get('issn') || '');
+    const editorial = this.normalizeText(params.get('editorial') || '');
+    const idioma = this.normalizeText(params.get('idioma') || '');
     const anioPublicacion = params.get('anio_publicacion') ? Number(params.get('anio_publicacion')) : null;
-    const tipo = (params.get('tipo') || '').toLowerCase().trim();
-    const cdu = (params.get('cdu') || '').toLowerCase().trim();
-    const lugarDePublicacion = (params.get('lugar_de_publicacion') || '').toLowerCase().trim();
-    const persona = (params.get('persona') || '').toLowerCase().trim();
-    const tituloInformativo = (params.get('titulo_informativo') || '').toLowerCase().trim();
-    const temaIds = (params.get('tema_ids') || '').split(',').map(value => value.trim()).filter(Boolean);
-    const temas = (params.get('temas') || '').toLowerCase().trim();
+    const tipo = this.normalizeText(params.get('tipo') || '');
+    const cdu = this.normalizeText(params.get('cdu') || '');
+    const lugarDePublicacion = this.normalizeText(params.get('lugar_de_publicacion') || '');
+    const persona = this.normalizeText(params.get('persona') || '');
+    const temas = this.normalizeText(params.get('temas') || '');
 
     return libros.filter(libro => {
-      if (titulo && !String(libro.titulo || '').toLowerCase().includes(titulo)) return false;
-      if (isbn && String(libro.isbn || '').toLowerCase() !== isbn) return false;
-      if (issn && String(libro.issn || '').toLowerCase() !== issn) return false;
-      if (editorial && !String(libro.editorial || '').toLowerCase().includes(editorial)) return false;
-      if (idioma && String(libro.idioma || '').toLowerCase() !== idioma) return false;
+      const libroTitulo = this.getLibroField(libro, 'titulo', 'title', 'articulo.titulo', 'libro.titulo');
+      const libroIsbn = this.getLibroField(libro, 'isbn', 'libro.isbn');
+      const libroIssn = this.getLibroField(libro, 'issn', 'libro.issn');
+      const libroEditorial = this.getLibroField(
+        libro,
+        'editorial',
+        'articulo.editorial',
+        'libro.editorial'
+      );
+      const libroIdioma = this.getLibroField(libro, 'idioma', 'articulo.idioma');
+      const libroTipo = this.getLibroField(libro, 'tipo', 'tipo_documento', 'articulo.tipo', 'articulo.tipo_documento');
+      const libroCdu = this.getLibroField(libro, 'cdu', 'libro.cdu');
+      const libroLugar = this.getLibroField(libro, 'lugar_de_publicacion', 'lugarDePublicacion', 'libro.lugar_de_publicacion');
+      if (titulo && !this.normalizeText(libroTitulo).includes(titulo)) return false;
+      if (isbn && this.normalizeText(libroIsbn) !== isbn) return false;
+      if (issn && this.normalizeText(libroIssn) !== issn) return false;
+      if (editorial && !this.normalizeText(libroEditorial).includes(editorial)) return false;
+      if (idioma && this.normalizeText(libroIdioma) !== idioma) return false;
       if (anioPublicacion !== null && Number(libro.anio_publicacion || libro.anio || libro.año || 0) !== anioPublicacion) return false;
-      if (tipo && String(libro.tipo || libro.tipo_documento || '').toLowerCase() !== tipo) return false;
-      if (cdu && !String(libro.cdu || '').toLowerCase().includes(cdu)) return false;
-      if (lugarDePublicacion && !String(libro.lugar_de_publicacion || libro.lugarDePublicacion || '').toLowerCase().includes(lugarDePublicacion)) return false;
+      if (tipo && this.normalizeText(libroTipo) !== tipo) return false;
+      if (cdu && !this.normalizeText(libroCdu).includes(cdu)) return false;
+      if (lugarDePublicacion && !this.normalizeText(libroLugar).includes(lugarDePublicacion)) return false;
       if (persona) {
         const personas = [
           libro.persona,
@@ -159,24 +208,13 @@ class LibroService {
           ...(Array.isArray(libro.personas) ? libro.personas.map(p => `${p.nombre || ''} ${p.apellido || ''} ${p.rol || ''}`) : []),
           ...(Array.isArray(libro.autores) ? libro.autores : []),
           ...(Array.isArray(libro.editores) ? libro.editores : [])
-        ].map(value => String(value || '').toLowerCase()).join(' ');
+        ].map(value => this.normalizeText(value || '')).join(' ');
         if (!personas.includes(persona)) return false;
       }
-      if (tituloInformativo && !String(libro.titulo_informativo || libro.tituloInformativo || '').toLowerCase().includes(tituloInformativo)) return false;
-
-      if (temaIds.length > 0) {
-        const libroTemaIds = Array.isArray(libro.tema_ids)
-          ? libro.tema_ids.map(value => String(value).trim())
-          : Array.isArray(libro.temas)
-            ? libro.temas.map(tema => String(tema?.id ?? tema).trim())
-            : [];
-        if (!temaIds.some(id => libroTemaIds.includes(id))) return false;
-      }
-
       if (temas) {
         const libroTemas = Array.isArray(libro.temas)
-          ? libro.temas.map(tema => String(tema?.titulo || tema?.nombre || tema || '').toLowerCase()).join(' ')
-          : String(libro.temas || '').toLowerCase();
+          ? libro.temas.map(tema => this.normalizeText(tema?.titulo || tema?.nombre || tema || '')).join(' ')
+          : this.normalizeText(libro.temas || '');
         if (!libroTemas.includes(temas)) return false;
       }
 

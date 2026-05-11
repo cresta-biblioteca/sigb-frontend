@@ -57,7 +57,7 @@ class CatalogRenderer {
     this.advTipo = document.getElementById('advTipo');
     this.advCdu = document.getElementById('advCdu');
     this.advLugarPublicacion = document.getElementById('advLugarPublicacion');
-    this.advTituloInformativo = document.getElementById('advTituloInformativo');
+      this.advTitulo = document.getElementById('advTitulo');
     this.advPersona = document.getElementById('advPersona');
     this.advTemas = document.getElementById('advTemas');
 
@@ -83,7 +83,7 @@ class CatalogRenderer {
       tipo: { el: this.advTipo, defaultValue: '' },
       cdu: { el: this.advCdu, defaultValue: '' },
       lugarDePublicacion: { el: this.advLugarPublicacion, defaultValue: '' },
-      tituloInformativo: { el: this.advTituloInformativo, defaultValue: '' },
+      titulo: { el: this.advTitulo, defaultValue: '' },
       persona: { el: this.advPersona, defaultValue: '' },
       temas: { el: this.advTemas, defaultValue: '' }
     };
@@ -822,7 +822,7 @@ class CatalogController {
       tipo: '',
       cdu: '',
       lugarDePublicacion: '',
-      tituloInformativo: '',
+       titulo: '',
       persona: '',
       temas: ''
     };
@@ -993,14 +993,10 @@ class CatalogController {
     if (adv.tipo) params.set('tipo', adv.tipo);
     if (adv.cdu) params.set('cdu', adv.cdu);
     if (adv.lugarDePublicacion) params.set('lugar_de_publicacion', adv.lugarDePublicacion);
-    if (adv.tituloInformativo) params.set('titulo_informativo', adv.tituloInformativo);
+    if (adv.titulo) params.set('titulo', adv.titulo);
     if (adv.persona) params.set('persona', adv.persona);
     if (adv.temas) {
-      const temaValues = String(adv.temas).split(',').map(value => value.trim()).filter(Boolean);
-      if (temaValues.length > 0) {
-        const isNumericList = temaValues.every(value => /^\d+$/.test(value));
-        params.set(isNumericList ? 'tema_ids' : 'temas', temaValues.join(','));
-      }
+      params.set('temas', String(adv.temas).trim());
     }
 
     return params;
