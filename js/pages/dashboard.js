@@ -752,27 +752,3 @@ function escapeHtml(value) {
 // ── Historial de reservas (#reservationHistory) ──────────────────────────
 // Muestra un resumen de las últimas reservas para acceso rápido.
 
-// ── Logout ───────────────────────────────────────────────────────────────
-const logoutButton = document.getElementById('logoutBtn');
-
-logoutButton?.addEventListener('click', () => {
-  Modal.create({
-    title: 'Cerrar sesión',
-    content: '¿Estás seguro que querés cerrar tu sesión?',
-    onCancel: () => {},
-    onConfirm: async () => {
-      logoutButton.disabled = true;
-
-      try {
-        // Notificar al backend para que invalide el token
-        await authService.logout();
-      } catch {
-        // Si el backend falla, igual limpiamos localmente.
-        // El usuario no puede quedar "atrapado" por un error de red.
-      } finally {
-        store.clearSession();
-        window.location.href = '../index.html';
-      }
-    },
-  });
-});

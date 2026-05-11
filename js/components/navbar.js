@@ -6,6 +6,10 @@
  * Cargar con <script type="module" src="js/components/navbar.js"></script>
  */
 
+import { store } from '../core/store.js';
+import { authService } from '../services/authService.js';
+import { Modal } from './modal.js';
+
 const navbar = document.getElementById('navbar');
 const navbarToggle = document.getElementById('navbarToggle');
 const navbarMenu = document.getElementById('navbarMenu');
@@ -60,6 +64,32 @@ function updateAuthNavigation() {
   }
 }
 
+function bindLogoutButton() {
+  const logoutButton = document.getElementById('logoutBtn');
+  if (!logoutButton || logoutButton.dataset.logoutBound === 'true') return;
+
+  logoutButton.dataset.logoutBound = 'true';
+  logoutButton.addEventListener('click', () => {
+    Modal.create({
+      title: 'Cerrar sesión',
+      content: '¿Estás seguro que querés cerrar tu sesión?',
+      onCancel: () => {},
+      onConfirm: async () => {
+        logoutButton.disabled = true;
+
+        try {
+          await authService.logout();
+        } catch {
+          // Si el backend falla, igual limpiamos la sesión local.
+        } finally {
+          store.clearSession();
+          window.location.href = '../index.html';
+        }
+      },
+    });
+  });
+}
+
 function setActiveLinkByPath() {
   const currentPath = normalizePath(window.location.pathname);
   const links = navbarMenu.querySelectorAll('a.navbar__link');
@@ -80,6 +110,7 @@ function setActiveLinkByPath() {
 
 setActiveLinkByPath();
 updateAuthNavigation();
+bindLogoutButton();
 
 // Mobile menu toggle
 navbarToggle.addEventListener('click', () => {

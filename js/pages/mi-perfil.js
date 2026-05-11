@@ -291,27 +291,3 @@ changePasswordBtn?.addEventListener('click', () => {
   if (currentPasswordInput) currentPasswordInput.focus();
 });
 
-// ---------------------------------------------------------------------------
-// Logout
-// ---------------------------------------------------------------------------
-const logoutBtn = document.getElementById('logoutBtn');
-
-logoutBtn?.addEventListener('click', () => {
-  Modal.create({
-    title: 'Cerrar sesión',
-    content: '¿Estás seguro que querés cerrar tu sesión?',
-    onCancel: () => {},
-    onConfirm: async () => {
-      logoutBtn.disabled = true;
-
-      try {
-        await authService.logout();
-      } catch {
-        // Si el backend falla, igual limpiamos localmente.
-      } finally {
-        store.clearSession();
-        window.location.href = '../index.html';
-      }
-    },
-  });
-});

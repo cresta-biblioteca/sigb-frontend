@@ -1,5 +1,12 @@
 /* ========== REUSABLE COMPONENTS ========== */
 
+/* Navbar auth states */
+.navbar__item--private,
+.navbar__item--auth,
+#logoutBtn {
+  display: none;
+}
+
 /* ========== BUTTONS ========== */
 .btn {
   display: inline-flex;

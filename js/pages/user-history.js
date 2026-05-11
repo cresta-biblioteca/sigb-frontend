@@ -507,25 +507,3 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
-// ---------------------------------------------------------------------------
-// Logout
-// ---------------------------------------------------------------------------
-logoutBtn?.addEventListener('click', () => {
-  Modal.create({
-    title: 'Cerrar sesión',
-    content: '¿Estás seguro que querés cerrar tu sesión?',
-    onCancel: () => {},
-    onConfirm: async () => {
-      logoutBtn.disabled = true;
-
-      try {
-        await authService.logout();
-      } catch {
-        // Si el backend falla, igual limpiamos la sesión local.
-      } finally {
-        store.clearSession();
-        window.location.href = '../index.html';
-      }
-    },
-  });
-});
