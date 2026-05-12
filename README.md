@@ -16,39 +16,77 @@ Frontend del Sistema de Gestión Bibliotecaria (SIGB) para el Centro Regional de
 sigb-frontend/
 ├── index.html                   # Página principal: hero, búsqueda rápida, login
 ├── templates/
-│   ├── dashboard.html           # Panel del usuario autenticado
-│   ├── catalog.html             # Catálogo de libros
 │   ├── book-detail.html         # Detalle de un libro
-│   ├── loans.html               # Gestión de préstamos
-│   └── readers.html             # Gestión de lectores
+│   ├── catalog.html             # Catálogo de libros
+│   ├── dashboard.html           # Panel del usuario autenticado
+│   ├── mi-perfil.html           # Perfil del lector autenticado
+│   ├── user-history.html        # Historial del lector autenticado
+│   └── panel-staff/
+│       ├── carga-articulos.html  # Alta e importación de artículos
+│       ├── detalle-prestamo.html # Detalle de préstamo
+│       ├── detalle-reserva.html  # Detalle de reserva
+│       ├── gestion-circulacion.html # Gestión de préstamos y reservas
+│       ├── gestion-usuarios.html # Gestión de usuarios
+│       ├── login.html            # Login del staff
+│       └── vista-general.html    # Vista general del panel staff
 │
 ├── css/
-│   ├── reset.css                # Normalización de defaults del browser
-│   ├── variables.css            # Design tokens: colores, tipografía, espaciado
-│   ├── layout.css               # Navbar, footer, container — compartido en todas las páginas
-│   ├── components.css           # Piezas reutilizables: botones, cards, inputs, search form
+│   ├── components.css            # Piezas reutilizables: botones, cards, inputs, search form
+│   ├── layout.css                # Navbar, footer, container — compartido en todas las páginas
+│   ├── reset.css                 # Normalización de defaults del browser
+│   ├── variables.css             # Design tokens: colores, tipografía, espaciado
 │   └── pages/
-│       ├── home.css             # Estilos exclusivos de index.html (hero, login form, partners)
-│       ├── dashboard.css        # Estilos exclusivos de dashboard.html
-│       └── catalog.css          # Estilos exclusivos de catalog.html
+│       ├── bookDetail.css        # Estilos de detalle de libro
+│       ├── carga-articulos.css   # Estilos de alta/importación de artículos
+│       ├── catalog.css           # Estilos exclusivos de catalog.html
+│       ├── dashboard.css         # Estilos exclusivos de dashboard.html
+│       ├── detalle-prestamo.css  # Estilos de detalle de préstamo
+│       ├── detalle-reserva.css   # Estilos de detalle de reserva
+│       ├── gestion-circulacion.css # Gestión de circulación
+│       ├── gestion-usuarios.css  # Gestión de usuarios
+│       ├── home.css              # Estilos exclusivos de index.html (hero, login form, partners)
+│       ├── mi-perfil.css         # Estilos del perfil del lector
+│       ├── staff-login.css       # Estilos del login del staff
+│       └── vista-general.css     # Estilos de la vista general del staff
 │
 ├── js/
-│   ├── core/
-│   │   ├── store.js             # Estado global de sesión (token JWT + usuario)
-│   │   └── authGuard.js         # Protección de rutas: requireAuth(), requireGuest()
-│   ├── services/
-│   │   ├── api.js               # HTTP client — único lugar donde vive fetch()
-│   │   ├── authService.js       # Endpoints de autenticación: login, logout, register
-│   │   └── lectoresService.js   # Endpoint del perfil autenticado del lector
 │   ├── components/
-│   │   ├── navbar.js            # Comportamiento del navbar (hamburguesa, dropdown)
-│   │   ├── footer.js            # Comportamiento del footer
-│   │   ├── modal.js             # Modal reutilizable (confirm, alert)
-│   │   └── ui.js                # Estados visuales: showLoading, showError, showEmpty
-│   └── pages/
-│       ├── home.js              # Lógica de index.html (login, búsqueda, accesibilidad)
-│       ├── dashboard.js         # Lógica de dashboard.html (guard, préstamos, logout)
-│       └── catalog.js           # Lógica de catalog.html
+│   │   ├── footer.js             # Comportamiento del footer
+│   │   ├── modal.js              # Modal reutilizable (confirm, alert)
+│   │   ├── navbar.js             # Comportamiento del navbar (hamburguesa, dropdown)
+│   │   └── ui.js                 # Estados visuales: showLoading, showError, showEmpty
+│   ├── core/
+│   │   ├── authGuard.js          # Protección de rutas: requireAuth(), requireGuest()
+│   │   └── store.js              # Estado global de sesión (token JWT + usuario)
+│   ├── pages/
+│   │   ├── book-detail.js        # Lógica de book-detail.html
+│   │   ├── carga-articulos.js    # Lógica de carga-articulos.html
+│   │   ├── catalog.js            # Lógica de catalog.html
+│   │   ├── dashboard.js          # Lógica de dashboard.html
+│   │   ├── detalle-prestamo.js   # Lógica de detalle-prestamo.html
+│   │   ├── detalle-reserva.js    # Lógica de detalle-reserva.html
+│   │   ├── gestion-circulacion.js # Lógica de gestion-circulacion.html
+│   │   ├── gestion-usuarios.js   # Lógica de gestion-usuarios.html
+│   │   ├── home.js               # Lógica de index.html (login, búsqueda, accesibilidad)
+│   │   ├── mi-perfil.js          # Lógica de mi-perfil.html
+│   │   ├── prestamos.js          # Lógica del listado de préstamos
+│   │   ├── reservas.js           # Lógica del listado de reservas
+│   │   ├── staff-login.js        # Lógica de login.html
+│   │   ├── user-history.js       # Lógica de user-history.html
+│   │   └── vista-general.js      # Lógica de vista-general.html
+│   └── services/
+│       ├── api.js                # HTTP client — único lugar donde vive fetch()
+│       ├── articulosService.js   # Gestión de artículos y MARC21
+│       ├── authService.js        # Endpoints de autenticación: login, logout, register
+│       ├── bibliographicResolver.js # Enriquecimiento bibliográfico
+│       ├── ejemplaresService.js  # CRUD de ejemplares
+│       ├── lectoresService.js    # Endpoint del perfil autenticado del lector
+│       ├── libroService.js       # Lecturas de libros
+│       ├── loansService.js       # Préstamos del lector autenticado
+│       ├── prestamosService.js   # Gestión de préstamos del staff
+│       ├── reservasService.js    # Gestión de reservas del staff
+│       ├── reservationsService.js # Reservas del lector autenticado
+│       └── usersService.js       # Usuarios del sistema
 │
 ├── assets/                      # Imágenes y recursos estáticos
 └── endpoints-backend/
@@ -88,7 +126,7 @@ components/modal.js modal imperativo para alertas y confirmaciones
 5. store.setSession(token) persiste en localStorage y decodifica el JWT
 6. Redirige a templates/dashboard.html
 
-En dashboard.html:
+En templates/dashboard.html:
 1. requireAuth() verifica sesión — redirige a index.html si no hay token válido
 2. store.getUser() retorna los claims del JWT (nombre, rol, exp, etc.)
 ```
@@ -192,7 +230,7 @@ export { nuevoService };
 
 ## Contrato con el backend
 
-El archivo `endpoints-backend/endpoints.yml` contiene la especificación OpenAPI de los endpoints disponibles. Endpoints implementados actualmente:
+El archivo `endpoints-backend/endpoints.yml` contiene la especificación OpenAPI de los endpoints disponibles. Endpoints utilizados actualmente por el frontend:
 
 | Método | Ruta | Descripción | Auth |
 |---|---|---|---|
@@ -201,5 +239,33 @@ El archivo `endpoints-backend/endpoints.yml` contiene la especificación OpenAPI
 | `POST` | `/auth/register` | Registrar nuevo usuario y lector | No |
 | `POST` | `/auth/change-password` | Cambiar contraseña | Bearer |
 | `GET` | `/lectores/mi-perfil` | Obtener perfil del lector autenticado | Bearer |
+| `GET` | `/lectores/me/prestamos` | Listar préstamos del lector autenticado | Bearer |
+| `GET` | `/lectores/me/reservas` | Listar reservas del lector autenticado | Bearer |
+| `GET` | `/documentos` | Listar tipos de documento | Bearer |
+| `GET` | `/articulos/{id}` | Obtener detalle de un artículo | Bearer |
+| `POST` | `/articulos/importar/marc21` | Importar registros MARC21/MARCXML | Bearer |
+| `POST` | `/libros` | Crear un libro | Bearer |
+| `GET` | `/libros` | Listar libros | Bearer |
+| `GET` | `/libros/{id}` | Obtener detalle de un libro | Bearer |
+| `GET` | `/ejemplares` | Listar ejemplares | Bearer |
+| `GET` | `/ejemplares/{id}` | Obtener detalle de un ejemplar | Bearer |
+| `POST` | `/ejemplares` | Crear ejemplar | Bearer |
+| `PUT` | `/ejemplares/{id}` | Actualizar ejemplar | Bearer |
+| `DELETE` | `/ejemplares/{id}` | Eliminar ejemplar | Bearer |
+| `GET` | `/prestamos` | Listar préstamos con filtros | Bearer |
+| `GET` | `/prestamos/{id}` | Obtener detalle de un préstamo | Bearer |
+| `GET` | `/prestamos/ejemplar/{ejemplar_id}` | Obtener préstamo por ejemplar | Bearer |
+| `POST` | `/prestamos` | Crear préstamo | Bearer |
+| `GET` | `/tipos-prestamos` | Listar tipos de préstamos | Bearer |
+| `PATCH` | `/prestamos/{id}/renovar` | Renovar préstamo | Bearer |
+| `PATCH` | `/prestamos/{id}/devolver` | Marcar préstamo como devuelto | Bearer |
+| `POST` | `/prestamos/{id}/vencer` | Marcar préstamo como vencido | Bearer |
+| `GET` | `/reservas` | Listar reservas con filtros | Bearer |
+| `GET` | `/reservas/{id}` | Obtener detalle de una reserva | Bearer |
+| `POST` | `/reservas` | Crear reserva | Bearer |
+| `POST` | `/reservas/{id}/aprobar` | Aprobar reserva | Bearer |
+| `POST` | `/reservas/{id}/cancelar` | Cancelar reserva | Bearer |
+| `PATCH` | `/reservas/{id}/cancelar` | Cancelar reserva desde el lector | Bearer |
+| `POST` | `/reservas/{id}/vencer` | Marcar reserva como vencida | Bearer |
 
 El token JWT se incluye automáticamente en todos los requests mediante `api.js`. Un `401` con token activo limpia la sesión y redirige al inicio.
