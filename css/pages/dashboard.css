@@ -1,0 +1,520 @@
+/* ========== DASHBOARD — MI CUENTA ========== */
+
+/* ---- Layout principal ---- */
+.main.dashboard {
+  padding-top: calc(var(--navbar-height) + var(--spacing-xl));
+  padding-bottom: var(--spacing-3xl);
+  min-height: 100vh;
+}
+
+/* ---- Encabezado de página ---- */
+.dashboard__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  flex-wrap: wrap;
+}
+
+.user-history .dashboard__header {
+  align-items: center;
+}
+
+.dashboard__title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.dashboard__title svg {
+  flex-shrink: 0;
+}
+
+.dashboard__subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+}
+
+.user-history__back {
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+/* ---- Sección genérica ---- */
+.dashboard__section {
+  margin-bottom: var(--spacing-2xl);
+}
+
+/* ---- Encabezado de sección ---- */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.section-header--history {
+  margin-bottom: var(--spacing-lg);
+}
+
+.history-grid__footer {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--spacing-xl);
+  width: 100%;
+}
+
+.section-header__title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-gray-900);
+}
+
+.section-header__title svg {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+/* ---- Barra de estadísticas ---- */
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.stat-card {
+  background-color: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--color-gray-200);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Línea de color izquierda como indicador visual */
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 4px;
+  background-color: var(--stat-color, var(--color-gray-400));
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.stat-card--loans        { --stat-color: var(--color-primary); }
+.stat-card--reservations { --stat-color: var(--color-accent); }
+
+.stat-card__label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--color-gray-500);
+  margin-bottom: var(--spacing-sm);
+}
+
+.stat-card__value {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--stat-color, var(--color-gray-800));
+  line-height: 1;
+}
+
+.stat-card__value--loading {
+  position: relative;
+  min-height: 1.1em;
+  color: transparent;
+}
+
+.stat-card__value--loading::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  border-top-color: var(--stat-color, var(--color-accent));
+  animation: stat-spin 0.8s linear infinite;
+}
+
+@keyframes stat-spin {
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+/* ---- Tabla de datos (préstamos) ---- */
+.table-wrapper {
+  background-color: var(--color-white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-gray-200);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 580px;
+}
+
+.data-table__head {
+  background-color: var(--color-gray-50);
+}
+
+.data-table__th {
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--color-gray-500);
+  text-align: left;
+  border-bottom: 1px solid var(--color-gray-200);
+  white-space: nowrap;
+}
+
+.data-table__th--center { text-align: center; }
+
+.data-table__row {
+  border-bottom: 1px solid var(--color-gray-100);
+  transition: background-color var(--transition-fast);
+}
+
+.data-table__row:last-child {
+  border-bottom: none;
+}
+
+.data-table__row:hover {
+  background-color: var(--color-gray-50);
+}
+
+.data-table__td {
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-700);
+}
+
+.data-table__td--title {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-gray-900);
+}
+
+.data-table__td--code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-500);
+}
+
+.data-table__td--center { text-align: center; }
+
+/* ---- Badges de estado ---- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.625rem;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.badge--success   { background-color: #d4edda; color: #155724; }
+.badge--warning   { background-color: #fff3cd; color: #856404; }
+.badge--overdue   { background-color: #f8d7da; color: #721c24; }
+.badge--closed    { background-color: var(--color-gray-100); color: var(--color-gray-600); }
+.badge--cancelled { background-color: #f8d7da; color: #721c24; }
+
+/* ---- Cards de reservas activas ---- */
+.reservation-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  list-style: none;
+}
+
+.reservation-card {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-fast);
+}
+
+.reservation-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.reservation-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background-color: rgba(21, 101, 192, 0.1);
+  border-radius: var(--radius-md);
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.reservation-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.reservation-card__title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-gray-900);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reservation-card__meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-500);
+}
+
+.reservation-card__cancel {
+  flex-shrink: 0;
+}
+
+/* ---- Grilla de historial (2 columnas) ---- */
+.history-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
+}
+
+/* ---- Lista de historial ---- */
+.history-list {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: none;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  list-style: none;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-xl) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-gray-100);
+  gap: var(--spacing-md);
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-item__info {
+  min-width: 0;
+}
+
+.history-item__title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-gray-900);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-item__meta {
+  font-size: var(--font-size-base);
+  color: var(--color-gray-500);
+}
+
+.history-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.history-pagination[hidden] {
+  display: none !important;
+}
+
+.history-pagination__info {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+  flex: 1;
+}
+
+.history-pagination__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- Link pie de sección ---- */
+.section-footer-link {
+  display: block;
+  text-align: center;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-gray-500);
+  background-color: var(--color-gray-50);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  text-decoration: none;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.section-footer-link:hover {
+  color: var(--color-primary);
+  background-color: var(--color-gray-100);
+}
+
+/* ---- Variantes de botón ---- */
+.btn--xs {
+  padding: 0.25rem 0.625rem;
+  font-size: var(--font-size-xs);
+}
+
+.btn--danger {
+  background-color: transparent;
+  border: 1.5px solid var(--color-error);
+  color: var(--color-error);
+}
+
+.btn--danger:hover {
+  background-color: var(--color-error);
+  color: var(--color-white);
+}
+
+/* ---- Bloque de usuario en navbar ---- */
+.navbar__user {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-left: var(--spacing-md);
+}
+
+.navbar__user-link {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.navbar__user-link:hover {
+  color: var(--color-white);
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ========== RESPONSIVE ========== */
+
+@media (max-width: 1024px) {
+  .stats-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .history-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .main.dashboard {
+    padding-top: calc(var(--navbar-height) + var(--spacing-md));
+  }
+
+  .dashboard__header {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .section-header {
+    flex-wrap: wrap;
+  }
+
+  .reservation-card {
+    flex-wrap: wrap;
+  }
+
+  .reservation-card__cancel {
+    width: 100%;
+    text-align: center;
+  }
+
+  .user-history .dashboard__header {
+    align-items: flex-start;
+  }
+
+  .user-history__back {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .history-pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .history-pagination__info {
+    order: -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-bar {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  .history-grid__footer .btn {
+    display: flex;
+    width: 100%;
+    max-width: none;
+  }
+
+  .stat-card {
+    padding: var(--spacing-md);
+  }
+
+  .stat-card__value {
+    font-size: var(--font-size-2xl);
+  }
+}

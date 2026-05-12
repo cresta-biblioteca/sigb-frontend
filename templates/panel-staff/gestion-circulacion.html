@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservas y Préstamos | CRESTA Admin</title>
+    <meta name="robots" content="noindex">
+
+    <!-- CSS Base -->
+    <link rel="stylesheet" href="../../css/reset.css">
+    <link rel="stylesheet" href="../../css/variables.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+    <!-- CSS Específico del panel admin (sidebar, header, tablas) -->
+    <link rel="stylesheet" href="../../css/pages/vista-general.css">
+    <!-- CSS Específico de esta vista -->
+    <link rel="stylesheet" href="../../css/pages/gestion-circulacion.css">
+
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<div class="admin-layout">
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="admin-sidebar" id="sidebar">
+        <div class="sidebar__header">
+            <div class="sidebar__logo-icon">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <div class="sidebar__title">
+                <span class="sidebar__title-main">CRESTA</span>
+                <span class="sidebar__title-sub">LIBRARY ADMIN</span>
+            </div>
+        </div>
+
+        <nav class="sidebar__menu">
+            <div class="sidebar__section-title">Principal</div>
+            <a href="vista-general.html" class="sidebar__link">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+
+            <div class="sidebar__section-title">Operaciones</div>
+            <a href="carga-articulos.html" class="sidebar__link">
+                <i class="fas fa-plus-square"></i> Carga de Artículos
+            </a>
+            <a href="#" class="sidebar__link">
+                <i class="fas fa-file-alt"></i> Tipos de Documentos
+            </a>
+            <a href="gestion-circulacion.html" class="sidebar__link sidebar__link--active">
+                <i class="fas fa-calendar-alt"></i> Reservas y Préstamos
+            </a>
+
+            <div class="sidebar__section-title">Usuarios</div>
+            <a href="gestion-usuarios.html" class="sidebar__link">
+                <i class="fas fa-users-cog"></i> Gestión de Usuarios
+            </a>
+        </nav>
+
+        <div class="sidebar__footer">
+            <button class="btn btn--outline sidebar__logout" id="btnLogout"
+                    style="border-color: rgba(255,255,255,0.2); color: white;">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </button>
+        </div>
+    </aside>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="admin-main">
+
+        <!-- Navbar Superior -->
+        <header class="admin-header">
+            <button class="btn admin-header__mobile-toggle" id="sidebarToggle" aria-label="Abrir menú">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="admin-header__search">
+                <i class="fas fa-search"></i>
+                <input type="text" class="form-input" placeholder="Búsqueda global rápida..." id="globalSearch">
+            </div>
+
+            <div class="admin-header__actions">
+                <div class="admin-header__noti" title="Notificaciones">
+                    <i class="fas fa-bell"></i>
+                </div>
+
+                <div class="admin-header__user">
+                    <div class="admin-header__user-info">
+                        <span class="admin-header__user-name" id="headerUserName">Admin CRESTA</span>
+                        <span class="admin-header__user-role">Staff</span>
+                    </div>
+                    <div class="admin-header__avatar" id="headerUserAvatar">A</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Contenido de la pantalla -->
+        <div class="admin-content">
+
+            <!-- Page header -->
+            <div class="admin-page-header">
+                <div>
+                    <h1 class="admin-page-title">Reservas y Préstamos</h1>
+                    <p class="admin-page-subtitle">Gestioná las reservas pendientes y el ciclo de préstamos de la biblioteca.</p>
+                </div>
+            </div>
+
+            <!-- ── Stats ── -->
+            <div class="circ-stats" id="circStats">
+                <div class="circ-stat-card">
+                    <div class="circ-stat-card__icon circ-stat-card__icon--warning">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="circ-stat-card__body">
+                        <p class="circ-stat-card__value" id="statReservasPendientes">—</p>
+                        <p class="circ-stat-card__label">Reservas Pendientes</p>
+                    </div>
+                </div>
+
+                <div class="circ-stat-card">
+                    <div class="circ-stat-card__icon circ-stat-card__icon--info">
+                        <i class="fas fa-book-reader"></i>
+                    </div>
+                    <div class="circ-stat-card__body">
+                        <p class="circ-stat-card__value" id="statPrestamosActivos">—</p>
+                        <p class="circ-stat-card__label">Préstamos Activos</p>
+                    </div>
+                </div>
+
+                <div class="circ-stat-card">
+                    <div class="circ-stat-card__icon circ-stat-card__icon--danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="circ-stat-card__body">
+                        <p class="circ-stat-card__value" id="statVencidos">—</p>
+                        <p class="circ-stat-card__label">Vencidos</p>
+                    </div>
+                </div>
+
+                <div class="circ-stat-card">
+                    <div class="circ-stat-card__icon circ-stat-card__icon--success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="circ-stat-card__body">
+                        <p class="circ-stat-card__value" id="statDevueltosHoy">—</p>
+                        <p class="circ-stat-card__label">Devueltos Hoy</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Tabs ── -->
+            <div class="circ-tabs" role="tablist">
+                <button class="circ-tab circ-tab--active" data-tab="reservas" role="tab" aria-selected="true">
+                    <i class="fas fa-calendar-check"></i> Reservas
+                    <span class="circ-tab__badge circ-tab__badge--warning" id="badgeReservasPendientes">0</span>
+                </button>
+                <button class="circ-tab" data-tab="prestamos" role="tab" aria-selected="false">
+                    <i class="fas fa-book-reader"></i> Préstamos
+                    <span class="circ-tab__badge circ-tab__badge--danger" id="badgePrestamosVencidos">0</span>
+                </button>
+            </div>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- PANEL: Reservas                                    -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <div class="circ-panel circ-panel--active" id="panel-reservas" role="tabpanel">
+
+                <!-- Toolbar: filtros + búsqueda -->
+                <div class="circ-toolbar">
+                    <div class="circ-filters" role="group" aria-label="Filtrar reservas">
+                        <button class="circ-filter circ-filter--active" data-filter="todas">Todas</button>
+                        <button class="circ-filter" id="btnReservasPendientes" data-filter="pendiente">
+                            Pendientes
+                            <span class="circ-filter__count" id="countPendientes">0</span>
+                        </button>
+                        <button class="circ-filter" data-filter="completada">Completadas</button>
+                        <button class="circ-filter" data-filter="cancelada">Canceladas</button>
+                    </div>
+
+                    <div class="circ-date-filters" style="display: flex; gap: var(--spacing-sm); align-items: center;">
+                        <input type="date" class="form-input" id="reservaFechaDesde" title="Fecha Desde">
+                        <span style="color: var(--color-gray-500);">-</span>
+                        <input type="date" class="form-input" id="reservaFechaHasta" title="Fecha Hasta">
+                        <button class="btn btn--outline" id="btnLimpiarFechasReservas" title="Limpiar fechas" style="padding: 0.5rem; border-color: var(--color-gray-300); color: var(--color-gray-600);">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="circ-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="form-input circ-search__input"
+                               placeholder="Buscar por usuario o artículo..."
+                               id="searchReservas" autocomplete="off">
+                    </div>
+                </div>
+
+                <!-- Tabla de reservas -->
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="admin-table" id="tableReservas">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Usuario_ID</th>
+                                    <th>Artículo</th>
+                                    <th>Solicitado</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyReservas">
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Estado vacío (JS lo muestra cuando no hay resultados) -->
+                    <div class="circ-empty-state" id="emptyReservas" hidden>
+                        <div class="circ-empty-state__icon">
+                            <i class="fas fa-calendar-times"></i>
+                        </div>
+                        <p class="circ-empty-state__title">Sin reservas</p>
+                        <p class="circ-empty-state__desc">No hay reservas que coincidan con el filtro seleccionado.</p>
+                    </div>
+                </div>
+                <!-- Paginación -->
+                <div class="pagination" id="reservasPagination"></div>
+            </div>
+            
+            <!-- /panel-reservas -->
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- PANEL: Préstamos                                   -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <div class="circ-panel" id="panel-prestamos" role="tabpanel">
+
+                <!-- Toolbar -->
+                <div class="circ-toolbar">
+                    <div class="circ-filters" role="group" aria-label="Filtrar préstamos">
+                        <button class="circ-filter circ-filter--active" data-filter="todos">Todos</button>
+                        <button class="circ-filter" data-filter="vigente">Vigentes</button>
+                        <button class="circ-filter circ-filter--danger" data-filter="completado_vencido">
+                            Vencidos
+                            <span class="circ-filter__count" id="countVencidos">0</span>
+                        </button>
+                        <button class="circ-filter" data-filter="completado_exito">Devueltos</button>
+                    </div>
+
+                    <div class="circ-date-filters" style="display: flex; gap: var(--spacing-sm); align-items: center;">
+                        <input type="date" class="form-input" id="prestamoFechaDesde" title="Fecha Desde">
+                        <span style="color: var(--color-gray-500);">-</span>
+                        <input type="date" class="form-input" id="prestamoFechaHasta" title="Fecha Hasta">
+                        <button class="btn btn--outline" id="btnLimpiarFechasPrestamos" title="Limpiar fechas" style="padding: 0.5rem; border-color: var(--color-gray-300); color: var(--color-gray-600);">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="circ-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="form-input circ-search__input"
+                               placeholder="Buscar por usuario o artículo..."
+                               id="searchPrestamos" autocomplete="off">
+                    </div>
+                </div>
+
+                <!-- Tabla de préstamos -->
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="admin-table" id="tablePrestamos">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Usuario_ID</th>
+                                    <th>Artículo</th>
+                                    <th>Prestado</th>
+                                    <th>Vence</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyPrestamos">
+                                <!-- Fila activa -->
+                                <tr>
+                                    <td class="circ-id">#P-2087</td>
+                                    <td>
+                                        <div class="circ-user-cell">
+                                            <div class="circ-user-cell__avatar">LP</div>
+                                            <div>
+                                                <p class="circ-user-cell__name">Lucas Pérez</p>
+                                                <p class="circ-user-cell__sub">Legajo L-44201</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="circ-article-cell">
+                                            <p class="circ-article-cell__title">Introducción a la Programación</p>
+                                            <p class="circ-article-cell__sub">Kernighan, B.</p>
+                                        </div>
+                                    </td>
+                                    <td class="circ-date">10 abr</td>
+                                    <td class="circ-date">24 abr</td>
+                                    <td><span class="status-badge status-badge--active">Activo</span></td>
+                                    <td>
+                                        <div class="circ-actions">
+                                            <button class="btn-action btn-action--return"
+                                                    title="Registrar devolución" data-id="2087">
+                                                <i class="fas fa-undo-alt"></i> Devolver
+                                            </button>
+                                            <button class="btn-action btn-action--extend"
+                                                    title="Extender plazo" data-id="2087">
+                                                <i class="fas fa-calendar-plus"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Fila vencida -->
+                                <tr class="circ-row--overdue">
+                                    <td class="circ-id">#P-2071</td>
+                                    <td>
+                                        <div class="circ-user-cell">
+                                            <div class="circ-user-cell__avatar">CR</div>
+                                            <div>
+                                                <p class="circ-user-cell__name">Carlos Ruiz</p>
+                                                <p class="circ-user-cell__sub">DNI 32.100.456</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="circ-article-cell">
+                                            <p class="circ-article-cell__title">Álgebra Lineal</p>
+                                            <p class="circ-article-cell__sub">Grossman, S.</p>
+                                        </div>
+                                    </td>
+                                    <td class="circ-date">25 mar</td>
+                                    <td class="circ-date circ-date--overdue">
+                                        <i class="fas fa-exclamation-circle"></i> 8 abr
+                                    </td>
+                                    <td><span class="status-badge status-badge--overdue">Vencido</span></td>
+                                    <td>
+                                        <div class="circ-actions">
+                                            <button class="btn-action btn-action--return"
+                                                    title="Registrar devolución" data-id="2071">
+                                                <i class="fas fa-undo-alt"></i> Devolver
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Fila devuelta -->
+                                <tr>
+                                    <td class="circ-id">#P-2065</td>
+                                    <td>
+                                        <div class="circ-user-cell">
+                                            <div class="circ-user-cell__avatar">MG</div>
+                                            <div>
+                                                <p class="circ-user-cell__name">María García</p>
+                                                <p class="circ-user-cell__sub">DNI 28.901.234</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="circ-article-cell">
+                                            <p class="circ-article-cell__title">Física Universitaria — Vol. I</p>
+                                            <p class="circ-article-cell__sub">Young &amp; Freedman</p>
+                                        </div>
+                                    </td>
+                                    <td class="circ-date">1 abr</td>
+                                    <td class="circ-date">15 abr</td>
+                                    <td><span class="status-badge status-badge--returned">Devuelto</span></td>
+                                    <td>
+                                        <div class="circ-actions">
+                                            <button class="btn-action btn-action--view"
+                                                    title="Ver historial" data-id="2065">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Estado vacío -->
+                    <div class="circ-empty-state" id="emptyPrestamos" hidden>
+                        <div class="circ-empty-state__icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <p class="circ-empty-state__title">Sin préstamos</p>
+                        <p class="circ-empty-state__desc">No hay préstamos que coincidan con el filtro seleccionado.</p>
+                    </div>
+                </div>
+                <!-- Paginación -->
+                <div class="pagination" id="prestamosPagination"></div>
+            </div>
+            <!-- /panel-prestamos -->
+             
+
+        </div><!-- /admin-content -->
+    </main>
+</div><!-- /admin-layout -->
+
+<!-- ========================================================== -->
+<!-- MODALES                                                     -->
+<!-- ========================================================== -->
+
+<!-- Modal: Aprobar Reserva → Crear Préstamo -->
+<div class="circ-modal-overlay" id="modalAprobarOverlay" aria-hidden="true">
+    <div class="circ-modal" role="dialog" aria-modal="true" aria-labelledby="modalAprobarTitle">
+        <div class="circ-modal__header">
+            <h2 class="circ-modal__title" id="modalAprobarTitle">
+                <i class="fas fa-check-circle"></i> Aprobar Reserva
+            </h2>
+            <button class="circ-modal__close" id="btnCloseModalAprobar" aria-label="Cerrar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="circ-modal__body">
+            <div class="circ-modal__info-row">
+                <div class="circ-modal__info-item">
+                    <span class="circ-modal__info-label">Usuario</span>
+                    <span class="circ-modal__info-value" id="modalAprobarUsuario">—</span>
+                </div>
+                <div class="circ-modal__info-item">
+                    <span class="circ-modal__info-label">Artículo</span>
+                    <span class="circ-modal__info-value" id="modalAprobarArticulo">—</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="modalTipoPrestamo">
+                    Tipo de Préstamo <span class="required">*</span>
+                </label>
+                <select id="modalTipoPrestamo" class="form-input">
+                    <option value="">Seleccione un tipo...</option>
+                </select>
+                <span class="field-error" id="modalTipoError"></span>
+            </div>
+
+            <div class="form-group" style="margin-top: var(--spacing-md);">
+                <label class="form-label" for="modalNotaAprobacion">Nota para el usuario (opcional)</label>
+                <textarea id="modalNotaAprobacion" class="form-input" rows="2"
+                          placeholder="Ej: El libro está disponible en la Sala de Lectura."></textarea>
+            </div>
+        </div>
+        <div class="circ-modal__footer">
+            <button class="btn btn--outline" id="btnCancelarAprobar">Cancelar</button>
+            <button class="btn btn--primary" id="btnConfirmarAprobar">
+                <i class="fas fa-check"></i> Confirmar y Generar Préstamo
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Rechazar Reserva -->
+<div class="circ-modal-overlay" id="modalRechazarOverlay" aria-hidden="true">
+    <div class="circ-modal" role="dialog" aria-modal="true" aria-labelledby="modalRechazarTitle">
+        <div class="circ-modal__header circ-modal__header--danger">
+            <h2 class="circ-modal__title" id="modalRechazarTitle">
+                <i class="fas fa-times-circle"></i> Rechazar Reserva
+            </h2>
+            <button class="circ-modal__close" id="btnCloseModalRechazar" aria-label="Cerrar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="circ-modal__body">
+            <p style="font-size: var(--font-size-sm); color: var(--color-gray-600); margin-bottom: var(--spacing-md);">
+                Estás por rechazar la reserva de
+                <strong id="modalRechazarUsuario">—</strong> para
+                <strong id="modalRechazarArticulo">—</strong>.
+            </p>
+            <div class="form-group">
+                <label class="form-label" for="modalMotivoRechazo">
+                    Motivo del rechazo <span class="required">*</span>
+                </label>
+                <textarea id="modalMotivoRechazo" class="form-input" rows="3"
+                          placeholder="Ej: El artículo no está disponible en el período solicitado."
+                          maxlength="300"></textarea>
+                <span class="form-hint">Esta información se mostrará al usuario en su historial.</span>
+                <span class="field-error" id="modalMotivoError"></span>
+            </div>
+        </div>
+        <div class="circ-modal__footer">
+            <button class="btn btn--outline" id="btnCancelarRechazar">Cancelar</button>
+            <button class="btn btn--danger" id="btnConfirmarRechazar">
+                <i class="fas fa-times"></i> Confirmar Rechazo
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Nuevo Préstamo (registro manual) -->
+<div class="circ-modal-overlay" id="modalNuevoPrestamoOverlay" aria-hidden="true">
+    <div class="circ-modal circ-modal--wide" role="dialog" aria-modal="true"
+         aria-labelledby="modalNuevoPrestamoTitle">
+        <div class="circ-modal__header">
+            <h2 class="circ-modal__title" id="modalNuevoPrestamoTitle">
+                <i class="fas fa-plus-circle"></i> Nuevo Préstamo
+            </h2>
+            <button class="circ-modal__close" id="btnCloseModalNuevoPrestamo" aria-label="Cerrar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="circ-modal__body">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="npSearchUsuario">
+                        Usuario <span class="required">*</span>
+                    </label>
+                    <div class="circ-search-field">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="npSearchUsuario" class="form-input"
+                               placeholder="Buscar por nombre o DNI..." autocomplete="off">
+                    </div>
+                    <span class="field-error" id="npUsuarioError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="npSearchArticulo">
+                        Artículo <span class="required">*</span>
+                    </label>
+                    <div class="circ-search-field">
+                        <i class="fas fa-book"></i>
+                        <input type="text" id="npSearchArticulo" class="form-input"
+                               placeholder="Buscar por título o ISBN..." autocomplete="off">
+                    </div>
+                    <span class="field-error" id="npArticuloError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="npFechaVencimiento">
+                        Fecha de Vencimiento <span class="required">*</span>
+                    </label>
+                    <input type="date" id="npFechaVencimiento" class="form-input">
+                    <span class="form-hint">Por defecto: 14 días</span>
+                    <span class="field-error" id="npFechaError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="npNota">Nota (opcional)</label>
+                    <input type="text" id="npNota" class="form-input"
+                           placeholder="Observación adicional..." maxlength="200">
+                </div>
+            </div>
+        </div>
+        <div class="circ-modal__footer">
+            <button class="btn btn--outline" id="btnCancelarNuevoPrestamo">Cancelar</button>
+            <button class="btn btn--primary" id="btnConfirmarNuevoPrestamo">
+                <i class="fas fa-check"></i> Registrar Préstamo
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Confirmar Devolución -->
+<div class="circ-modal-overlay" id="modalDevolucionOverlay" aria-hidden="true">
+    <div class="circ-modal" role="dialog" aria-modal="true" aria-labelledby="modalDevolucionTitle">
+        <div class="circ-modal__header">
+            <h2 class="circ-modal__title" id="modalDevolucionTitle">
+                <i class="fas fa-undo-alt"></i> Registrar Devolución
+            </h2>
+            <button class="circ-modal__close" id="btnCloseModalDevolucion" aria-label="Cerrar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="circ-modal__body">
+            <p style="font-size: var(--font-size-sm); color: var(--color-gray-600); margin-bottom: var(--spacing-md);">
+                Confirmás la devolución del préstamo
+                <strong id="modalDevolucionId">—</strong>
+                por parte de <strong id="modalDevolucionUsuario">—</strong>.
+            </p>
+
+            <div class="circ-devolucion-summary">
+                <div class="circ-devolucion-summary__item">
+                    <span>Artículo</span>
+                    <strong id="modalDevolucionArticulo">—</strong>
+                </div>
+                <div class="circ-devolucion-summary__item">
+                    <span>Fecha de vencimiento</span>
+                    <strong id="modalDevolucionVencimiento">—</strong>
+                </div>
+                <div class="circ-devolucion-summary__item" id="modalDevolucionMoraRow" hidden>
+                    <span>Días de demora</span>
+                    <strong class="circ-text--danger" id="modalDevolucionMora">—</strong>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: var(--spacing-md);">
+                <label class="form-label" for="modalNotaDevolucion">Nota (opcional)</label>
+                <textarea id="modalNotaDevolucion" class="form-input" rows="2"
+                          placeholder="Ej: Devuelto con daño en tapa."></textarea>
+            </div>
+        </div>
+        <div class="circ-modal__footer">
+            <button class="btn btn--outline" id="btnCancelarDevolucion">Cancelar</button>
+            <button class="btn btn--primary" id="btnConfirmarDevolucion">
+                <i class="fas fa-undo-alt"></i> Confirmar Devolución
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Renovar Préstamo (Extender plazo) -->
+<div class="circ-modal-overlay" id="modalRenovarOverlay" aria-hidden="true">
+    <div class="circ-modal" role="dialog" aria-modal="true" aria-labelledby="modalRenovarTitle">
+        <div class="circ-modal__header">
+            <h2 class="circ-modal__title" id="modalRenovarTitle">
+                <i class="fas fa-calendar-plus"></i> Extender Plazo
+            </h2>
+            <button class="circ-modal__close" id="btnCloseModalRenovar" aria-label="Cerrar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="circ-modal__body">
+            <p style="font-size: var(--font-size-sm); color: var(--color-gray-600); margin-bottom: var(--spacing-md);">
+                Estás por renovar el préstamo
+                <strong id="modalRenovarId">—</strong>
+                de <strong id="modalRenovarUsuario">—</strong>.
+            </p>
+
+            <div class="circ-devolucion-summary" style="margin-bottom: var(--spacing-lg);">
+                <div class="circ-devolucion-summary__item">
+                    <span>Artículo</span>
+                    <strong id="modalRenovarArticulo">—</strong>
+                </div>
+                <div class="circ-devolucion-summary__item">
+                    <span>Vencimiento actual</span>
+                    <strong id="modalRenovarVencActual">—</strong>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="modalRenovarTipoPrestamo">
+                    Cambiar tipo de préstamo <span style="color: var(--color-gray-400); font-weight: normal;">(opcional)</span>
+                </label>
+                <select id="modalRenovarTipoPrestamo" class="form-input">
+                    <option value="">Mantener tipo actual</option>
+                </select>
+                <span class="form-hint">Si no seleccionás un tipo, se mantendrá el tipo de préstamo actual.</span>
+            </div>
+        </div>
+        <div class="circ-modal__footer">
+            <button class="btn btn--outline" id="btnCancelarRenovar">Cancelar</button>
+            <button class="btn btn--primary" id="btnConfirmarRenovar">
+                <i class="fas fa-redo"></i> Confirmar Renovación
+            </button>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="../../js/pages/gestion-circulacion.js"></script>
+<script type="module" src="../../js/pages/prestamos.js"></script>
+<script type="module" src="../../js/pages/reservas.js"></script>
+</body>
+</html>

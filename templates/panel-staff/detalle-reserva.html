@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de Reserva | CRESTA Admin</title>
+    <meta name="robots" content="noindex">
+
+    <!-- CSS Base -->
+    <link rel="stylesheet" href="../../css/reset.css">
+    <link rel="stylesheet" href="../../css/variables.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+    <!-- CSS Admin panel (sidebar, header) -->
+    <link rel="stylesheet" href="../../css/pages/vista-general.css">
+    <!-- CSS Circulación (badges, etc.) -->
+    <link rel="stylesheet" href="../../css/pages/gestion-circulacion.css">
+    <!-- CSS Específico de esta vista -->
+    <link rel="stylesheet" href="../../css/pages/detalle-reserva.css">
+
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<div class="admin-layout">
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="admin-sidebar" id="sidebar">
+        <div class="sidebar__header">
+            <div class="sidebar__logo-icon">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <div class="sidebar__title">
+                <span class="sidebar__title-main">CRESTA</span>
+                <span class="sidebar__title-sub">LIBRARY ADMIN</span>
+            </div>
+        </div>
+
+        <nav class="sidebar__menu">
+            <div class="sidebar__section-title">Principal</div>
+            <a href="vista-general.html" class="sidebar__link">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+
+            <div class="sidebar__section-title">Operaciones</div>
+            <a href="carga-articulos.html" class="sidebar__link">
+                <i class="fas fa-plus-square"></i> Carga de Artículos
+            </a>
+            <a href="#" class="sidebar__link">
+                <i class="fas fa-file-alt"></i> Tipos de Documentos
+            </a>
+            <a href="gestion-circulacion.html" class="sidebar__link sidebar__link--active">
+                <i class="fas fa-calendar-alt"></i> Reservas y Préstamos
+            </a>
+
+            <div class="sidebar__section-title">Usuarios</div>
+            <a href="gestion-usuarios.html" class="sidebar__link">
+                <i class="fas fa-users-cog"></i> Gestión de Usuarios
+            </a>
+        </nav>
+
+        <div class="sidebar__footer">
+            <button class="btn btn--outline sidebar__logout" id="btnLogout"
+                    style="border-color: rgba(255,255,255,0.2); color: white;">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </button>
+        </div>
+    </aside>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="admin-main">
+
+        <!-- Navbar Superior -->
+        <header class="admin-header">
+            <button class="btn admin-header__mobile-toggle" id="sidebarToggle" aria-label="Abrir menú">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="admin-header__search">
+                <i class="fas fa-search"></i>
+                <input type="text" class="form-input" placeholder="Búsqueda global rápida..." id="globalSearch">
+            </div>
+
+            <div class="admin-header__actions">
+                <div class="admin-header__noti" title="Notificaciones">
+                    <i class="fas fa-bell"></i>
+                </div>
+
+                <div class="admin-header__user">
+                    <div class="admin-header__user-info">
+                        <span class="admin-header__user-name" id="headerUserName">Admin CRESTA</span>
+                        <span class="admin-header__user-role">Staff</span>
+                    </div>
+                    <div class="admin-header__avatar" id="headerUserAvatar">A</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Contenido de la pantalla -->
+        <div class="admin-content">
+
+            <!-- Breadcrumb -->
+            <nav class="rd-breadcrumb" aria-label="Breadcrumb">
+                <a href="gestion-circulacion.html" class="rd-breadcrumb__link">Reservas</a>
+                <span class="rd-breadcrumb__sep"><i class="fas fa-chevron-right"></i></span>
+                <span class="rd-breadcrumb__current" id="breadcrumbCurrent">Reserva #R-…</span>
+            </nav>
+
+            <!-- ── Reservation Header ── -->
+            <div class="rd-header">
+                <div class="rd-header__left">
+                    <div class="rd-header__icon">
+                        <i class="fas fa-bookmark"></i>
+                    </div>
+                    <div class="rd-header__info">
+                        <div class="rd-header__title-row">
+                            <h1 class="rd-header__id" id="rdId">#R-…</h1>
+                            <span class="status-badge status-badge--approved" id="rdEstadoBadge">—</span>
+                        </div>
+                        <p class="rd-header__meta" id="rdMeta">Última actualización: —</p>
+                    </div>
+                </div>
+                <div class="rd-header__actions">
+                    <button class="btn btn--outline rd-btn-action" id="btnEdit">
+                        <i class="fas fa-pen"></i> Editar
+                    </button>
+                    <button class="btn btn--outline rd-btn-action" id="btnPrint">
+                        <i class="fas fa-print"></i> Imprimir
+                    </button>
+                    <button class="btn btn--accent rd-btn-action" id="btnSendEmail">
+                        <i class="fas fa-envelope"></i> Enviar Correo
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── Content Grid ── -->
+            <div class="rd-grid">
+
+                <!-- LEFT COLUMN -->
+                <div class="rd-col-left">
+
+                    <!-- User Information -->
+                    <section class="rd-card" id="cardUserInfo">
+                        <div class="rd-card__header">
+                            <i class="fas fa-user-circle rd-card__header-icon"></i>
+                            <h2 class="rd-card__title">Información del Usuario</h2>
+                        </div>
+                        <div class="rd-card__body">
+                            <div class="rd-info-grid">
+                                <div class="rd-info-item">
+                                    <span class="rd-info-item__label">USUARIO</span>
+                                    <span class="rd-info-item__value" id="rdUsuario">—</span>
+                                </div>
+                                <div class="rd-info-item">
+                                    <span class="rd-info-item__label">ID</span>
+                                    <span class="rd-info-item__value" id="rdUsuarioId">—</span>
+                                </div>
+                                <div class="rd-info-item">
+                                    <span class="rd-info-item__label">EMAIL</span>
+                                    <span class="rd-info-item__value" id="rdEmail">—</span>
+                                </div>
+                                <div class="rd-info-item">
+                                    <span class="rd-info-item__label">CARRERA</span>
+                                    <span class="rd-info-item__value" id="rdCarrera">—</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Book Details -->
+                    <section class="rd-card" id="cardBookDetails">
+                        <div class="rd-card__header">
+                            <i class="fas fa-book-open rd-card__header-icon"></i>
+                            <h2 class="rd-card__title">Detalles del Libro</h2>
+                        </div>
+                        <div class="rd-card__body">
+                            <div class="rd-info-grid">
+                                <div class="rd-info-item">
+                                    <span class="rd-info-item__label">LIBRO</span>
+                                    <span class="rd-info-item__value" id="rdLibro">—</span>
+                                </div>
+                                <div class="rd-info-item">
+                                    <span class="rd-info-item__label">ISBN</span>
+                                    <span class="rd-info-item__value" id="rdIsbn">—</span>
+                                </div>
+                                <div class="rd-info-item">
+                                    <span class="rd-info-item__label">TEMAS</span>
+                                    <span class="rd-info-item__value" id="rdCategoria">—</span>
+                                </div>
+                                <div class="rd-info-item">
+                                    <span class="rd-info-item__label">ESTADO FÍSICO</span>
+                                    <span class="rd-info-item__value" id="rdEstadoFisico">
+                                        <span class="rd-dot rd-dot--green"></span> —
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+
+                <!-- RIGHT COLUMN -->
+                <div class="rd-col-right">
+
+                    <!-- Timeline -->
+                    <section class="rd-card" id="cardTimeline">
+                        <div class="rd-card__header">
+                            <i class="fas fa-clock rd-card__header-icon"></i>
+                            <h2 class="rd-card__title">Historial de la Reserva</h2>
+                        </div>
+                        <div class="rd-card__body">
+                            <div class="rd-timeline" id="rdTimeline">
+                                <!-- JS populates timeline events -->
+                            </div>
+
+                            <!-- Fecha Límite -->
+                            <div class="rd-deadline" id="rdDeadlineBox"> 
+                                <div class="rd-deadline__icon">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="rd-deadline__label">FECHA LÍMITE</div>
+                                <div class="rd-deadline__date" id="rdFechaLimite">—</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Librarian Notes -->
+                    <section class="rd-card" id="cardNotes">
+                        <div class="rd-card__header">
+                            <i class="fas fa-sticky-note rd-card__header-icon"></i>
+                            <h2 class="rd-card__title">Notas del Bibliotecario</h2>
+                            <button class="rd-card__header-action" id="btnAddNote" title="Agregar nota">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="rd-card__body">
+                            <div class="rd-notes" id="rdNotes">
+                                <!-- JS populates notes -->
+                                <div class="rd-note rd-note--empty" id="rdNotesEmpty">
+                                    <p>No hay notas para esta reserva.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+
+            </div><!-- /rd-grid -->
+
+        </div><!-- /admin-content -->
+    </main>
+</div><!-- /admin-layout -->
+
+<script type="module" src="../../js/pages/detalle-reserva.js"></script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Staff | CRESTA Admin</title>
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="stylesheet" href="../../css/reset.css">
+    <link rel="stylesheet" href="../../css/variables.css">
+    <link rel="stylesheet" href="../../css/components.css">
+    <link rel="stylesheet" href="../../css/pages/staff-login.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<div class="login-card">
+
+    <!-- Branding -->
+    <div class="login-card__header">
+        <div class="login-card__logo">
+            <i class="fas fa-book-open"></i>
+        </div>
+        <p class="login-card__title">CRESTA</p>
+        <p class="login-card__subtitle">Library Admin Panel</p>
+    </div>
+
+    <!-- Formulario -->
+    <div class="login-card__body">
+        <p class="login-card__welcome">Ingresá con tus credenciales de staff para continuar.</p>
+
+        <!-- Alerta de error -->
+        <div class="login-alert" id="loginAlert" role="alert">
+            <i class="fas fa-circle-exclamation"></i>
+            <span id="loginAlertMsg"></span>
+        </div>
+
+        <form id="staffLoginForm" novalidate autocomplete="off">
+            <div class="login-form-group">
+                <label class="login-form-label" for="staffDni">DNI</label>
+                <input type="text" id="staffDni" name="dni"
+                       class="form-input" placeholder="Ej: 12345678"
+                       inputmode="numeric" maxlength="8"
+                       autocomplete="username">
+            </div>
+
+            <div class="login-form-group">
+                <label class="login-form-label" for="staffPassword">Contraseña</label>
+                <input type="password" id="staffPassword" name="password"
+                       class="form-input" placeholder="••••••••"
+                       autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn btn--primary login-submit" id="staffLoginBtn">
+                <i class="fas fa-sign-in-alt"></i> Ingresar al Panel
+            </button>
+        </form>
+    </div>
+
+    <!-- Volver al home público -->
+    <div class="login-card__footer">
+        <a href="../../index.html" class="login-card__back-link">
+            <i class="fas fa-arrow-left"></i> Volver al sitio público
+        </a>
+    </div>
+
+</div>
+
+<script type="module" src="../../js/pages/staff-login.js"></script>
+</body>
+</html>
