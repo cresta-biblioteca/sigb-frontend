@@ -245,8 +245,8 @@ El archivo `endpoints-backend/endpoints.yml` contiene la especificación OpenAPI
 | `GET` | `/articulos/{id}` | Obtener detalle de un artículo | Bearer |
 | `POST` | `/articulos/importar/marc21` | Importar registros MARC21/MARCXML | Bearer |
 | `POST` | `/libros` | Crear un libro | Bearer |
-| `GET` | `/libros` | Listar libros | Bearer |
-| `GET` | `/libros/{id}` | Obtener detalle de un libro | Bearer |
+| `GET` | `/libros` | Listar libros | No |
+| `GET` | `/libros/{id}` | Obtener detalle de un libro | No |
 | `GET` | `/ejemplares` | Listar ejemplares | Bearer |
 | `GET` | `/ejemplares/{id}` | Obtener detalle de un ejemplar | Bearer |
 | `POST` | `/ejemplares` | Crear ejemplar | Bearer |
